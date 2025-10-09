@@ -79,14 +79,6 @@ set(DFTRACER_UTILS_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/pipeline/executors/scheduler/sequential_scheduler.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/pipeline/executors/executor_context.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/pipeline/tasks/task_context.cpp
-    # Analyzers
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/analyzers/constants.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/analyzers/analyzer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/analyzers/pipeline/trace_reader.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/analyzers/helpers/derive_io_cat.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/analyzers/helpers/bins.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/analyzers/helpers/ignore_events.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/analyzers/helpers/parse_trace.cpp
 )
 
 # +++++++++++++++++++++++++++++++++++++++++
@@ -169,7 +161,6 @@ endif()
 set(DFTRACER_BINARIES
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_reader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_tar.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_map.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_event_count.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_pgzip.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_merge.cpp
@@ -257,8 +248,7 @@ endif()
 
 # Install directive for libraries
 
-set(INSTALLABLE_TARGETS dftracer_utils dftracer_utils_shared
-)# dftracer_utils_analyzer)
+set(INSTALLABLE_TARGETS dftracer_utils dftracer_utils_shared)
 if(TARGET sqlite3)
   list(APPEND INSTALLABLE_TARGETS sqlite3)
 endif()
