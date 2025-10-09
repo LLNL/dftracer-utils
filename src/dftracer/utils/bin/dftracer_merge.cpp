@@ -132,7 +132,7 @@ static MergeResult process_pfw_gz_file(const std::string& gz_path,
             result.valid_events, result.lines_processed);
 
     } catch (const std::exception& e) {
-        DFTRACER_UTILS_LOG_ERROR("Error processing file %s: %s",
+        DFTRACER_UTILS_LOG_DEBUG("Error processing file %s: %s",
                                  gz_path.c_str(), e.what());
     }
 
@@ -175,7 +175,7 @@ static MergeResult process_pfw_file(const std::string& pfw_path,
             result.valid_events, result.lines_processed);
 
     } catch (const std::exception& e) {
-        DFTRACER_UTILS_LOG_ERROR("Error processing file %s: %s",
+        DFTRACER_UTILS_LOG_DEBUG("Error processing file %s: %s",
                                  pfw_path.c_str(), e.what());
     }
 
@@ -207,7 +207,7 @@ static std::vector<MergeResult> process_files_parallel(
             // Handle plain .pfw files
             return process_pfw_file(file_path, temp_dir, ctx);
         } else {
-            DFTRACER_UTILS_LOG_ERROR("Unknown file type: %s",
+            DFTRACER_UTILS_LOG_DEBUG("Unknown file type: %s",
                                      file_path.c_str());
             return MergeResult{file_path, "", false, 0, 0};
         }

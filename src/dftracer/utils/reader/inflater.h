@@ -138,7 +138,13 @@ class ReaderInflater : public Inflater {
             int ret = inflate(&stream, Z_NO_FLUSH);
 
             if (ret == Z_STREAM_END) {
-                break;
+                if (inflateReset(&stream) != Z_OK) {
+                    DFTRACER_UTILS_LOG_DEBUG(
+                        "Failed to reset inflater for next stream: %s",
+                        stream.msg ? stream.msg : "no message");
+                    break;
+                }
+                continue;
             }
             if (ret != Z_OK) {
                 DFTRACER_UTILS_LOG_DEBUG(
