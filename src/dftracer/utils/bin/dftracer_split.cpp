@@ -9,8 +9,11 @@
 #include <dftracer/utils/reader/reader_factory.h>
 #include <dftracer/utils/utils/filesystem.h>
 #include <dftracer/utils/utils/string.h>
+#include <xxhash.h>
+#include <yyjson.h>
 #include <zlib.h>
 
+#include <algorithm>
 #include <argparse/argparse.hpp>
 #include <atomic>
 #include <chrono>
@@ -21,6 +24,7 @@
 #include <functional>
 #include <map>
 #include <mutex>
+#include <set>
 #include <sstream>
 #include <thread>
 #include <vector>
@@ -76,6 +80,163 @@ class SizeEstimator : public LineProcessor {
         return true;
     }
 };
+
+struct EventId {
+    std::int64_t id;
+    std::int64_t pid;
+    std::int64_t tid;
+
+    bool operator<(const EventId& other) const {
+        if (id != other.id) return id < other.id;
+        if (pid != other.pid) return pid < other.pid;
+        return tid < other.tid;
+    }
+};
+
+class EventIdCollector : public LineProcessor {
+   public:
+    std::vector<EventId>& events;
+
+    EventIdCollector(std::vector<EventId>& event_list) : events(event_list) {}
+
+    bool process(const char* data, std::size_t length) override {
+        const char* trimmed;
+        std::size_t trimmed_length;
+        if (!json_trim_and_validate(data, length, trimmed, trimmed_length) ||
+            trimmed_length <= 8) {
+            return true;
+        }
+
+        yyjson_doc* doc = yyjson_read(trimmed, trimmed_length, 0);
+        if (!doc) return true;
+
+        yyjson_val* root = yyjson_doc_get_root(doc);
+        if (!yyjson_is_obj(root)) {
+            yyjson_doc_free(doc);
+            return true;
+        }
+
+        EventId event{-1, -1, -1};
+        yyjson_val* id_val = yyjson_obj_get(root, "id");
+        if (id_val && yyjson_is_int(id_val)) {
+            event.id = yyjson_get_int(id_val);
+        }
+
+        yyjson_val* pid_val = yyjson_obj_get(root, "pid");
+        if (pid_val && yyjson_is_int(pid_val)) {
+            event.pid = yyjson_get_int(pid_val);
+        }
+
+        yyjson_val* tid_val = yyjson_obj_get(root, "tid");
+        if (tid_val && yyjson_is_int(tid_val)) {
+            event.tid = yyjson_get_int(tid_val);
+        }
+
+        if (event.id >= 0) {
+            events.push_back(event);
+        }
+
+        yyjson_doc_free(doc);
+        return true;
+    }
+};
+
+static std::uint64_t compute_event_hash(
+    const std::vector<FileMetadata>& files) {
+    std::vector<EventId> events;
+
+    for (const auto& file : files) {
+        if (!file.success) continue;
+
+        if (!file.idx_path.empty()) {
+            auto reader = ReaderFactory::create(file.file_path, file.idx_path);
+            EventIdCollector collector(events);
+            reader->read_lines_with_processor(file.start_line, file.end_line,
+                                              collector);
+        } else {
+            std::ifstream infile(file.file_path);
+            if (!infile.is_open()) continue;
+
+            EventIdCollector collector(events);
+            std::string line;
+            std::size_t current_line = 0;
+            while (std::getline(infile, line)) {
+                current_line++;
+                if (current_line < file.start_line) continue;
+                if (current_line > file.end_line) break;
+                collector.process(line.c_str(), line.length());
+            }
+        }
+    }
+
+    std::sort(events.begin(), events.end());
+
+    XXH3_state_t* state = XXH3_createState();
+    if (!state) {
+        DFTRACER_UTILS_LOG_ERROR("%s", "Failed to create XXH3 state");
+        return 0;
+    }
+    XXH3_64bits_reset_withSeed(state, 0);
+
+    for (const auto& event : events) {
+        XXH3_64bits_update(state, &event.id, sizeof(event.id));
+        XXH3_64bits_update(state, &event.pid, sizeof(event.pid));
+        XXH3_64bits_update(state, &event.tid, sizeof(event.tid));
+    }
+
+    std::uint64_t hash = XXH3_64bits_digest(state);
+    XXH3_freeState(state);
+    return hash;
+}
+
+static std::vector<EventId> collect_output_events(const ChunkResult& result,
+                                                  std::size_t checkpoint_size,
+                                                  TaskContext&) {
+    std::vector<EventId> events;
+    if (!result.success) return events;
+
+    bool is_compressed =
+        (result.output_path.size() > 3 &&
+         result.output_path.substr(result.output_path.size() - 3) == ".gz");
+    EventIdCollector collector(events);
+
+    if (is_compressed) {
+        fs::path tmp_idx =
+            fs::temp_directory_path() /
+            (fs::path(result.output_path).filename().string() + ".idx");
+
+        if (fs::exists(tmp_idx)) {
+            fs::remove(tmp_idx);
+        }
+
+        auto indexer = IndexerFactory::create(
+            result.output_path, tmp_idx.string(), checkpoint_size, true);
+        indexer->build();
+
+        auto reader = ReaderFactory::create(indexer.get());
+        std::size_t num_lines = reader->get_num_lines();
+        if (num_lines > 0) {
+            reader->read_lines_with_processor(1, num_lines, collector);
+        }
+
+        if (fs::exists(tmp_idx)) {
+            fs::remove(tmp_idx);
+        }
+    } else {
+        std::ifstream chunk_file(result.output_path);
+        if (!chunk_file.is_open()) {
+            DFTRACER_UTILS_LOG_ERROR("Cannot open chunk file: %s",
+                                     result.output_path.c_str());
+            return events;
+        }
+
+        std::string line;
+        while (std::getline(chunk_file, line)) {
+            collector.process(line.c_str(), line.length());
+        }
+    }
+    return events;
+}
 
 static FileMetadata collect_metadata_gz(const std::string& gz_path,
                                         const std::string& idx_path,
@@ -355,15 +516,26 @@ static ChunkResult extract_chunk(const ChunkData& chunk,
         std::fprintf(output_fp, "[\n");
 
         std::size_t total_events = 0;
+        XXH3_state_t* hash_state = XXH3_createState();
+        if (!hash_state) {
+            DFTRACER_UTILS_LOG_ERROR("Failed to create XXH3 state for chunk %d",
+                                     chunk.chunk_index);
+            std::fclose(output_fp);
+            result.success = false;
+            return result;
+        }
+        XXH3_64bits_reset_withSeed(hash_state, 0);
 
         for (const auto& spec : chunk.specs) {
             class ChunkWriter : public LineProcessor {
                public:
                 FILE* fp;
+                XXH3_state_t* hasher;
                 std::atomic<std::size_t>& event_count;
 
-                ChunkWriter(FILE* file, std::atomic<std::size_t>& count)
-                    : fp(file), event_count(count) {}
+                ChunkWriter(FILE* file, XXH3_state_t* hash_state,
+                            std::atomic<std::size_t>& count)
+                    : fp(file), hasher(hash_state), event_count(count) {}
 
                 bool process(const char* data, std::size_t length) override {
                     const char* trimmed;
@@ -373,6 +545,8 @@ static ChunkResult extract_chunk(const ChunkData& chunk,
                         trimmed_length > 8) {
                         std::fwrite(trimmed, 1, trimmed_length, fp);
                         std::fwrite("\n", 1, 1, fp);
+                        XXH3_64bits_update(hasher, trimmed, trimmed_length);
+                        XXH3_64bits_update(hasher, "\n", 1);
                         event_count++;
                     }
                     return true;
@@ -384,7 +558,7 @@ static ChunkResult extract_chunk(const ChunkData& chunk,
             if (!spec.idx_path.empty()) {
                 auto reader =
                     ReaderFactory::create(spec.file_path, spec.idx_path);
-                ChunkWriter writer(output_fp, spec_events);
+                ChunkWriter writer(output_fp, hash_state, spec_events);
                 reader->read_lines_with_processor(spec.start_line,
                                                   spec.end_line, writer);
             } else {
@@ -410,6 +584,8 @@ static ChunkResult extract_chunk(const ChunkData& chunk,
                         trimmed_length > 8) {
                         std::fwrite(trimmed, 1, trimmed_length, output_fp);
                         std::fwrite("\n", 1, 1, output_fp);
+                        XXH3_64bits_update(hash_state, trimmed, trimmed_length);
+                        XXH3_64bits_update(hash_state, "\n", 1);
                         spec_events++;
                     }
                 }
@@ -420,6 +596,8 @@ static ChunkResult extract_chunk(const ChunkData& chunk,
 
         std::fprintf(output_fp, "\n]\n");
         std::fclose(output_fp);
+
+        XXH3_freeState(hash_state);
 
         result.events = total_events;
         result.size_mb = chunk.total_size_mb;
@@ -576,6 +754,10 @@ int main(int argc, char** argv) {
         .help("Directory to store index files (default: system temp directory)")
         .default_value<std::string>("");
 
+    program.add_argument("--verify")
+        .help("Verify output chunks match input by comparing event IDs")
+        .flag();
+
     try {
         program.parse_args(argc, argv);
     } catch (const std::exception& err) {
@@ -590,6 +772,7 @@ int main(int argc, char** argv) {
     int chunk_size_mb = program.get<int>("--chunk-size");
     bool force = program.get<bool>("--force");
     bool compress = program.get<bool>("--compress");
+    bool verify = program.get<bool>("--verify");
     std::size_t checkpoint_size = program.get<std::size_t>("--checkpoint-size");
     std::size_t num_threads = program.get<std::size_t>("--threads");
     std::string index_dir = program.get<std::string>("--index-dir");
@@ -597,16 +780,16 @@ int main(int argc, char** argv) {
     log_dir = fs::absolute(log_dir).string();
     output_dir = fs::absolute(output_dir).string();
 
-    printf("==========================================\n");
-    printf("Arguments:\n");
-    printf("  App name: %s\n", app_name.c_str());
-    printf("  Override: %s\n", force ? "true" : "false");
-    printf("  Compress: %s\n", compress ? "true" : "false");
-    printf("  Data dir: %s\n", log_dir.c_str());
-    printf("  Output dir: %s\n", output_dir.c_str());
-    printf("  Chunk size: %d MB\n", chunk_size_mb);
-    printf("  Threads: %zu\n", num_threads);
-    printf("==========================================\n");
+    std::printf("==========================================\n");
+    std::printf("Arguments:\n");
+    std::printf("  App name: %s\n", app_name.c_str());
+    std::printf("  Override: %s\n", force ? "true" : "false");
+    std::printf("  Compress: %s\n", compress ? "true" : "false");
+    std::printf("  Data dir: %s\n", log_dir.c_str());
+    std::printf("  Output dir: %s\n", output_dir.c_str());
+    std::printf("  Chunk size: %d MB\n", chunk_size_mb);
+    std::printf("  Threads: %zu\n", num_threads);
+    std::printf("==========================================\n");
 
     if (!fs::exists(output_dir)) {
         fs::create_directories(output_dir);
@@ -654,8 +837,8 @@ int main(int argc, char** argv) {
                                                 force, index_dir, ctx);
                 });
 
-    ThreadExecutor metadata_executor(num_threads);
-    metadata_executor.execute(metadata_pipeline, input_files);
+    ThreadExecutor executor(num_threads);
+    executor.execute(metadata_pipeline, input_files);
     std::vector<FileMetadata> all_metadata = metadata_task.get();
 
     std::size_t successful_files = 0;
@@ -701,12 +884,16 @@ int main(int argc, char** argv) {
                                               compress, ctx);
                 });
 
-    ThreadExecutor extract_executor(num_threads);
-    extract_executor.execute(extract_pipeline, chunks);
+    executor.execute(extract_pipeline, chunks);
     std::vector<ChunkResult> results = extract_task.get();
 
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> duration = end_time - start_time;
+
+    std::sort(results.begin(), results.end(),
+              [](const ChunkResult& a, const ChunkResult& b) {
+                  return a.chunk_index < b.chunk_index;
+              });
 
     std::size_t successful_chunks = 0;
     std::size_t total_events = 0;
@@ -721,14 +908,88 @@ int main(int argc, char** argv) {
         }
     }
 
-    printf("\n");
-    printf("Split completed in %.2f seconds\n", duration.count() / 1000.0);
-    printf("  Input: %zu files, %.2f MB\n", successful_files, total_size_mb);
-    printf("  Output: %zu/%zu chunks, %zu events\n", successful_chunks,
-           results.size(), total_events);
+    std::printf("\n");
+    std::printf("Split completed in %.2f seconds\n", duration.count() / 1000.0);
+    std::printf("  Input: %zu files, %.2f MB\n", successful_files,
+                total_size_mb);
+    std::printf("  Output: %zu/%zu chunks, %zu events\n", successful_chunks,
+                results.size(), total_events);
 
-    DFTRACER_UTILS_LOG_INFO("All chunks processed in %.2f ms",
-                            duration.count());
+    if (verify) {
+        auto verify_start = std::chrono::high_resolution_clock::now();
+        std::printf("  Validating output chunks match input...\n");
+        std::vector<FileMetadata> chunk_metadata;
+        for (const auto& chunk : chunks) {
+            for (const auto& spec : chunk.specs) {
+                FileMetadata meta;
+                meta.file_path = spec.file_path;
+                meta.idx_path = spec.idx_path;
+                meta.start_line = spec.start_line;
+                meta.end_line = spec.end_line;
+                meta.success = true;
+                chunk_metadata.push_back(meta);
+            }
+        }
+        std::uint64_t input_hash = compute_event_hash(chunk_metadata);
+
+        Pipeline verify_pipeline;
+        auto verify_task =
+            verify_pipeline.add_task<std::vector<ChunkResult>,
+                                     std::vector<std::vector<EventId>>>(
+                [checkpoint_size](
+                    std::vector<ChunkResult> result_list,
+                    TaskContext& ctx) -> std::vector<std::vector<EventId>> {
+                    std::vector<std::vector<EventId>> all_events;
+                    for (const auto& result : result_list) {
+                        all_events.push_back(collect_output_events(
+                            result, checkpoint_size, ctx));
+                    }
+                    return all_events;
+                });
+
+        executor.execute(verify_pipeline, results);
+        auto all_output_events = verify_task.get();
+
+        std::vector<EventId> output_events;
+        for (const auto& events : all_output_events) {
+            output_events.insert(output_events.end(), events.begin(),
+                                 events.end());
+        }
+
+        std::sort(output_events.begin(), output_events.end());
+
+        XXH3_state_t* output_state = XXH3_createState();
+        XXH3_64bits_reset_withSeed(output_state, 0);
+        for (const auto& event : output_events) {
+            XXH3_64bits_update(output_state, &event.id, sizeof(event.id));
+            XXH3_64bits_update(output_state, &event.pid, sizeof(event.pid));
+            XXH3_64bits_update(output_state, &event.tid, sizeof(event.tid));
+        }
+        std::uint64_t output_hash = XXH3_64bits_digest(output_state);
+        XXH3_freeState(output_state);
+
+        auto verify_end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> verify_duration =
+            verify_end - verify_start;
+
+        if (input_hash == output_hash) {
+            std::printf(
+                "  \u2713 Verification: PASSED - all events present in output "
+                "(%.2f seconds)\n",
+                verify_duration.count() / 1000.0);
+        } else {
+            std::printf(
+                "  \u2717 Verification: FAILED - event mismatch detected (%.2f "
+                "seconds)\n",
+                verify_duration.count() / 1000.0);
+            DFTRACER_UTILS_LOG_ERROR(
+                "Hash mismatch: input=%016llx output=%016llx",
+                (unsigned long long)input_hash,
+                (unsigned long long)output_hash);
+        }
+    }
+
+    std::printf("All chunks processed in %.2f ms", duration.count());
 
     return successful_chunks == results.size() ? 0 : 1;
 }
