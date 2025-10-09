@@ -431,7 +431,7 @@ int main(int argc, char** argv) {
             total_events += result.valid_events;
             total_lines += result.lines_processed;
         } else {
-            DFTRACER_UTILS_LOG_ERROR("Failed to process: %s",
+            DFTRACER_UTILS_LOG_DEBUG("Failed to process: %s",
                                      result.file_path.c_str());
         }
     }
