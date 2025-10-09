@@ -353,19 +353,16 @@ static ChunkResult extract_chunk(const ChunkData& chunk,
         setvbuf(output_fp, nullptr, _IOFBF, 1024 * 1024);
         std::fprintf(output_fp, "[\n");
 
-        bool first = true;
         std::size_t total_events = 0;
 
         for (const auto& spec : chunk.specs) {
             class ChunkWriter : public LineProcessor {
                public:
                 FILE* fp;
-                bool& is_first;
                 std::atomic<std::size_t>& event_count;
 
-                ChunkWriter(FILE* file, bool& first,
-                            std::atomic<std::size_t>& count)
-                    : fp(file), is_first(first), event_count(count) {}
+                ChunkWriter(FILE* file, std::atomic<std::size_t>& count)
+                    : fp(file), event_count(count) {}
 
                 bool process(const char* data, std::size_t length) override {
                     const char* trimmed;
@@ -373,11 +370,8 @@ static ChunkResult extract_chunk(const ChunkData& chunk,
                     if (json_trim_and_validate(data, length, trimmed,
                                                trimmed_length) &&
                         trimmed_length > 8) {
-                        if (!is_first) {
-                            std::fwrite(",\n", 1, 2, fp);
-                        }
-                        is_first = false;
                         std::fwrite(trimmed, 1, trimmed_length, fp);
+                        std::fwrite("\n", 1, 1, fp);
                         event_count++;
                     }
                     return true;
@@ -389,7 +383,7 @@ static ChunkResult extract_chunk(const ChunkData& chunk,
             if (!spec.idx_path.empty()) {
                 auto reader =
                     ReaderFactory::create(spec.file_path, spec.idx_path);
-                ChunkWriter writer(output_fp, first, spec_events);
+                ChunkWriter writer(output_fp, spec_events);
                 reader->read_lines_with_processor(spec.start_line,
                                                   spec.end_line, writer);
             } else {
@@ -413,11 +407,8 @@ static ChunkResult extract_chunk(const ChunkData& chunk,
                     if (json_trim_and_validate(line.c_str(), line.length(),
                                                trimmed, trimmed_length) &&
                         trimmed_length > 8) {
-                        if (!first) {
-                            std::fwrite(",\n", 1, 2, output_fp);
-                        }
-                        first = false;
                         std::fwrite(trimmed, 1, trimmed_length, output_fp);
+                        std::fwrite("\n", 1, 1, output_fp);
                         spec_events++;
                     }
                 }
