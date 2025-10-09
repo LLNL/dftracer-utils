@@ -29,11 +29,12 @@ std::size_t count_events_in_pfw_file(const std::string& pfw_path);
 static std::size_t process_files_parallel(const std::vector<std::string>& files,
                                           std::size_t checkpoint_size,
                                           bool force_rebuild,
+                                          const std::string& index_dir,
                                           TaskContext& ctx) {
     std::vector<TaskResult<std::size_t>::Future> futures;
     futures.reserve(files.size());
 
-    auto process_file = [checkpoint_size, force_rebuild](
+    auto process_file = [checkpoint_size, force_rebuild, &index_dir](
                             std::string file_path,
                             TaskContext&) -> std::size_t {
         // Check if it's a .pfw.gz file or plain .pfw file
@@ -43,8 +44,10 @@ static std::size_t process_files_parallel(const std::vector<std::string>& files,
         if (file_path.size() >= pfw_gz_suffix.size() &&
             file_path.compare(file_path.size() - pfw_gz_suffix.size(),
                               pfw_gz_suffix.size(), pfw_gz_suffix) == 0) {
-            // Handle .pfw.gz files with indexer/reader
-            std::string idx_path = file_path + ".idx";
+            fs::path idx_dir = index_dir.empty() ? fs::temp_directory_path()
+                                                 : fs::path(index_dir);
+            std::string base_name = fs::path(file_path).filename().string();
+            std::string idx_path = (idx_dir / (base_name + ".idx")).string();
 
             if (force_rebuild && fs::exists(idx_path)) {
                 fs::remove(idx_path);
@@ -218,6 +221,10 @@ int main(int argc, char** argv) {
         .default_value(
             static_cast<std::size_t>(std::thread::hardware_concurrency()));
 
+    program.add_argument("--index-dir")
+        .help("Directory to store index files (default: system temp directory)")
+        .default_value<std::string>("");
+
     try {
         program.parse_args(argc, argv);
     } catch (const std::exception& err) {
@@ -230,6 +237,7 @@ int main(int argc, char** argv) {
     bool force_rebuild = program.get<bool>("--force");
     std::size_t checkpoint_size = program.get<std::size_t>("--checkpoint-size");
     std::size_t num_threads = program.get<std::size_t>("--threads");
+    std::string index_dir = program.get<std::string>("--index-dir");
 
     log_dir = fs::absolute(log_dir).string();
 
@@ -269,10 +277,11 @@ int main(int argc, char** argv) {
 
     Pipeline pipeline;
     auto task_result = pipeline.add_task<std::vector<std::string>, std::size_t>(
-        [checkpoint_size, force_rebuild](std::vector<std::string> file_list,
-                                         TaskContext& ctx) -> std::size_t {
+        [checkpoint_size, force_rebuild, index_dir](
+            std::vector<std::string> file_list,
+            TaskContext& ctx) -> std::size_t {
             return process_files_parallel(file_list, checkpoint_size,
-                                          force_rebuild, ctx);
+                                          force_rebuild, index_dir, ctx);
         });
 
     ThreadExecutor executor(num_threads);

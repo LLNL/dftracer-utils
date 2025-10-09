@@ -59,6 +59,9 @@ int main(int argc, char **argv) {
         .help("Set the reading mode (bytes, line_bytes, lines)")
         .default_value<std::string>("bytes")
         .choices("bytes", "line_bytes", "lines");
+    program.add_argument("--index-dir")
+        .help("Directory to store index files (default: system temp directory)")
+        .default_value<std::string>("");
 
     try {
         program.parse_args(argc, argv);
@@ -78,6 +81,7 @@ int main(int argc, char **argv) {
     std::string read_mode = program.get<std::string>("--mode");
     std::size_t read_buffer_size =
         program.get<std::size_t>("--read-buffer-size");
+    std::string index_dir = program.get<std::string>("--index-dir");
 
     DFTRACER_UTILS_LOG_DEBUG("Processing file: %s", gz_path.c_str());
     DFTRACER_UTILS_LOG_DEBUG("Start position: %lld", (long long)start);
@@ -103,10 +107,16 @@ int main(int argc, char **argv) {
     }
     fclose(test_file);
 
-    // Detect format and determine appropriate index file extension
-    std::string idx_path = index_path.empty()
-                               ? (gz_path + constants::indexer::EXTENSION)
-                               : index_path;
+    std::string idx_path;
+    if (!index_path.empty()) {
+        idx_path = index_path;
+    } else {
+        fs::path idx_dir =
+            index_dir.empty() ? fs::temp_directory_path() : fs::path(index_dir);
+        std::string base_name = fs::path(gz_path).filename().string();
+        idx_path =
+            (idx_dir / (base_name + constants::indexer::EXTENSION)).string();
+    }
 
     ArchiveFormat format = IndexerFactory::detect_format(gz_path);
 

@@ -201,11 +201,11 @@ static FileMetadata collect_metadata_pfw(const std::string& pfw_path,
 
 static std::vector<FileMetadata> collect_all_metadata(
     const std::vector<std::string>& files, std::size_t checkpoint_size,
-    bool force_rebuild, TaskContext& p_ctx) {
+    bool force_rebuild, const std::string& index_dir, TaskContext& p_ctx) {
     std::vector<TaskResult<FileMetadata>::Future> futures;
     futures.reserve(files.size());
 
-    auto process_file = [checkpoint_size, force_rebuild](
+    auto process_file = [checkpoint_size, force_rebuild, &index_dir](
                             std::string file_path,
                             TaskContext& ctx) -> FileMetadata {
         const std::string pfw_gz_suffix = ".pfw.gz";
@@ -214,7 +214,10 @@ static std::vector<FileMetadata> collect_all_metadata(
         if (file_path.size() >= pfw_gz_suffix.size() &&
             file_path.compare(file_path.size() - pfw_gz_suffix.size(),
                               pfw_gz_suffix.size(), pfw_gz_suffix) == 0) {
-            std::string idx_path = file_path + ".idx";
+            fs::path idx_dir = index_dir.empty() ? fs::temp_directory_path()
+                                                 : fs::path(index_dir);
+            std::string base_name = fs::path(file_path).filename().string();
+            std::string idx_path = (idx_dir / (base_name + ".idx")).string();
             return collect_metadata_gz(file_path, idx_path, checkpoint_size,
                                        force_rebuild, ctx);
         } else if (file_path.size() >= pfw_suffix.size() &&
@@ -579,6 +582,10 @@ int main(int argc, char** argv) {
         .default_value(
             static_cast<std::size_t>(std::thread::hardware_concurrency()));
 
+    program.add_argument("--index-dir")
+        .help("Directory to store index files (default: system temp directory)")
+        .default_value<std::string>("");
+
     try {
         program.parse_args(argc, argv);
     } catch (const std::exception& err) {
@@ -595,6 +602,7 @@ int main(int argc, char** argv) {
     bool compress = program.get<bool>("--compress");
     std::size_t checkpoint_size = program.get<std::size_t>("--checkpoint-size");
     std::size_t num_threads = program.get<std::size_t>("--threads");
+    std::string index_dir = program.get<std::string>("--index-dir");
 
     log_dir = fs::absolute(log_dir).string();
     output_dir = fs::absolute(output_dir).string();
@@ -646,13 +654,15 @@ int main(int argc, char** argv) {
     // Phase 1: Collect metadata in parallel
     DFTRACER_UTILS_LOG_INFO("%s", "Phase 1: Collecting file metadata...");
     Pipeline metadata_pipeline;
-    auto metadata_task = metadata_pipeline.add_task<std::vector<std::string>,
-                                                    std::vector<FileMetadata>>(
-        [checkpoint_size, force](
-            std::vector<std::string> file_list,
-            TaskContext& ctx) -> std::vector<FileMetadata> {
-            return collect_all_metadata(file_list, checkpoint_size, force, ctx);
-        });
+    auto metadata_task =
+        metadata_pipeline
+            .add_task<std::vector<std::string>, std::vector<FileMetadata>>(
+                [checkpoint_size, force, index_dir](
+                    std::vector<std::string> file_list,
+                    TaskContext& ctx) -> std::vector<FileMetadata> {
+                    return collect_all_metadata(file_list, checkpoint_size,
+                                                force, index_dir, ctx);
+                });
 
     ThreadExecutor metadata_executor(num_threads);
     metadata_executor.execute(metadata_pipeline, input_files);

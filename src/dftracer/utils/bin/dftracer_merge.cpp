@@ -184,11 +184,12 @@ static MergeResult process_pfw_file(const std::string& pfw_path,
 
 static std::vector<MergeResult> process_files_parallel(
     const std::vector<std::string>& files, std::size_t checkpoint_size,
-    bool force_rebuild, const std::string& temp_dir, TaskContext& p_ctx) {
+    bool force_rebuild, const std::string& temp_dir,
+    const std::string& index_dir, TaskContext& p_ctx) {
     std::vector<TaskResult<MergeResult>::Future> futures;
     futures.reserve(files.size());
 
-    auto process_file = [&temp_dir, checkpoint_size, force_rebuild](
+    auto process_file = [&temp_dir, &index_dir, checkpoint_size, force_rebuild](
                             std::string file_path,
                             TaskContext& ctx) -> MergeResult {
         const std::string pfw_gz_suffix = ".pfw.gz";
@@ -197,8 +198,10 @@ static std::vector<MergeResult> process_files_parallel(
         if (file_path.size() >= pfw_gz_suffix.size() &&
             file_path.compare(file_path.size() - pfw_gz_suffix.size(),
                               pfw_gz_suffix.size(), pfw_gz_suffix) == 0) {
-            // Handle .pfw.gz files
-            std::string idx_path = file_path + ".idx";
+            fs::path idx_dir = index_dir.empty() ? fs::temp_directory_path()
+                                                 : fs::path(index_dir);
+            std::string base_name = fs::path(file_path).filename().string();
+            std::string idx_path = (idx_dir / (base_name + ".idx")).string();
             return process_pfw_gz_file(file_path, idx_path, checkpoint_size,
                                        temp_dir, force_rebuild, ctx);
         } else if (file_path.size() >= pfw_suffix.size() &&
@@ -280,6 +283,10 @@ int main(int argc, char** argv) {
         .default_value(
             static_cast<std::size_t>(std::thread::hardware_concurrency()));
 
+    program.add_argument("--index-dir")
+        .help("Directory to store index files (default: system temp directory)")
+        .default_value<std::string>("");
+
     try {
         program.parse_args(argc, argv);
     } catch (const std::exception& err) {
@@ -296,6 +303,7 @@ int main(int argc, char** argv) {
     bool gzip_only = program.get<bool>("--gzip-only");
     std::size_t checkpoint_size = program.get<std::size_t>("--checkpoint-size");
     std::size_t num_threads = program.get<std::size_t>("--threads");
+    std::string index_dir = program.get<std::string>("--index-dir");
 
     input_dir = fs::absolute(input_dir).string();
     output_file = fs::absolute(output_file).string();
@@ -364,11 +372,12 @@ int main(int argc, char** argv) {
     Pipeline pipeline;
     auto task_result =
         pipeline.add_task<std::vector<std::string>, std::vector<MergeResult>>(
-            [temp_dir, checkpoint_size, force_override](
+            [temp_dir, checkpoint_size, force_override, index_dir](
                 std::vector<std::string> file_list,
                 TaskContext& ctx) -> std::vector<MergeResult> {
                 return process_files_parallel(file_list, checkpoint_size,
-                                              force_override, temp_dir, ctx);
+                                              force_override, temp_dir,
+                                              index_dir, ctx);
             });
 
     ThreadExecutor executor(num_threads);
