@@ -273,9 +273,10 @@ static std::vector<ChunkData> create_chunk_mappings(
             }
 
             // Always respect chunk size limit
-            std::size_t events_to_take = (events_that_fit > 0)
-                                         ? std::min(remaining_events, events_that_fit)
-                                         : remaining_events;
+            std::size_t events_to_take =
+                (events_that_fit > 0)
+                    ? std::min(remaining_events, events_that_fit)
+                    : remaining_events;
 
             if (events_to_take == 0 && remaining_events > 0) {
                 if (!current_chunk.specs.empty()) {

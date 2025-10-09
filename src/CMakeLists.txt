@@ -173,7 +173,8 @@ set(DFTRACER_BINARIES
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_event_count.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_pgzip.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_merge.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_split.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_split.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_info.cpp)
 
 foreach(bin ${DFTRACER_BINARIES})
   string(REPLACE ".cpp" "" bin_exec ${bin})
