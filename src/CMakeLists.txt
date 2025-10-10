@@ -99,8 +99,8 @@ add_library(dftracer_utils::static ALIAS dftracer_utils)
 set_target_properties(dftracer_utils PROPERTIES OUTPUT_NAME dftracer_utils)
 target_link_libraries(
   dftracer_utils
-  PRIVATE xxHash::xxhash_static
-  PUBLIC ghc_filesystem cpp-logger Threads::Threads yyjson::yyjson_static)
+  PRIVATE 
+  PUBLIC ghc_filesystem cpp-logger Threads::Threads yyjson::yyjson_static xxHash::xxhash_static)
 target_add_rpath(dftracer_utils)
 add_stdfs_if_needed(dftracer_utils)
 
@@ -138,8 +138,8 @@ set_target_properties(
              SOVERSION ${PROJECT_VERSION_MAJOR})
 target_link_libraries(
   dftracer_utils_shared
-  PRIVATE xxHash::xxhash
-  PUBLIC ghc_filesystem cpp-logger Threads::Threads yyjson::yyjson)
+  PRIVATE 
+  PUBLIC ghc_filesystem cpp-logger Threads::Threads yyjson::yyjson xxHash::xxhash)
 target_add_rpath(dftracer_utils_shared)
 add_stdfs_if_needed(dftracer_utils_shared)
 
@@ -173,7 +173,8 @@ set(DFTRACER_BINARIES
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_event_count.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_pgzip.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_merge.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_split.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_split.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_info.cpp)
 
 foreach(bin ${DFTRACER_BINARIES})
   string(REPLACE ".cpp" "" bin_exec ${bin})

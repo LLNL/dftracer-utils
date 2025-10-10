@@ -33,7 +33,7 @@ dev = [
 ]
 
 [build-system]
-requires = ["scikit-build-core >=0.10", "nanobind >=1.3.2"]
+requires = ["scikit-build-core >=0.10"]
 build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
@@ -48,6 +48,8 @@ wheel.py-api = "cp312"
 
 # Package discovery
 wheel.packages = ["dftracer"]
+
+cmake.build-type = "Release"
 
 [tool.cibuildwheel]
 build-verbosity = 1
