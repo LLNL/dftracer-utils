@@ -82,9 +82,12 @@ class SizeEstimator : public LineProcessor {
 
 struct EventId {
     char prefix[256];
+    std::size_t len;
 
     bool operator<(const EventId& other) const {
-        return std::strcmp(prefix, other.prefix) < 0;
+        int cmp = std::memcmp(prefix, other.prefix, std::min(len, other.len));
+        if (cmp != 0) return cmp < 0;
+        return len < other.len;
     }
 };
 
@@ -103,10 +106,8 @@ class EventIdCollector : public LineProcessor {
         }
 
         EventId event;
-        std::size_t copy_len =
-            std::min(trimmed_length, sizeof(event.prefix) - 1);
-        std::memcpy(event.prefix, trimmed, copy_len);
-        event.prefix[copy_len] = '\0';
+        event.len = std::min(trimmed_length, sizeof(event.prefix));
+        std::memcpy(event.prefix, trimmed, event.len);
 
         events.push_back(event);
         return true;
@@ -151,7 +152,7 @@ static std::uint64_t compute_event_hash(
     XXH3_64bits_reset_withSeed(state, 0);
 
     for (const auto& event : events) {
-        XXH3_64bits_update(state, event.prefix, std::strlen(event.prefix));
+        XXH3_64bits_update(state, event.prefix, event.len);
     }
 
     std::uint64_t hash = XXH3_64bits_digest(state);
@@ -946,8 +947,7 @@ int main(int argc, char** argv) {
         XXH3_state_t* output_state = XXH3_createState();
         XXH3_64bits_reset_withSeed(output_state, 0);
         for (const auto& event : output_events) {
-            XXH3_64bits_update(output_state, event.prefix,
-                               std::strlen(event.prefix));
+            XXH3_64bits_update(output_state, event.prefix, event.len);
         }
         std::uint64_t output_hash = XXH3_64bits_digest(output_state);
         XXH3_freeState(output_state);
