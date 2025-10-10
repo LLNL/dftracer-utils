@@ -49,9 +49,7 @@ wheel.py-api = "cp312"
 # Package discovery
 wheel.packages = ["dftracer"]
 
-cmake.args = [
-    "-DCMAKE_BUILD_TYPE=Release",
-]
+cmake.build-type = "Release"
 
 [tool.cibuildwheel]
 build-verbosity = 1
