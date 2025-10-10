@@ -10,7 +10,6 @@
 #include <dftracer/utils/utils/filesystem.h>
 #include <dftracer/utils/utils/string.h>
 #include <xxhash.h>
-#include <yyjson.h>
 #include <zlib.h>
 
 #include <algorithm>
@@ -82,14 +81,10 @@ class SizeEstimator : public LineProcessor {
 };
 
 struct EventId {
-    std::int64_t id;
-    std::int64_t pid;
-    std::int64_t tid;
+    char prefix[256];
 
     bool operator<(const EventId& other) const {
-        if (id != other.id) return id < other.id;
-        if (pid != other.pid) return pid < other.pid;
-        return tid < other.tid;
+        return std::strcmp(prefix, other.prefix) < 0;
     }
 };
 
@@ -107,36 +102,13 @@ class EventIdCollector : public LineProcessor {
             return true;
         }
 
-        yyjson_doc* doc = yyjson_read(trimmed, trimmed_length, 0);
-        if (!doc) return true;
+        EventId event;
+        std::size_t copy_len =
+            std::min(trimmed_length, sizeof(event.prefix) - 1);
+        std::memcpy(event.prefix, trimmed, copy_len);
+        event.prefix[copy_len] = '\0';
 
-        yyjson_val* root = yyjson_doc_get_root(doc);
-        if (!yyjson_is_obj(root)) {
-            yyjson_doc_free(doc);
-            return true;
-        }
-
-        EventId event{-1, -1, -1};
-        yyjson_val* id_val = yyjson_obj_get(root, "id");
-        if (id_val && yyjson_is_int(id_val)) {
-            event.id = yyjson_get_int(id_val);
-        }
-
-        yyjson_val* pid_val = yyjson_obj_get(root, "pid");
-        if (pid_val && yyjson_is_int(pid_val)) {
-            event.pid = yyjson_get_int(pid_val);
-        }
-
-        yyjson_val* tid_val = yyjson_obj_get(root, "tid");
-        if (tid_val && yyjson_is_int(tid_val)) {
-            event.tid = yyjson_get_int(tid_val);
-        }
-
-        if (event.id >= 0) {
-            events.push_back(event);
-        }
-
-        yyjson_doc_free(doc);
+        events.push_back(event);
         return true;
     }
 };
@@ -179,9 +151,7 @@ static std::uint64_t compute_event_hash(
     XXH3_64bits_reset_withSeed(state, 0);
 
     for (const auto& event : events) {
-        XXH3_64bits_update(state, &event.id, sizeof(event.id));
-        XXH3_64bits_update(state, &event.pid, sizeof(event.pid));
-        XXH3_64bits_update(state, &event.tid, sizeof(event.tid));
+        XXH3_64bits_update(state, event.prefix, std::strlen(event.prefix));
     }
 
     std::uint64_t hash = XXH3_64bits_digest(state);
@@ -941,17 +911,16 @@ int main(int argc, char** argv) {
                 std::vector<TaskResult<std::vector<EventId>>::Future> futures;
                 futures.reserve(result_list.size());
 
-                auto collect_fn =
-                    [checkpoint_size](
-                        ChunkResult result,
-                        TaskContext& ctx) -> std::vector<EventId> {
-                    return collect_output_events(result, checkpoint_size, ctx);
-                };
-
                 for (const auto& result : result_list) {
                     auto task_result =
                         p_ctx.emit<ChunkResult, std::vector<EventId>>(
-                            collect_fn, Input{result});
+                            [checkpoint_size](
+                                ChunkResult chunk_result,
+                                TaskContext& ctx) -> std::vector<EventId> {
+                                return collect_output_events(
+                                    chunk_result, checkpoint_size, ctx);
+                            },
+                            Input{result});
                     futures.push_back(std::move(task_result.future()));
                 }
 
@@ -977,9 +946,8 @@ int main(int argc, char** argv) {
         XXH3_state_t* output_state = XXH3_createState();
         XXH3_64bits_reset_withSeed(output_state, 0);
         for (const auto& event : output_events) {
-            XXH3_64bits_update(output_state, &event.id, sizeof(event.id));
-            XXH3_64bits_update(output_state, &event.pid, sizeof(event.pid));
-            XXH3_64bits_update(output_state, &event.tid, sizeof(event.tid));
+            XXH3_64bits_update(output_state, event.prefix,
+                               std::strlen(event.prefix));
         }
         std::uint64_t output_hash = XXH3_64bits_digest(output_state);
         XXH3_freeState(output_state);
