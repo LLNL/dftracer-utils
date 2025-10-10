@@ -10,6 +10,7 @@
 #include <dftracer/utils/utils/filesystem.h>
 #include <dftracer/utils/utils/string.h>
 #include <xxhash.h>
+#include <yyjson.h>
 #include <zlib.h>
 
 #include <algorithm>
@@ -81,13 +82,14 @@ class SizeEstimator : public LineProcessor {
 };
 
 struct EventId {
-    char prefix[256];
-    std::size_t len;
+    std::int64_t id;
+    std::int64_t pid;
+    std::int64_t tid;
 
     bool operator<(const EventId& other) const {
-        int cmp = std::memcmp(prefix, other.prefix, std::min(len, other.len));
-        if (cmp != 0) return cmp < 0;
-        return len < other.len;
+        if (id != other.id) return id < other.id;
+        if (pid != other.pid) return pid < other.pid;
+        return tid < other.tid;
     }
 };
 
@@ -105,11 +107,36 @@ class EventIdCollector : public LineProcessor {
             return true;
         }
 
-        EventId event;
-        event.len = std::min(trimmed_length, sizeof(event.prefix));
-        std::memcpy(event.prefix, trimmed, event.len);
+        yyjson_doc* doc = yyjson_read(trimmed, trimmed_length, 0);
+        if (!doc) return true;
 
-        events.push_back(event);
+        yyjson_val* root = yyjson_doc_get_root(doc);
+        if (!yyjson_is_obj(root)) {
+            yyjson_doc_free(doc);
+            return true;
+        }
+
+        EventId event{-1, -1, -1};
+        yyjson_val* id_val = yyjson_obj_get(root, "id");
+        if (id_val && yyjson_is_int(id_val)) {
+            event.id = yyjson_get_int(id_val);
+        }
+
+        yyjson_val* pid_val = yyjson_obj_get(root, "pid");
+        if (pid_val && yyjson_is_int(pid_val)) {
+            event.pid = yyjson_get_int(pid_val);
+        }
+
+        yyjson_val* tid_val = yyjson_obj_get(root, "tid");
+        if (tid_val && yyjson_is_int(tid_val)) {
+            event.tid = yyjson_get_int(tid_val);
+        }
+
+        if (event.id >= 0) {
+            events.push_back(event);
+        }
+
+        yyjson_doc_free(doc);
         return true;
     }
 };
@@ -152,7 +179,9 @@ static std::uint64_t compute_event_hash(
     XXH3_64bits_reset_withSeed(state, 0);
 
     for (const auto& event : events) {
-        XXH3_64bits_update(state, event.prefix, event.len);
+        XXH3_64bits_update(state, &event.id, sizeof(event.id));
+        XXH3_64bits_update(state, &event.pid, sizeof(event.pid));
+        XXH3_64bits_update(state, &event.tid, sizeof(event.tid));
     }
 
     std::uint64_t hash = XXH3_64bits_digest(state);
@@ -947,7 +976,9 @@ int main(int argc, char** argv) {
         XXH3_state_t* output_state = XXH3_createState();
         XXH3_64bits_reset_withSeed(output_state, 0);
         for (const auto& event : output_events) {
-            XXH3_64bits_update(output_state, event.prefix, event.len);
+            XXH3_64bits_update(output_state, &event.id, sizeof(event.id));
+            XXH3_64bits_update(output_state, &event.pid, sizeof(event.pid));
+            XXH3_64bits_update(output_state, &event.tid, sizeof(event.tid));
         }
         std::uint64_t output_hash = XXH3_64bits_digest(output_state);
         XXH3_freeState(output_state);
