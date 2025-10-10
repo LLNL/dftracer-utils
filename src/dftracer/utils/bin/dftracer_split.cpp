@@ -933,19 +933,35 @@ int main(int argc, char** argv) {
         std::uint64_t input_hash = compute_event_hash(chunk_metadata);
 
         Pipeline verify_pipeline;
-        auto verify_task =
-            verify_pipeline.add_task<std::vector<ChunkResult>,
-                                     std::vector<std::vector<EventId>>>(
-                [checkpoint_size](
-                    std::vector<ChunkResult> result_list,
-                    TaskContext& ctx) -> std::vector<std::vector<EventId>> {
-                    std::vector<std::vector<EventId>> all_events;
-                    for (const auto& result : result_list) {
-                        all_events.push_back(collect_output_events(
-                            result, checkpoint_size, ctx));
-                    }
-                    return all_events;
-                });
+        auto verify_task = verify_pipeline.add_task<
+            std::vector<ChunkResult>, std::vector<std::vector<EventId>>>(
+            [checkpoint_size](
+                std::vector<ChunkResult> result_list,
+                TaskContext& p_ctx) -> std::vector<std::vector<EventId>> {
+                std::vector<TaskResult<std::vector<EventId>>::Future> futures;
+                futures.reserve(result_list.size());
+
+                auto collect_fn =
+                    [checkpoint_size](
+                        ChunkResult result,
+                        TaskContext& ctx) -> std::vector<EventId> {
+                    return collect_output_events(result, checkpoint_size, ctx);
+                };
+
+                for (const auto& result : result_list) {
+                    auto task_result =
+                        p_ctx.emit<ChunkResult, std::vector<EventId>>(
+                            collect_fn, Input{result});
+                    futures.push_back(std::move(task_result.future()));
+                }
+
+                std::vector<std::vector<EventId>> all_events;
+                all_events.reserve(result_list.size());
+                for (auto& future : futures) {
+                    all_events.push_back(future.get());
+                }
+                return all_events;
+            });
 
         executor.execute(verify_pipeline, results);
         auto all_output_events = verify_task.get();
