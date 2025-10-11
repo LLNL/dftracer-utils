@@ -308,6 +308,7 @@ int main(int argc, char** argv) {
 
     std::uint64_t total_compressed = 0;
     std::uint64_t total_uncompressed = 0;
+    std::uint64_t total_lines = 0;
     std::size_t successful = 0;
 
     for (const auto& info : all_info) {
@@ -317,6 +318,7 @@ int main(int argc, char** argv) {
             successful++;
             total_compressed += info.compressed_size;
             total_uncompressed += info.uncompressed_size;
+            total_lines += info.num_lines;
         }
     }
 
@@ -330,6 +332,7 @@ int main(int argc, char** argv) {
         std::printf("Total Files: %zu\n", files.size());
         std::printf("Successful: %zu\n", successful);
         std::printf("Failed: %zu\n", files.size() - successful);
+        std::printf("Total Lines: %llu\n", (unsigned long long)total_lines);
         std::printf("Total Compressed: %s\n",
                     format_size(total_compressed).c_str());
         std::printf("Total Uncompressed: %s\n",
