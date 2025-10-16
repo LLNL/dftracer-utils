@@ -1,12 +1,31 @@
 set(CPM_USE_LOCAL_PACKAGES ON)
 set(CPM_SOURCE_CACHE "${CMAKE_SOURCE_DIR}/.cpmsource")
 
+find_package(Threads REQUIRED)
+
+set(DEPENDENCY_LIBRARY_DIRS "" PARENT_SCOPE)
+
+if(CMAKE_VERSION VERSION_LESS 3.18)
+  set(DEV_MODULE Development)
+else()
+  set(DEV_MODULE Development.Module)
+endif()
+
+find_package(
+  Python 3.8
+  COMPONENTS Interpreter ${DEV_MODULE}
+  OPTIONAL_COMPONENTS Development.SABIModule)
+
 function(need_cpplogger)
   if(NOT cpplogger_ADDED)
     cpmaddpackage(
       NAME cpplogger GITHUB_REPOSITORY hariharan-devarajan/cpp-logger
-      # VERSION 0.0.4 GIT_TAG v0.0.4
-      GIT_TAG e7e73bb331449b7dc44536539414a22985039aa9)
+      GIT_TAG 22201852471578483f3aa6b754dcb35a09d6838f
+      OPTIONS
+      FORCE YES)
+    if(cpplogger_ADDED AND SKBUILD)
+        set(DEPENDENCY_LIBRARY_DIRS "${DEPENDENCY_LIBRARY_DIRS}" ${Python_SITELIB}/${CMAKE_INSTALL_LIBDIR} PARENT_SCOPE)
+    endif() 
   endif()
 endfunction()
 

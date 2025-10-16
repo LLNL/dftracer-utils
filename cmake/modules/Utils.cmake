@@ -22,3 +22,23 @@ function(set_coverage_compiler_flags ENABLE_COVERAGE)
         "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} --coverage")
   endif()
 endfunction()
+
+function(create_venv_symlink target_name)
+    file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/symlink_${target_name}.sh CONTENT "echo -- Installing: symlink ${CMAKE_INSTALL_VENV_BIN_DIR}/$<TARGET_FILE_NAME:${target_name}> from ${CMAKE_INSTALL_BINDIR}/$<TARGET_FILE_NAME:${target_name}>;ln -sf ${SKBUILD_PLATLIB_DIR}/${CMAKE_INSTALL_BINDIR}/$<TARGET_FILE_NAME:${target_name}> ${CMAKE_INSTALL_VENV_BIN_DIR}/$<TARGET_FILE_NAME:${target_name}>")
+    install(CODE "execute_process(
+                COMMAND bash -c \"set -e
+                mkdir -p ${CMAKE_INSTALL_VENV_BIN_DIR}
+                chmod +x ${CMAKE_BINARY_DIR}/symlink_${target_name}.sh
+                . ${CMAKE_BINARY_DIR}/symlink_${target_name}.sh
+                \")")
+endfunction()
+
+function(print_all_variables)
+    message(STATUS "CMake Variables:")
+    get_cmake_property(_variableNames VARIABLES)
+    list(SORT _variableNames)
+
+    foreach(_variableName ${_variableNames})
+        message(STATUS "${_variableName}=${${_variableName}}")
+    endforeach()
+endfunction()

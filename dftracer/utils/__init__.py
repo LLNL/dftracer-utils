@@ -1,4 +1,5 @@
 from typing import Optional, Union
+from importlib.metadata import version, PackageNotFoundError
 
 from .dftracer_utils_ext import (
     Reader,  # noqa: F401
@@ -6,6 +7,12 @@ from .dftracer_utils_ext import (
     IndexerCheckpoint,  # noqa: F401
     JSON,  # noqa: F401
 )
+
+try:
+    __version__ = version("dftracer-utils")
+except PackageNotFoundError:
+    # package is not installed
+    pass
 
 def dft_reader(
     gzip_path_or_indexer: Union[str, Indexer], 
