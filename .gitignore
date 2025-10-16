@@ -74,3 +74,4 @@ traces
 refs
 dfanalyzer
 *.ipynb
+_version.py

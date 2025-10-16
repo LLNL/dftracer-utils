@@ -218,9 +218,9 @@ void ThreadScheduler::worker_thread() {
             std::any result;
 
             if (task.task_ptr) {
+                TaskContext task_context(this, current_execution_context_,
+                                         task.task_id);
                 if (task.task_ptr->needs_context()) {
-                    TaskContext task_context(this, current_execution_context_,
-                                             task.task_id);
                     task.task_ptr->setup_context(&task_context);
                 }
 

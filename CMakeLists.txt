@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.20)
 
 set(DFTRACER_UTILS_VERSION_MAJOR 0)
 set(DFTRACER_UTILS_VERSION_MINOR 1)
@@ -21,6 +21,7 @@ set(DFTRACER_UTILS_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_PATCH}")
 set(DFTRACER_UTILS_PACKAGE_STRING
     "${DFTRACER_UTILS_PACKAGE_NAME} ${DFTRACER_UTILS_PACKAGE_VERSION}")
 set(DFTRACER_UTILS_PACKAGE_TARNAME "${DFTRACER_UTILS_PACKAGE}")
+set(DEPENDENCY_LIBRARY_DIRS "")
 
 # ##############################################################################
 # Options
@@ -36,15 +37,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 # Enable optimization
 
-if(DFTRACER_UTILS_DEBUG)
-  set(CMAKE_CXX_FLAGS_DEBUG
-      "-O0 -g -DDEBUG"
-      CACHE STRING "Debug flags" FORCE)
-else()
-  set(CMAKE_CXX_FLAGS_RELEASE
-      "-O3 -DNDEBUG"
-      CACHE STRING "Release flags" FORCE)
-endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ##############################################################################
@@ -63,13 +55,17 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/Rpath.cmake)
 
 if(SKBUILD)
   set(CMAKE_INSTALL_LIBDIR
-      "dftracer/utils/lib"
+      "dftracer/lib"
       CACHE STRING "Library install directory" FORCE)
   set(CMAKE_INSTALL_BINDIR
-      "${SKBUILD_SCRIPTS_DIR}"
+      # "${SKBUILD_SCRIPTS_DIR}"
+      "dftracer/bin"
       CACHE STRING "Binary install directory" FORCE)
+  set(CMAKE_INSTALL_VENV_BIN_DIR
+      "${SKBUILD_SCRIPTS_DIR}"
+      CACHE STRING "Virtualenv build directory" FORCE)
   set(CMAKE_INSTALL_INCLUDEDIR
-      "dftracer/utils/include"
+      "dftracer/include"
       CACHE STRING "Include install directory" FORCE)
 endif()
 

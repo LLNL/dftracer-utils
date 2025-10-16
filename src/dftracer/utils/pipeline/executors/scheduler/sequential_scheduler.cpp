@@ -99,9 +99,9 @@ void SequentialScheduler::process_all_tasks() {
             std::any result;
 
             if (task.task_ptr) {
+                TaskContext task_context(this, current_execution_context_,
+                                         task.task_id);
                 if (task.task_ptr->needs_context()) {
-                    TaskContext task_context(this, current_execution_context_,
-                                             task.task_id);
                     task.task_ptr->setup_context(&task_context);
                 }
 
@@ -119,37 +119,18 @@ void SequentialScheduler::process_all_tasks() {
                 result = task.input;
             }
 
-            // Check if this is a pipeline task (not a dynamic task)
             bool is_pipeline_task =
                 current_pipeline_ &&
                 task.task_id <
                     static_cast<TaskIndex>(current_pipeline_->size());
 
-            // Check if task has dependents
-            bool has_dependents =
-                !current_execution_context_->get_task_dependents(task.task_id)
-                     .empty();
-
             current_execution_context_->set_task_output(task.task_id, result);
 
-            // Fulfill promise for ALL tasks
             if (is_pipeline_task) {
-                // Pipeline task promises handled by Pipeline
-                if (has_dependents) {
-                    current_pipeline_->fulfill_promise(task.task_id, result);
-                } else {
-                    current_pipeline_->fulfill_promise(task.task_id,
-                                                       std::move(result));
-                }
+                current_pipeline_->fulfill_promise(task.task_id, result);
             } else {
-                // Dynamic task promises handled by ExecutorContext
-                if (has_dependents) {
-                    current_execution_context_->fulfill_dynamic_promise(
-                        task.task_id, result);
-                } else {
-                    current_execution_context_->fulfill_dynamic_promise(
-                        task.task_id, std::move(result));
-                }
+                current_execution_context_->fulfill_dynamic_promise(
+                    task.task_id, result);
             }
 
             task_completed_[task.task_id] = true;

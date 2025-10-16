@@ -9,7 +9,8 @@ need_ghc_filesystem()
 need_xxhash()
 need_cpplogger()
 need_yyjson()
-find_package(Threads REQUIRED)
+
+add_rpath()
 
 # ##############################################################################
 # Libraries
@@ -93,7 +94,6 @@ target_link_libraries(
   dftracer_utils
   PRIVATE 
   PUBLIC ghc_filesystem cpp-logger Threads::Threads yyjson::yyjson_static xxHash::xxhash_static)
-target_add_rpath(dftracer_utils)
 add_stdfs_if_needed(dftracer_utils)
 
 # Link SQLite3, zlib, and Arrow with appropriate variants for static library
@@ -132,7 +132,6 @@ target_link_libraries(
   dftracer_utils_shared
   PRIVATE 
   PUBLIC ghc_filesystem cpp-logger Threads::Threads yyjson::yyjson xxHash::xxhash)
-target_add_rpath(dftracer_utils_shared)
 add_stdfs_if_needed(dftracer_utils_shared)
 
 # Link SQLite3, zlib, and Arrow with appropriate variants for shared library
@@ -193,6 +192,9 @@ foreach(bin ${DFTRACER_BINARIES})
 
   # Install executable
   install(TARGETS ${bin_exec} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  if (SKBUILD)
+    create_venv_symlink(${bin_exec})
+  endif()
 endforeach()
 
 # ##############################################################################
@@ -237,8 +239,6 @@ if(Python_FOUND)
   set_target_properties(
     dftracer_utils_ext
     PROPERTIES PREFIX "" SUFFIX ".${Python_SOABI}${CMAKE_SHARED_MODULE_SUFFIX}")
-
-  target_add_rpath(dftracer_utils_ext)
 
   install(TARGETS dftracer_utils_ext LIBRARY DESTINATION dftracer/utils)
 endif()
