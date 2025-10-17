@@ -95,11 +95,8 @@ target_link_libraries(
   PRIVATE 
   PUBLIC ghc_filesystem cpp-logger Threads::Threads yyjson::yyjson_static xxHash::xxhash_static)
 add_stdfs_if_needed(dftracer_utils)
-
-# Link SQLite3, zlib, and Arrow with appropriate variants for static library
 link_sqlite3(dftracer_utils STATIC)
 link_zlib(dftracer_utils STATIC)
-# link_arrow(dftracer_utils STATIC)
 
 target_include_directories(
   dftracer_utils
@@ -134,10 +131,8 @@ target_link_libraries(
   PUBLIC ghc_filesystem cpp-logger Threads::Threads yyjson::yyjson xxHash::xxhash)
 add_stdfs_if_needed(dftracer_utils_shared)
 
-# Link SQLite3, zlib, and Arrow with appropriate variants for shared library
 link_sqlite3(dftracer_utils_shared SHARED)
 link_zlib(dftracer_utils_shared SHARED)
-# link_arrow(dftracer_utils_shared SHARED)
 
 target_include_directories(
   dftracer_utils_shared
@@ -158,17 +153,17 @@ endif()
 # ##############################################################################
 
 set(DFTRACER_BINARIES
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_reader.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_tar.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_event_count.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_pgzip.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_merge.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_split.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/dftracer_info.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_reader.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_tar.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_event_count.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_pgzip.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_merge.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_split.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_info.cpp)
 
 foreach(bin ${DFTRACER_BINARIES})
   string(REPLACE ".cpp" "" bin_exec ${bin})
-  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/bin/" "" bin_exec
+  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/" "" bin_exec
                  ${bin_exec})
 
   add_executable(${bin_exec} ${bin})
@@ -213,11 +208,6 @@ find_package(
   OPTIONAL_COMPONENTS Development.SABIModule)
 
 if(Python_FOUND)
-  # if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  # set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
-  # set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
-  # "MinSizeRel" "RelWithDebInfo") endif()
-
   # Python C API binding sources
   add_library(
     dftracer_utils_ext MODULE
@@ -235,7 +225,6 @@ if(Python_FOUND)
 
   target_link_libraries(dftracer_utils_ext PRIVATE dftracer_utils::shared
                                                    Python::Module)
-
   set_target_properties(
     dftracer_utils_ext
     PROPERTIES PREFIX "" SUFFIX ".${Python_SOABI}${CMAKE_SHARED_MODULE_SUFFIX}")
