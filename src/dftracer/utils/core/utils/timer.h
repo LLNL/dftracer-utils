@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_UTILS_TIMER_H
-#define DFTRACER_UTILS_UTILS_TIMER_H
+#ifndef DFTRACER_UTILS_CORE_UTILS_TIMER_H
+#define DFTRACER_UTILS_CORE_UTILS_TIMER_H
 
 #include <chrono>
 #include <cstddef>
@@ -52,4 +52,4 @@ class Timer {
 
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_UTILS_TIMER_H
+#endif  // DFTRACER_UTILS_CORE_UTILS_TIMER_H

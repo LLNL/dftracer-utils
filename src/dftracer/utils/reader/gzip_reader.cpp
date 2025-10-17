@@ -1,9 +1,9 @@
+#include <dftracer/utils/core/utils/timer.h>
 #include <dftracer/utils/indexer/indexer.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/reader/error.h>
 #include <dftracer/utils/reader/gzip_reader.h>
 #include <dftracer/utils/reader/string_line_processor.h>
-#include <dftracer/utils/core/utils/timer.h>
 
 #include <cstdio>
 #include <cstring>

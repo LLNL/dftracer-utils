@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_PIPELINE_TASKS_TASK_TAG_H
-#define DFTRACER_UTILS_PIPELINE_TASKS_TASK_TAG_H
+#ifndef DFTRACER_UTILS_CORE_PIPELINE_TASKS_TASK_TAG_H
+#define DFTRACER_UTILS_CORE_PIPELINE_TASKS_TASK_TAG_H
 
 #include <dftracer/utils/core/common/typedefs.h>
 
@@ -48,4 +48,4 @@ struct DependsOn {
 
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_PIPELINE_TASKS_TASK_TAG_H
+#endif  // DFTRACER_UTILS_CORE_PIPELINE_TASKS_TASK_TAG_H

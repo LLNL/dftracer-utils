@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_COMMON_LOGGING_H
-#define DFTRACER_UTILS_COMMON_LOGGING_H
+#ifndef DFTRACER_UTILS_CORE_COMMON_LOGGING_H
+#define DFTRACER_UTILS_CORE_COMMON_LOGGING_H
 
 #include <dftracer/utils/core/common/config.h>
 #include <sys/types.h>
@@ -214,4 +214,4 @@ inline std::string dftracer_utils_macro_get_time() {
 #define DFTRACER_UTILS_LOG_STDERR_REDIRECT(fpath)
 #endif  // DFTRACER_UTILS_LOGGER_CPP_LOGGER
 
-#endif  // DFTRACER_UTILS_COMMON_LOGGING_H
+#endif  // DFTRACER_UTILS_CORE_COMMON_LOGGING_H

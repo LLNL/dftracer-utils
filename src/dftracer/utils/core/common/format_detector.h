@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_INDEXER_FORMAT_DETECTOR_H
-#define DFTRACER_UTILS_INDEXER_FORMAT_DETECTOR_H
+#ifndef DFTRACER_UTILS_CORE_COMMON_FORMAT_DETECTOR_H
+#define DFTRACER_UTILS_CORE_COMMON_FORMAT_DETECTOR_H
 
 #include <dftracer/utils/core/common/archive_format.h>
 
@@ -24,4 +24,4 @@ class FormatDetector {
 };
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_COMMON_FORMAT_DETECTOR_H
+#endif  // DFTRACER_UTILS_CORE_COMMON_FORMAT_DETECTOR_H

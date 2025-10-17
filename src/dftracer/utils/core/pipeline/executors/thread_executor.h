@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_PIPELINE_EXECUTORS_THREAD_EXECUTOR_H
-#define DFTRACER_UTILS_PIPELINE_EXECUTORS_THREAD_EXECUTOR_H
+#ifndef DFTRACER_UTILS_CORE_PIPELINE_EXECUTORS_THREAD_EXECUTOR_H
+#define DFTRACER_UTILS_CORE_PIPELINE_EXECUTORS_THREAD_EXECUTOR_H
 
 #include <dftracer/utils/core/pipeline/executors/executor.h>
 #include <dftracer/utils/core/pipeline/executors/scheduler/thread_scheduler.h>
@@ -32,4 +32,4 @@ class ThreadExecutor : public Executor {
 
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_PIPELINE_EXECUTORS_THREAD_EXECUTOR_H
+#endif  // DFTRACER_UTILS_CORE_PIPELINE_EXECUTORS_THREAD_EXECUTOR_H

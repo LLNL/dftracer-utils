@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_PIPELINE_EXECUTORS_EXECUTOR_CONTEXT_H
-#define DFTRACER_UTILS_PIPELINE_EXECUTORS_EXECUTOR_CONTEXT_H
+#ifndef DFTRACER_UTILS_CORE_PIPELINE_EXECUTORS_EXECUTOR_CONTEXT_H
+#define DFTRACER_UTILS_CORE_PIPELINE_EXECUTORS_EXECUTOR_CONTEXT_H
 
 #include <dftracer/utils/core/common/typedefs.h>
 #include <dftracer/utils/core/pipeline/executors/executor_task_output.h>
@@ -105,4 +105,4 @@ class ExecutorContext {
 
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_PIPELINE_EXECUTORS_EXECUTOR_CONTEXT_H
+#endif  // DFTRACER_UTILS_CORE_PIPELINE_EXECUTORS_EXECUTOR_CONTEXT_H

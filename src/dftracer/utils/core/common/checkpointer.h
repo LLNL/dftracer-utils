@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_COMMON_CHECKPOINTER_H
-#define DFTRACER_UTILS_COMMON_CHECKPOINTER_H
+#ifndef DFTRACER_UTILS_CORE_COMMON_CHECKPOINTER_H
+#define DFTRACER_UTILS_CORE_COMMON_CHECKPOINTER_H
 
 #include <dftracer/utils/core/common/constants.h>
 #include <dftracer/utils/core/common/inflater.h>
@@ -142,4 +142,4 @@ struct Checkpointer {
 };
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_COMMON_CHECKPOINTER_H
+#endif  // DFTRACER_UTILS_CORE_COMMON_CHECKPOINTER_H

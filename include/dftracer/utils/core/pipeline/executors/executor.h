@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_PIPELINE_EXECUTORS_EXECUTOR_H
-#define DFTRACER_UTILS_PIPELINE_EXECUTORS_EXECUTOR_H
+#ifndef DFTRACER_UTILS_CORE_PIPELINE_EXECUTORS_EXECUTOR_H
+#define DFTRACER_UTILS_CORE_PIPELINE_EXECUTORS_EXECUTOR_H
 
 #include <dftracer/utils/core/pipeline/executors/executor_type.h>
 #include <dftracer/utils/core/pipeline/executors/progress_callback.h>
@@ -34,4 +34,4 @@ class Executor {
 
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_PIPELINE_EXECUTORS_EXECUTOR_H
+#endif  // DFTRACER_UTILS_CORE_PIPELINE_EXECUTORS_EXECUTOR_H

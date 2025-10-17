@@ -1,11 +1,11 @@
 #include <dftracer/utils/core/common/config.h>
 #include <dftracer/utils/core/common/constants.h>
+#include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/indexer/indexer.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/reader/reader.h>
 #include <dftracer/utils/reader/reader_factory.h>
-#include <dftracer/utils/core/common/filesystem.h>
 
 #include <algorithm>
 #include <argparse/argparse.hpp>
@@ -118,12 +118,14 @@ int main(int argc, char **argv) {
             (idx_dir / (base_name + constants::indexer::EXTENSION)).string();
     }
 
+#if DFTRACER_UTILS_LOGGER_DEBUG_ENABLED
     ArchiveFormat format = IndexerFactory::detect_format(gz_path);
 
     DFTRACER_UTILS_LOG_DEBUG("Detected format: %s",
                              format == ArchiveFormat::TAR_GZ ? "TAR.GZ"
                              : format == ArchiveFormat::GZIP ? "GZIP"
                                                              : "UNKNOWN");
+#endif
 
     // Create indexer first
     std::unique_ptr<Indexer> indexer;
@@ -138,7 +140,7 @@ int main(int argc, char **argv) {
             }
             DFTRACER_UTILS_LOG_DEBUG("Index file '%s' does not exist",
                                      idx_path.c_str());
-            DFTRACER_UTILS_LOG_DEBUG("Will create new index file");
+            DFTRACER_UTILS_LOG_DEBUG("%s", "Will create new index file");
             force_rebuild = true;
         }
 

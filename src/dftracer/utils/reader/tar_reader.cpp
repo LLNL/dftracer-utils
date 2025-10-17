@@ -66,13 +66,13 @@ TarReader::~TarReader() {
                 // For externally managed indexer, release ownership without
                 // deleting
                 DFTRACER_UTILS_LOG_DEBUG(
-                    "Releasing externally managed TAR indexer");
+                    "%s", "Releasing externally managed TAR indexer");
                 indexer.release();
             } else {
                 // For internally managed indexer, let unique_ptr destructor
                 // handle it
                 DFTRACER_UTILS_LOG_DEBUG(
-                    "Destroying internally managed TAR indexer");
+                    "%s", "Destroying internally managed TAR indexer");
             }
         }
 
@@ -399,7 +399,7 @@ void TarReader::build_logical_mapping() const {
     }
 
     DFTRACER_UTILS_LOG_DEBUG(
-        "Building logical content mapping for TAR.GZ file");
+        "%s", "Building logical content mapping for TAR.GZ file");
 
     try {
         // Get all TAR file entries from the indexer
@@ -542,7 +542,7 @@ std::string TarReader::read_file_content(const TarFileInfo &file_info,
 
         if (!byte_stream) {
             DFTRACER_UTILS_LOG_DEBUG(
-                "Failed to create TAR byte stream for file content");
+                "%s", "Failed to create TAR byte stream for file content");
             return "";
         }
 

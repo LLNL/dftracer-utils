@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_PIPELINE_TASKS_TYPED_TASK_H
-#define DFTRACER_UTILS_PIPELINE_TASKS_TYPED_TASK_H
+#ifndef DFTRACER_UTILS_CORE_PIPELINE_TASKS_TYPED_TASK_H
+#define DFTRACER_UTILS_CORE_PIPELINE_TASKS_TYPED_TASK_H
 
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/pipeline/tasks/task.h>
@@ -41,4 +41,4 @@ class TypedTask : public Task {
 
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_PIPELINE_TASKS_TYPED_TASK_H
+#endif  // DFTRACER_UTILS_CORE_PIPELINE_TASKS_TYPED_TASK_H

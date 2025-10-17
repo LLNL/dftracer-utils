@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_PIPELINE_EXECUTORS_EXECUTOR_FACTORY_H
-#define DFTRACER_UTILS_PIPELINE_EXECUTORS_EXECUTOR_FACTORY_H
+#ifndef DFTRACER_UTILS_CORE_PIPELINE_EXECUTORS_EXECUTOR_FACTORY_H
+#define DFTRACER_UTILS_CORE_PIPELINE_EXECUTORS_EXECUTOR_FACTORY_H
 
 #include <dftracer/utils/core/pipeline/executors/executor.h>
 #include <dftracer/utils/core/pipeline/executors/executor_type.h>
@@ -22,4 +22,4 @@ class ExecutorFactory {
 
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_PIPELINE_EXECUTORS_EXECUTOR_FACTORY_H
+#endif  // DFTRACER_UTILS_CORE_PIPELINE_EXECUTORS_EXECUTOR_FACTORY_H

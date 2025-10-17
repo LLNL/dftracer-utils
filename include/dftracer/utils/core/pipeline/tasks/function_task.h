@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_PIPELINE_TASKS_FUNCTION_TASK_H
-#define DFTRACER_UTILS_PIPELINE_TASKS_FUNCTION_TASK_H
+#ifndef DFTRACER_UTILS_CORE_PIPELINE_TASKS_FUNCTION_TASK_H
+#define DFTRACER_UTILS_CORE_PIPELINE_TASKS_FUNCTION_TASK_H
 
 #include <dftracer/utils/core/pipeline/tasks/task_context.h>
 #include <dftracer/utils/core/pipeline/tasks/typed_task.h>
@@ -64,4 +64,4 @@ std::unique_ptr<FunctionTask<I, O>> make_task(
 }
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_PIPELINE_TASKS_FUNCTION_TASK_H
+#endif  // DFTRACER_UTILS_CORE_PIPELINE_TASKS_FUNCTION_TASK_H

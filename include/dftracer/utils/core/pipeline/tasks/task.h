@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_PIPELINE_TASKS_TASK_H
-#define DFTRACER_UTILS_PIPELINE_TASKS_TASK_H
+#ifndef DFTRACER_UTILS_CORE_PIPELINE_TASKS_TASK_H
+#define DFTRACER_UTILS_CORE_PIPELINE_TASKS_TASK_H
 
 #include <any>
 #include <cstdint>
@@ -32,4 +32,4 @@ class Task {
 
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_PIPELINE_TASKS_TASK_H
+#endif  // DFTRACER_UTILS_CORE_PIPELINE_TASKS_TASK_H

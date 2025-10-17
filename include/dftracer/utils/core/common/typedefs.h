@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_COMMON_TYPEDEFS_H
-#define DFTRACER_UTILS_COMMON_TYPEDEFS_H
+#ifndef DFTRACER_UTILS_CORE_COMMON_TYPEDEFS_H
+#define DFTRACER_UTILS_CORE_COMMON_TYPEDEFS_H
 
 #include <cstdint>
 
@@ -9,4 +9,4 @@ typedef int TaskIndex;
 
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_COMMON_TYPEDEFS_H
+#endif  // DFTRACER_UTILS_CORE_COMMON_TYPEDEFS_H

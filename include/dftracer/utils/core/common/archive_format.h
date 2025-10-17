@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_COMMON_ARCHIVE_FORMAT_H
-#define DFTRACER_UTILS_COMMON_ARCHIVE_FORMAT_H
+#ifndef DFTRACER_UTILS_CORE_COMMON_ARCHIVE_FORMAT_H
+#define DFTRACER_UTILS_CORE_COMMON_ARCHIVE_FORMAT_H
 
 namespace dftracer::utils {
 
@@ -25,4 +25,4 @@ inline const char* get_format_name(ArchiveFormat format) {
 }
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_COMMON_ARCHIVE_FORMAT_H
+#endif  // DFTRACER_UTILS_CORE_COMMON_ARCHIVE_FORMAT_H

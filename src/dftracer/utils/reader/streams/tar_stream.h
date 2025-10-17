@@ -81,7 +81,7 @@ class TarStream : public GzipStream {
             return;
         }
 
-        DFTRACER_UTILS_LOG_DEBUG("Building TAR logical mapping");
+        DFTRACER_UTILS_LOG_DEBUG("%s", "Building TAR logical mapping");
 
         auto tar_files = tar_indexer.list_files();
         file_mapping_.clear();

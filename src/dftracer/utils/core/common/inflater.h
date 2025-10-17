@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_COMMON_INFLATER_H
-#define DFTRACER_UTILS_COMMON_INFLATER_H
+#ifndef DFTRACER_UTILS_CORE_COMMON_INFLATER_H
+#define DFTRACER_UTILS_CORE_COMMON_INFLATER_H
 
 #include <dftracer/utils/core/common/constants.h>
 #include <dftracer/utils/core/common/logging.h>
@@ -156,4 +156,4 @@ class Inflater {
 
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_COMMON_INFLATER_H
+#endif  // DFTRACER_UTILS_CORE_COMMON_INFLATER_H

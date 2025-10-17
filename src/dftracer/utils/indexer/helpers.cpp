@@ -1,6 +1,6 @@
+#include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/indexer/helpers.h>
-#include <dftracer/utils/core/common/filesystem.h>
 #include <xxhash.h>
 
 // Platform-specific includes for file stats

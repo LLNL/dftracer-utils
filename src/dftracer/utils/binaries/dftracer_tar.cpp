@@ -1,12 +1,13 @@
 #include <dftracer/utils/core/common/config.h>
+#include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/indexer/tar_indexer.h>
-#include <dftracer/utils/core/common/filesystem.h>
 
 #include <argparse/argparse.hpp>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <memory>
 
@@ -117,7 +118,8 @@ int main(int argc, char** argv) {
         }
 
         // List files for TAR archives
-        if (list_files && indexer->get_format_name() == "TAR.GZ") {
+        if (list_files &&
+            std::strcmp(indexer->get_format_name(), "TAR.GZ") == 0) {
             // Try to cast to TarIndexer to access TAR-specific functionality
             auto* tar_indexer =
                 dynamic_cast<dftracer::utils::TarIndexer*>(indexer.get());

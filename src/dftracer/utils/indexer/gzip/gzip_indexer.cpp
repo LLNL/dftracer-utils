@@ -1,5 +1,6 @@
 #include <dftracer/utils/core/common/checkpointer.h>
 #include <dftracer/utils/core/common/constants.h>
+#include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/indexer/checkpoint_size.h>
 #include <dftracer/utils/indexer/common/gzip_checkpointer.h>
@@ -8,7 +9,6 @@
 #include <dftracer/utils/indexer/gzip/gzip_indexer.h>
 #include <dftracer/utils/indexer/gzip/queries/queries.h>
 #include <dftracer/utils/indexer/helpers.h>
-#include <dftracer/utils/core/common/filesystem.h>
 
 #include <cstdio>
 

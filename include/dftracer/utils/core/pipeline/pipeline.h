@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_PIPELINE_PIPELINE_H
-#define DFTRACER_UTILS_PIPELINE_PIPELINE_H
+#ifndef DFTRACER_UTILS_CORE_PIPELINE_PIPELINE_H
+#define DFTRACER_UTILS_CORE_PIPELINE_PIPELINE_H
 
 #include <dftracer/utils/core/common/typedefs.h>
 #include <dftracer/utils/core/pipeline/error.h>
@@ -164,4 +164,4 @@ class Pipeline {
 };
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_PIPELINE_PIPELINE_H
+#endif  // DFTRACER_UTILS_CORE_PIPELINE_PIPELINE_H

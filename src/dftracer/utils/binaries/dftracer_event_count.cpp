@@ -1,13 +1,13 @@
 #include <dftracer/utils/core/common/config.h>
+#include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/common/logging.h>
-#include <dftracer/utils/indexer/indexer.h>
 #include <dftracer/utils/core/pipeline/executors/thread_executor.h>
 #include <dftracer/utils/core/pipeline/pipeline.h>
+#include <dftracer/utils/core/utils/string.h>
+#include <dftracer/utils/indexer/indexer.h>
 #include <dftracer/utils/reader/line_processor.h>
 #include <dftracer/utils/reader/reader.h>
 #include <dftracer/utils/reader/reader_factory.h>
-#include <dftracer/utils/core/common/filesystem.h>
-#include <dftracer/utils/core/utils/string.h>
 
 #include <argparse/argparse.hpp>
 #include <atomic>
