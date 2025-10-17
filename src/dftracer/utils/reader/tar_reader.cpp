@@ -1,4 +1,4 @@
-#include <dftracer/utils/common/logging.h>
+#include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/indexer/tar/queries/queries.h>
 #include <dftracer/utils/reader/streams/tar_factory.h>

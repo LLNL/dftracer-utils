@@ -1,7 +1,7 @@
 #ifndef DFTRACER_UTILS_READER_STREAMS_TAR_STREAM_H
 #define DFTRACER_UTILS_READER_STREAMS_TAR_STREAM_H
 
-#include <dftracer/utils/common/logging.h>
+#include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/indexer/tar_indexer.h>
 #include <dftracer/utils/reader/streams/gzip_stream.h>
 #include <dftracer/utils/reader/tar_reader.h>

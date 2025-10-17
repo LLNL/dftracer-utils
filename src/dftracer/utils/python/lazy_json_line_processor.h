@@ -4,7 +4,7 @@
 #include <Python.h>
 #include <dftracer/utils/python/json.h>
 #include <dftracer/utils/reader/line_processor.h>
-#include <dftracer/utils/utils/string.h>
+#include <dftracer/utils/core/utils/string.h>
 
 class PyLazyJSONLineProcessor : public dftracer::utils::LineProcessor {
    public:

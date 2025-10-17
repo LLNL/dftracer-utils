@@ -17,13 +17,28 @@ add_rpath()
 # ##############################################################################
 
 # -----------------------------------------
-# Utils Base library
+# Utils Core library
 # -----------------------------------------
 
 set(DFTRACER_UTILS_SOURCES
     # Common
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/common/constants.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/common/format_detector.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/common/constants.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/common/format_detector.cpp
+    # Utilities
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/utils/timer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/utils/string.cpp
+    # Pipeline
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/error.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/pipeline.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/executors/executor_type.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/executors/executor_factory.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/executors/sequential_executor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/executors/thread_executor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/executors/scheduler/thread_scheduler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/executors/scheduler/thread_task_queue.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/executors/scheduler/sequential_scheduler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/executors/executor_context.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/tasks/task_context.cpp
     # Indexer
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/indexer/indexer_c.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/indexer/helpers.cpp
@@ -65,21 +80,6 @@ set(DFTRACER_UTILS_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/reader/tar_reader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/reader/reader_factory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/reader/error.cpp
-    # Utilities
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/utils/timer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/utils/string.cpp
-    # Pipeline
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/pipeline/error.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/pipeline/pipeline.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/pipeline/executors/executor_type.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/pipeline/executors/executor_factory.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/pipeline/executors/sequential_executor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/pipeline/executors/thread_executor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/pipeline/executors/scheduler/thread_scheduler.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/pipeline/executors/scheduler/thread_task_queue.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/pipeline/executors/scheduler/sequential_scheduler.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/pipeline/executors/executor_context.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/pipeline/tasks/task_context.cpp
 )
 
 # +++++++++++++++++++++++++++++++++++++++++

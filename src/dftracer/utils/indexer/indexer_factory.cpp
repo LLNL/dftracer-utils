@@ -1,5 +1,5 @@
-#include <dftracer/utils/common/format_detector.h>
-#include <dftracer/utils/common/logging.h>
+#include <dftracer/utils/core/common/format_detector.h>
+#include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/indexer/gzip_indexer.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/indexer/tar/tar_indexer.h>

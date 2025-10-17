@@ -1,8 +1,8 @@
-#include <dftracer/utils/common/config.h>
-#include <dftracer/utils/common/logging.h>
+#include <dftracer/utils/core/common/config.h>
+#include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/indexer/tar_indexer.h>
-#include <dftracer/utils/utils/filesystem.h>
+#include <dftracer/utils/core/common/filesystem.h>
 
 #include <argparse/argparse.hpp>
 #include <cstdio>

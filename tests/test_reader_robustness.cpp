@@ -3,7 +3,7 @@
 #include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/reader/reader.h>
 #include <dftracer/utils/reader/reader_factory.h>
-#include <dftracer/utils/utils/filesystem.h>
+#include <dftracer/utils/core/common/filesystem.h>
 #include <doctest/doctest.h>
 
 #include <algorithm>

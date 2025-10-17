@@ -1,11 +1,11 @@
-#include <dftracer/utils/common/archive_format.h>
-#include <dftracer/utils/common/config.h>
-#include <dftracer/utils/common/logging.h>
+#include <dftracer/utils/core/common/archive_format.h>
+#include <dftracer/utils/core/common/config.h>
+#include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/indexer/indexer.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
-#include <dftracer/utils/pipeline/executors/thread_executor.h>
-#include <dftracer/utils/pipeline/pipeline.h>
-#include <dftracer/utils/utils/filesystem.h>
+#include <dftracer/utils/core/pipeline/executors/thread_executor.h>
+#include <dftracer/utils/core/pipeline/pipeline.h>
+#include <dftracer/utils/core/common/filesystem.h>
 
 #include <argparse/argparse.hpp>
 #include <chrono>

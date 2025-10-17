@@ -3,7 +3,7 @@
 
 #include <Python.h>
 #include <dftracer/utils/reader/line_processor.h>
-#include <dftracer/utils/utils/timer.h>
+#include <dftracer/utils/core/utils/timer.h>
 
 #include <cstdio>
 #include <stdexcept>
