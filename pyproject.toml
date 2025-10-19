@@ -67,6 +67,10 @@ sdist.exclude = [
   "temp*",
   ".clang-*",
   "*.lock",
+  "*.venv*",
+  "*venv*",
+  "*.env",
+  "*.egg-info",
   "DEVELOPERS_GUIDE.md",
 ]
 
