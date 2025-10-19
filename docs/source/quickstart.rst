@@ -1,7 +1,7 @@
 Quick Start Guide
 =================
 
-This guide will help you get started with dftracer-utils quickly.
+This guide will help you get started with dftracer utilities quickly.
 
 Python Quick Start
 ------------------

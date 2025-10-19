@@ -1,7 +1,7 @@
 Installation
 ============
 
-This guide covers installation of dftracer-utils for both Python and C++ users.
+This guide covers installation of dftracer utilities for both Python and C++ users.
 
 Python Installation
 -------------------
@@ -9,7 +9,7 @@ Python Installation
 Using pip
 ~~~~~~~~~
 
-The easiest way to install dftracer-utils is via pip:
+The easiest way to install dftracer utilities is via pip:
 
 .. code-block:: bash
 
@@ -22,7 +22,7 @@ To install from source:
 
 .. code-block:: bash
 
-   git clone https://github.com/your-org/dftracer-utils.git
+   git clone https://github.com/LLNL/dftracer-utils.git
    cd dftracer-utils
    pip install .
 
@@ -38,7 +38,7 @@ C++ Installation
 Prerequisites
 ~~~~~~~~~~~~~
 
-Before building dftracer-utils, ensure you have:
+Before building dftracer utilities, ensure you have:
 
 - CMake 3.5 or higher
 - C++17 compatible compiler (GCC, Clang, or MSVC)
@@ -63,7 +63,7 @@ Building from Source
 
 .. code-block:: bash
 
-   git clone https://github.com/your-org/dftracer-utils.git
+   git clone https://github.com/LLNL/dftracer-utils.git
    cd dftracer-utils
    mkdir build && cd build
    cmake ..
