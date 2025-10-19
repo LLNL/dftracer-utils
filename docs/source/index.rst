@@ -1,0 +1,66 @@
+.. dftracer-utils documentation master file
+
+Welcome to dftracer-utils's documentation!
+==========================================
+
+**dftracer-utils** is a collection of utilities for DFTracer, providing powerful tools for
+trace file reading, indexing, and processing. The library includes both C++ APIs and Python
+bindings for flexible integration.
+
+Features
+--------
+
+- **High-performance trace file reading**: Efficient reading of compressed trace files
+- **Indexing capabilities**: Fast indexing and searching of trace data
+- **Pipeline processing**: Flexible data processing pipelines
+- **Python bindings**: Easy-to-use Python interface
+- **Cross-platform**: Works on Linux, macOS, and other Unix-like systems
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   installation
+   quickstart
+   cli
+   api/index
+   .. ifconfig:: cpp_api_enabled
+      cpp_api/index
+   developers
+
+Getting Started
+---------------
+
+To get started with dftracer-utils, check out the :doc:`installation` guide
+and then follow the :doc:`quickstart` tutorial.
+
+Installation
+~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   pip install dftracer-utils
+
+For more detailed installation instructions, see :doc:`installation`.
+
+Quick Example
+~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   from dftracer.utils import Reader
+
+   # Read a trace file
+   reader = Reader("path/to/trace.pfw.gz", "path/to/trace.pfw.gz.idx")
+
+   # Read specific lines
+   lines = reader.read_lines(0, 100)  # Read first 100 lines
+   for line in lines:
+       print(line)
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

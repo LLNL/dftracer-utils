@@ -24,6 +24,8 @@
             lcov
             openmpi
             cmake-format
+            doxygen
+            graphviz
             # valgrind-light
             # sqlite
             # zlib
@@ -41,6 +43,7 @@
           shellHook = ''
             export CC=gcc
             export CXX=g++
+            unset SOURCE_DATE_EPOCH
           '';
         };
       });
