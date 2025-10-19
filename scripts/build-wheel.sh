@@ -21,4 +21,3 @@ echo "Platform selected is $platform"
 auditwheel repair --plat $platform dist/*.whl -w dist/
 rm -rf $temp_dir
 rm dist/*linux_x86_64.whl
-rm dist/*.tar.gz
