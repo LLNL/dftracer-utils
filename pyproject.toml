@@ -47,8 +47,8 @@ build-dir = "build/{wheel_tag}"
 wheel.py-api = "cp312"
 
 # Package discovery
-wheel.packages = ["dftracer"]
-sdist.include = ["dftracer/utils/_version.py"]
+wheel.packages = ["python/dftracer"]
+sdist.include = ["python/dftracer/utils/_version.py"]
 sdist.exclude = [
   "tests/**",
   "cmake/**",
@@ -86,4 +86,4 @@ MACOSX_DEPLOYMENT_TARGET = "10.14"
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
-version_file = "dftracer/utils/_version.py"
+version_file = "python/dftracer/utils/_version.py"
