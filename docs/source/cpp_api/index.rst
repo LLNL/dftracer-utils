@@ -1,7 +1,7 @@
 C++ API Reference
 =================
 
-This section contains the C++ API documentation for dftracer-utils.
+This section contains the C++ API documentation for dftracer utilities.
 
 .. note::
    The C++ API documentation is generated using Doxygen and Breathe.
@@ -18,7 +18,7 @@ This section contains the C++ API documentation for dftracer-utils.
 Overview
 --------
 
-The dftracer-utils C++ library is organized into several namespaces:
+The dftracer utilities C++ library is organized into several namespaces:
 
 - ``dftracer::utils::core`` - Core utilities and data structures
 - ``dftracer::utils::reader`` - Trace file reading

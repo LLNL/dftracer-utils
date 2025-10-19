@@ -1,11 +1,11 @@
-.. dftracer-utils documentation master file
+.. dftracer utilities documentation master file
 
-Welcome to dftracer-utils's documentation!
-==========================================
+Welcome to dftracer utilities documentation!
+============================================
 
-**dftracer-utils** is a collection of utilities for DFTracer, providing powerful tools for
-trace file reading, indexing, and processing. The library includes both C++ APIs and Python
-bindings for flexible integration.
+**dftracer utilities** is a collection of utilities for `DFTracer <https://dftracer.readthedocs.io/>`_,
+providing powerful tools for trace file reading, indexing, and processing. The library includes
+both C++ APIs and Python bindings for flexible integration.
 
 Features
 --------
@@ -17,6 +17,13 @@ Features
 - **Cross-platform**: Works on Linux, macOS, and other Unix-like systems
 
 .. toctree::
+   :maxdepth: 1
+   :caption: Links:
+
+   DFTracer Documentation <https://dftracer.readthedocs.io/>
+   DFTracer GitHub <https://github.com/hariharan-devarajan/dftracer>
+
+.. toctree::
    :maxdepth: 2
    :caption: Contents:
 
@@ -24,14 +31,13 @@ Features
    quickstart
    cli
    api/index
-   .. ifconfig:: cpp_api_enabled
-      cpp_api/index
+   cpp_api/index
    developers
 
 Getting Started
 ---------------
 
-To get started with dftracer-utils, check out the :doc:`installation` guide
+To get started with dftracer utilities, check out the :doc:`installation` guide
 and then follow the :doc:`quickstart` tutorial.
 
 Installation

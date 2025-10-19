@@ -2,7 +2,7 @@
 
 A collection of utilities for DFTracer
 
-[![Documentation Status](https://readthedocs.org/projects/dftracer/badge/?version=latest)](https://dftracer.readthedocs.io/projects/utils/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/dftracer-utils/badge/?version=latest)](https://dftracer.readthedocs.io/projects/utils/)
 
 ## Documentation
 

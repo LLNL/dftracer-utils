@@ -1,6 +1,6 @@
 # Documentation
 
-This directory contains the documentation for dftracer-utils.
+This directory contains the documentation for dftracer utilities.
 
 ## Building Documentation Locally
 
