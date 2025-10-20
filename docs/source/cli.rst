@@ -3,8 +3,8 @@ Command-Line Tools
 
 DFTracer Utils provides several command-line utilities for working with DFTracer trace files and compressed archives.
 
-dft_reader
-----------
+dftracer_reader
+---------------
 
 **Description:** DFTracer utility for reading and indexing compressed files (GZIP, TAR.GZ)
 
@@ -12,7 +12,7 @@ dft_reader
 
 .. code-block:: bash
 
-   dft_reader [OPTIONS] file
+   dftracer_reader [OPTIONS] file
 
 **Arguments:**
 
@@ -20,27 +20,31 @@ dft_reader
 
 **Options:**
 
-- ``-i, --index <path>`` - Index file to use (default: auto-generated .idx file)
-- ``-s, --start <bytes>`` - Start position in bytes
-- ``-e, --end <bytes>`` - End position in bytes
-- ``-c, --checkpoint-size <bytes>`` - Checkpoint size for indexing in bytes (default: 10 MB)
+- ``-i, --index <path>`` - Index file to use (default: auto-generated in temp directory)
+- ``-s, --start <bytes>`` - Start position in bytes (default: -1)
+- ``-e, --end <bytes>`` - End position in bytes (default: -1)
+- ``-c, --checkpoint-size <bytes>`` - Checkpoint size for indexing in bytes (default: 33554432 B / 32 MB)
 - ``-f, --force-rebuild`` - Force rebuild of index even if it exists
-- ``--start-line <line>`` - Start line number
-- ``--end-line <line>`` - End line number
-- ``--num-lines <count>`` - Number of lines to read
+- ``--check`` - Check if index is valid
+- ``--read-buffer-size <bytes>`` - Size of the read buffer in bytes (default: 1MB)
+- ``--mode <mode>`` - Set the reading mode: bytes, line_bytes, or lines (default: bytes)
+- ``--index-dir <path>`` - Directory to store index files (default: system temp directory)
 
 **Example:**
 
 .. code-block:: bash
 
-   # Read lines 100-200 from a compressed file
-   dft_reader --start-line 100 --end-line 200 trace.pfw.gz
+   # Read bytes 100-200 from a compressed file
+   dftracer_reader --start 100 --end 200 trace.pfw.gz
+
+   # Read in line mode
+   dftracer_reader --mode lines --start 1 --end 100 trace.pfw.gz
 
    # Build index with custom checkpoint size
-   dft_reader --checkpoint-size 20971520 trace.pfw.gz
+   dftracer_reader --checkpoint-size 20971520 trace.pfw.gz
 
-dft_info
---------
+dftracer_info
+-------------
 
 **Description:** Display metadata and index information for DFTracer compressed files
 
@@ -48,34 +52,33 @@ dft_info
 
 .. code-block:: bash
 
-   dft_info [OPTIONS] files...
-
-**Arguments:**
-
-- ``files`` - One or more compressed files to analyze [required]
+   dftracer_info [OPTIONS]
 
 **Options:**
 
-- ``-j, --json`` - Output in JSON format
-- ``-c, --checkpoint-size <bytes>`` - Checkpoint size for indexing (default: 10 MB)
-- ``-t, --threads <count>`` - Number of threads for parallel processing
-- ``--rebuild`` - Force rebuild of indices
+- ``--files <files...>`` - Compressed files to inspect (GZIP, TAR.GZ)
+- ``-d, --directory <path>`` - Directory containing files to inspect
+- ``-v, --verbose`` - Show detailed information including index details
+- ``-f, --force-rebuild`` - Force rebuild index files
+- ``-c, --checkpoint-size <bytes>`` - Checkpoint size for indexing in bytes (default: 33554432 B / 32 MB)
+- ``--index-dir <path>`` - Directory to store index files (default: system temp directory)
+- ``--threads <count>`` - Number of threads for parallel processing (default: number of CPU cores)
 
 **Example:**
 
 .. code-block:: bash
 
-   # Show info for a single file
-   dft_info trace.pfw.gz
+   # Show info for files in a directory
+   dftracer_info -d ./logs
 
-   # Show info for multiple files in JSON format
-   dft_info --json trace1.pfw.gz trace2.pfw.gz
+   # Show info for specific files with verbose output
+   dftracer_info --files trace1.pfw.gz trace2.pfw.gz -v
 
    # Analyze with 4 threads
-   dft_info --threads 4 trace*.pfw.gz
+   dftracer_info --threads 4 -d ./traces
 
-dft_merge
----------
+dftracer_merge
+--------------
 
 **Description:** Merge DFTracer .pfw or .pfw.gz files into a single JSON array file using pipeline processing
 
@@ -83,31 +86,35 @@ dft_merge
 
 .. code-block:: bash
 
-   dft_merge [OPTIONS] -o output files...
-
-**Arguments:**
-
-- ``files`` - Input .pfw or .pfw.gz files to merge [required]
+   dftracer_merge [OPTIONS]
 
 **Options:**
 
-- ``-o, --output <path>`` - Output JSON file [required]
-- ``-t, --threads <count>`` - Number of worker threads for parallel processing
-- ``-b, --batch-size <count>`` - Batch size for processing
-- ``-c, --checkpoint-size <bytes>`` - Checkpoint size for indexing (default: 10 MB)
+- ``-d, --directory <path>`` - Directory containing .pfw or .pfw.gz files (default: .)
+- ``-o, --output <path>`` - Output file path (should have .pfw extension) (default: combined.pfw)
+- ``-f, --force`` - Override existing output file and force index recreation
+- ``-c, --compress`` - Compress output file with gzip
+- ``-v, --verbose`` - Enable verbose mode
+- ``-g, --gzip-only`` - Process only .pfw.gz files
+- ``--checkpoint-size <bytes>`` - Checkpoint size for indexing in bytes (default: 33554432 B / 32 MB)
+- ``--threads <count>`` - Number of threads for parallel processing (default: number of CPU cores)
+- ``--index-dir <path>`` - Directory to store index files (default: system temp directory)
 
 **Example:**
 
 .. code-block:: bash
 
-   # Merge multiple trace files into one JSON file
-   dft_merge -o merged.json trace1.pfw.gz trace2.pfw.gz trace3.pfw.gz
+   # Merge all .pfw/.pfw.gz files in current directory
+   dftracer_merge -o merged.pfw
 
-   # Merge with parallel processing
-   dft_merge -t 8 -o output.json trace*.pfw.gz
+   # Merge files from specific directory with compression
+   dftracer_merge -d ./logs -o output.pfw -c
 
-dft_split
----------
+   # Merge with parallel processing and verbose output
+   dftracer_merge -d ./traces -o combined.pfw --threads 8 -v
+
+dftracer_split
+--------------
 
 **Description:** Split DFTracer traces into equal-sized chunks using pipeline processing
 
@@ -115,33 +122,37 @@ dft_split
 
 .. code-block:: bash
 
-   dft_split [OPTIONS] -o output_dir files...
-
-**Arguments:**
-
-- ``files`` - Input .pfw or .pfw.gz files to split [required]
+   dftracer_split [OPTIONS]
 
 **Options:**
 
-- ``-o, --output <dir>`` - Output directory for split files [required]
-- ``-n, --num-splits <count>`` - Number of output files to create
-- ``-s, --split-size <count>`` - Number of events per output file
-- ``-t, --threads <count>`` - Number of worker threads
-- ``-c, --checkpoint-size <bytes>`` - Checkpoint size for indexing (default: 10 MB)
-- ``-f, --format <format>`` - Output format (pfw, pfw.gz, json)
+- ``-n, --app-name <name>`` - Application name for output files (default: app)
+- ``-d, --directory <path>`` - Input directory containing .pfw or .pfw.gz files (default: .)
+- ``-o, --output <dir>`` - Output directory for split files (default: ./split)
+- ``-s, --chunk-size <MB>`` - Chunk size in MB (default: 4)
+- ``-f, --force`` - Override existing files and force index recreation
+- ``-c, --compress`` - Compress output files with gzip (default: true)
+- ``-v, --verbose`` - Enable verbose mode
+- ``--checkpoint-size <bytes>`` - Checkpoint size for indexing in bytes (default: 33554432 B / 32 MB)
+- ``--threads <count>`` - Number of threads for parallel processing (default: number of CPU cores)
+- ``--index-dir <path>`` - Directory to store index files (default: system temp directory)
+- ``--verify`` - Verify output chunks match input by comparing event IDs
 
 **Example:**
 
 .. code-block:: bash
 
-   # Split into 10 equal chunks
-   dft_split -n 10 -o split_output/ large_trace.pfw.gz
+   # Split files into 4MB chunks
+   dftracer_split -d ./logs -o ./split_output
 
-   # Split with specific event count per file
-   dft_split --split-size 100000 -o chunks/ trace.pfw.gz
+   # Split with 10MB chunks and custom app name
+   dftracer_split -d ./traces -s 10 -n myapp -o ./chunks
 
-dft_event_count
----------------
+   # Split without compression and verify output
+   dftracer_split -d ./data -c false --verify -o ./output
+
+dftracer_event_count
+--------------------
 
 **Description:** Count valid events in DFTracer .pfw or .pfw.gz files using pipeline processing
 
@@ -149,30 +160,31 @@ dft_event_count
 
 .. code-block:: bash
 
-   dft_event_count [OPTIONS] files...
-
-**Arguments:**
-
-- ``files`` - Input .pfw or .pfw.gz files to count [required]
+   dftracer_event_count [OPTIONS]
 
 **Options:**
 
-- ``-t, --threads <count>`` - Number of worker threads for parallel processing
-- ``-c, --checkpoint-size <bytes>`` - Checkpoint size for indexing (default: 10 MB)
-- ``-v, --verbose`` - Show detailed progress information
+- ``-d, --directory <path>`` - Directory containing .pfw or .pfw.gz files (default: .)
+- ``-f, --force`` - Force index recreation
+- ``-c, --checkpoint-size <bytes>`` - Checkpoint size for indexing in bytes (default: 33554432 B / 32 MB)
+- ``--threads <count>`` - Number of threads for parallel processing (default: number of CPU cores)
+- ``--index-dir <path>`` - Directory to store index files (default: system temp directory)
 
 **Example:**
 
 .. code-block:: bash
 
-   # Count events in a single file
-   dft_event_count trace.pfw.gz
+   # Count events in current directory
+   dftracer_event_count
 
-   # Count events across multiple files with 8 threads
-   dft_event_count -t 8 trace*.pfw.gz
+   # Count events in specific directory with 8 threads
+   dftracer_event_count -d ./traces --threads 8
 
-dft_pgzip
----------
+   # Force index rebuild
+   dftracer_event_count -d ./logs -f
+
+dftracer_pgzip
+--------------
 
 **Description:** Parallel gzip compression for DFTracer .pfw files
 
@@ -180,29 +192,23 @@ dft_pgzip
 
 .. code-block:: bash
 
-   dft_pgzip [OPTIONS] files...
-
-**Arguments:**
-
-- ``files`` - Input .pfw files to compress [required]
+   dftracer_pgzip [OPTIONS]
 
 **Options:**
 
-- ``-t, --threads <count>`` - Number of compression threads (default: number of CPU cores)
-- ``-c, --checkpoint-size <bytes>`` - Checkpoint size for chunking (default: 10 MB)
-- ``-l, --level <1-9>`` - Compression level (default: 6)
-- ``-o, --output <path>`` - Output file path (for single input file)
-- ``-k, --keep`` - Keep original files after compression
+- ``-d, --directory <path>`` - Directory containing .pfw files (default: .)
+- ``-v, --verbose`` - Enable verbose output
+- ``--threads <count>`` - Number of threads for parallel processing (default: number of CPU cores)
 
 **Example:**
 
 .. code-block:: bash
 
-   # Compress a file with default settings
-   dft_pgzip trace.pfw
+   # Compress all .pfw files in current directory
+   dftracer_pgzip
 
-   # Compress with maximum compression and 16 threads
-   dft_pgzip -l 9 -t 16 trace.pfw
+   # Compress files in specific directory with verbose output
+   dftracer_pgzip -d ./logs -v
 
-   # Compress and keep original
-   dft_pgzip -k trace.pfw
+   # Compress with 16 threads
+   dftracer_pgzip -d ./traces --threads 16
