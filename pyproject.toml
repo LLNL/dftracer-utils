@@ -72,6 +72,10 @@ sdist.exclude = [
   "*.env",
   "*.egg-info",
   "DEVELOPERS_GUIDE.md",
+  "DOCUMENTATION_SETUP.md",
+  "docs",
+  "Doxygen",
+  ".readthedocs.yaml",
 ]
 
 cmake.build-type = "Release"
