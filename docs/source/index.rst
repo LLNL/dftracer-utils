@@ -21,7 +21,7 @@ Features
    :caption: Links:
 
    DFTracer Documentation <https://dftracer.readthedocs.io/>
-   DFTracer GitHub <https://github.com/hariharan-devarajan/dftracer>
+   DFTracer GitHub <https://github.com/LLNL/dftracer>
 
 .. toctree::
    :maxdepth: 2
