@@ -48,12 +48,10 @@ wheel.py-api = "cp312"
 
 # Package discovery
 wheel.packages = ["python/dftracer"]
-sdist.include = ["python/dftracer/utils/_version.py"]
+sdist.include = ["python/dftracer/utils/_version.py", "cmake/tests"]
 sdist.exclude = [
   "tests/**",
-  "cmake/**",
   "*.DS_Store",
-  "*.txt",
   "*.sh",
   "*.gz",
   "*.tar.gz",
