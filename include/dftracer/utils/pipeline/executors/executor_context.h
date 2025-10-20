@@ -10,6 +10,7 @@
 #include <chrono>
 #include <future>
 #include <memory>
+#include <mutex>
 #include <thread>
 #include <unordered_map>
 #include <vector>
@@ -62,20 +63,12 @@ class ExecutorContext {
     void mark_task_completed(TaskIndex index);
     bool wait_for_task_completion(TaskIndex index);
 
-    void set_task_promise(TaskIndex index,
-                          std::shared_ptr<std::promise<std::any>> promise);
-    std::shared_ptr<std::promise<std::any>> get_task_promise(
-        TaskIndex index) const;
-
     void set_promise_fulfiller(TaskIndex index,
                                std::function<void(const std::any&)> fulfiller);
     void fulfill_dynamic_promise(TaskIndex index, const std::any& result) const;
 
-    void set_dependency_count(TaskIndex index, int count);
-    int get_dependency_count(TaskIndex index) const;
-    void decrement_dependency_count(TaskIndex index);
-
     void reset();
+    void initialize_task_tracking();
 
     std::size_t dynamic_task_count() const { return dynamic_tasks_.size(); }
 
@@ -93,12 +86,14 @@ class ExecutorContext {
     std::vector<std::vector<TaskIndex>>
         dynamic_dependents_;    // who this task depends on
 
+    mutable std::mutex task_outputs_mutex_;
     std::unordered_map<TaskIndex, std::unique_ptr<ExecutorTaskOutput>>
         task_outputs_;
-    std::unordered_map<TaskIndex, std::atomic<bool>> task_completed_;
+    mutable std::mutex task_completed_mutex_;
+    std::unordered_map<TaskIndex, bool> task_completed_;
+    mutable std::mutex dependency_count_mutex_;
     std::unordered_map<TaskIndex, int> dependency_count_;
-    std::unordered_map<TaskIndex, std::shared_ptr<std::promise<std::any>>>
-        task_promises_;
+    mutable std::mutex promise_fulfillers_mutex_;
     std::unordered_map<TaskIndex, std::function<void(const std::any&)>>
         promise_fulfillers_;
 };

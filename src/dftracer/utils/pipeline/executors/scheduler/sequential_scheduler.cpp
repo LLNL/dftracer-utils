@@ -24,6 +24,8 @@ PipelineOutput SequentialScheduler::execute(const Pipeline& pipeline,
                             "Pipeline validation failed");
     }
 
+    execution_context.initialize_task_tracking();
+
     task_completed_.clear();
     dependency_count_.clear();
     while (!task_queue_.empty()) {

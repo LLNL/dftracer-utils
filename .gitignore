@@ -75,6 +75,7 @@ refs
 dfanalyzer
 *.ipynb
 _version.py
+venv
 
 # Documentation
 docs/build/
