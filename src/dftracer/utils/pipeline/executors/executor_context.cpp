@@ -49,8 +49,14 @@ TaskIndex ExecutorContext::add_dynamic_task(std::unique_ptr<Task> task,
         add_dynamic_dependency(depends_on, task_id);
     }
 
-    task_completed_[task_id] = false;
-    dependency_count_[task_id] = (depends_on >= 0) ? 1 : 0;
+    {
+        std::lock_guard<std::mutex> lock(task_completed_mutex_);
+        task_completed_[task_id] = false;
+    }
+    {
+        std::lock_guard<std::mutex> lock(dependency_count_mutex_);
+        dependency_count_[task_id] = (depends_on >= 0) ? 1 : 0;
+    }
 
     return task_id;
 }
@@ -86,7 +92,10 @@ void ExecutorContext::add_dynamic_dependency(TaskIndex from, TaskIndex to) {
         dynamic_dependencies_[to_idx].push_back(from);
     }
 
-    dependency_count_[to]++;
+    {
+        std::lock_guard<std::mutex> lock(dependency_count_mutex_);
+        dependency_count_[to]++;
+    }
 }
 
 Task* ExecutorContext::get_dynamic_task(TaskIndex index) const {
@@ -127,57 +136,27 @@ void ExecutorContext::set_task_output(TaskIndex index, std::any output) {
     const auto& dependents = get_task_dependents(index);
     task_output->dependency_refs = static_cast<int>(dependents.size());
 
-    // User refs start at 0, will be incremented when TaskResult is created
     task_output->user_refs = 0;
 
+    std::lock_guard<std::mutex> lock(task_outputs_mutex_);
     task_outputs_[index] = std::move(task_output);
-
-    // Clean up promise after task completion (promise already fulfilled in
-    // wrapped function)
-    auto promise_it = task_promises_.find(index);
-    if (promise_it != task_promises_.end()) {
-        task_promises_.erase(promise_it);
-    }
 }
 
 std::any ExecutorContext::get_task_output(TaskIndex index) const {
+    std::lock_guard<std::mutex> lock(task_outputs_mutex_);
     auto it = task_outputs_.find(index);
     return (it != task_outputs_.end()) ? it->second->data : std::any{};
 }
 
 void ExecutorContext::set_task_completed(TaskIndex index, bool completed) {
+    std::lock_guard<std::mutex> lock(task_completed_mutex_);
     task_completed_[index] = completed;
 }
 
 bool ExecutorContext::is_task_completed(TaskIndex index) const {
+    std::lock_guard<std::mutex> lock(task_completed_mutex_);
     auto it = task_completed_.find(index);
-    return (it != task_completed_.end()) ? it->second.load() : false;
-}
-
-void ExecutorContext::set_task_promise(
-    TaskIndex index, std::shared_ptr<std::promise<std::any>> promise) {
-    task_promises_[index] = std::move(promise);
-}
-
-std::shared_ptr<std::promise<std::any>> ExecutorContext::get_task_promise(
-    TaskIndex index) const {
-    auto it = task_promises_.find(index);
-    return (it != task_promises_.end()) ? it->second : nullptr;
-}
-
-void ExecutorContext::set_dependency_count(TaskIndex index, int count) {
-    dependency_count_[index] = count;
-}
-
-int ExecutorContext::get_dependency_count(TaskIndex index) const {
-    auto it = dependency_count_.find(index);
-    return (it != dependency_count_.end()) ? it->second : 0;
-}
-
-void ExecutorContext::decrement_dependency_count(TaskIndex index) {
-    if (dependency_count_.find(index) != dependency_count_.end()) {
-        dependency_count_[index]--;
-    }
+    return (it != task_completed_.end()) ? it->second : false;
 }
 
 void ExecutorContext::reset() {
@@ -187,9 +166,31 @@ void ExecutorContext::reset() {
     dynamic_dependents_.clear();
 
     // Clear all execution state
-    task_outputs_.clear();
-    task_completed_.clear();
-    dependency_count_.clear();
+    {
+        std::lock_guard<std::mutex> lock(task_outputs_mutex_);
+        task_outputs_.clear();
+    }
+    {
+        std::lock_guard<std::mutex> lock(task_completed_mutex_);
+        task_completed_.clear();
+    }
+    {
+        std::lock_guard<std::mutex> lock(dependency_count_mutex_);
+        dependency_count_.clear();
+    }
+}
+
+void ExecutorContext::initialize_task_tracking() {
+    std::unordered_map<TaskIndex, bool> temp_task_completed;
+    temp_task_completed.reserve(pipeline_->size());
+    for (TaskIndex i = 0; i < static_cast<TaskIndex>(pipeline_->size()); ++i) {
+        temp_task_completed[i] = false;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(task_completed_mutex_);
+        task_completed_ = std::move(temp_task_completed);
+    }
 }
 
 bool ExecutorContext::validate() const {
@@ -246,6 +247,7 @@ bool ExecutorContext::is_terminal_task(TaskIndex index) const {
 }
 
 void ExecutorContext::increment_user_ref(TaskIndex index) {
+    std::lock_guard<std::mutex> lock(task_outputs_mutex_);
     auto it = task_outputs_.find(index);
     if (it != task_outputs_.end()) {
         it->second->user_refs.fetch_add(1);
@@ -253,6 +255,7 @@ void ExecutorContext::increment_user_ref(TaskIndex index) {
 }
 
 void ExecutorContext::release_user_ref(TaskIndex index) {
+    std::lock_guard<std::mutex> lock(task_outputs_mutex_);
     auto it = task_outputs_.find(index);
     if (it != task_outputs_.end()) {
         it->second->user_refs.fetch_sub(1);
@@ -263,6 +266,7 @@ void ExecutorContext::release_user_ref(TaskIndex index) {
 }
 
 std::any ExecutorContext::consume_task_output(TaskIndex index) {
+    std::lock_guard<std::mutex> lock(task_outputs_mutex_);
     auto it = task_outputs_.find(index);
     if (it == task_outputs_.end()) {
         return std::any{};
@@ -270,7 +274,6 @@ std::any ExecutorContext::consume_task_output(TaskIndex index) {
 
     std::any result = it->second->data;
 
-    // Decrement dependency reference
     it->second->dependency_refs.fetch_sub(1);
 
     if (it->second->can_cleanup()) {
@@ -293,14 +296,22 @@ bool ExecutorContext::wait_for_task_completion(TaskIndex index) {
 
 void ExecutorContext::set_promise_fulfiller(
     TaskIndex index, std::function<void(const std::any&)> fulfiller) {
+    std::lock_guard<std::mutex> lock(promise_fulfillers_mutex_);
     promise_fulfillers_[index] = std::move(fulfiller);
 }
 
 void ExecutorContext::fulfill_dynamic_promise(TaskIndex index,
                                               const std::any& result) const {
-    auto it = promise_fulfillers_.find(index);
-    if (it != promise_fulfillers_.end()) {
-        it->second(result);
+    std::function<void(const std::any&)> fulfiller;
+    {
+        std::lock_guard<std::mutex> lock(promise_fulfillers_mutex_);
+        auto it = promise_fulfillers_.find(index);
+        if (it != promise_fulfillers_.end()) {
+            fulfiller = it->second;
+        }
+    }
+    if (fulfiller) {
+        fulfiller(result);
     }
 }
 

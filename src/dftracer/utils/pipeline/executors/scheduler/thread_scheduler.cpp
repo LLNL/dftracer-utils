@@ -90,6 +90,8 @@ PipelineOutput ThreadScheduler::execute(const Pipeline& pipeline,
                             "Pipeline validation failed");
     }
 
+    execution_context.initialize_task_tracking();
+
     completed_tasks_ = 0;
     total_tasks_ = pipeline.size();
     current_pipeline_name_ = pipeline.get_name();
