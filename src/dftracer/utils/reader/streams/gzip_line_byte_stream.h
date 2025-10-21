@@ -16,13 +16,11 @@ class GzipLineByteStream : public GzipStream {
     static constexpr std::size_t LINE_SEARCH_LOOKBACK = 512;
 
     std::vector<char> partial_line_buffer_;
-    std::vector<char> temp_buffer_;  // Reusable temp buffer
     std::size_t actual_start_bytes_;
 
    public:
     GzipLineByteStream() : GzipStream(), actual_start_bytes_(0) {
         partial_line_buffer_.reserve(1 * 1024 * 1024);
-        temp_buffer_.reserve(1 * 1024 * 1024);
     }
 
     virtual void initialize(const std::string &gz_path, std::size_t start_bytes,
@@ -96,21 +94,22 @@ class GzipLineByteStream : public GzipStream {
             return 0;
         }
 
-        ensure_temp_buffer_size(buffer_size);
-
+        // Copy partial line buffer directly to output buffer (if exists)
+        std::size_t partial_size = partial_line_buffer_.size();
         std::size_t available_buffer_space = buffer_size;
-        if (!partial_line_buffer_.empty()) {
-            if (partial_line_buffer_.size() > buffer_size) {
+
+        if (partial_size > 0) {
+            if (partial_size > buffer_size) {
                 throw ReaderError(
                     ReaderError::READ_ERROR,
                     "Partial line buffer exceeds available buffer space");
             }
-            std::memcpy(temp_buffer_.data(), partial_line_buffer_.data(),
-                        partial_line_buffer_.size());
-            available_buffer_space -= partial_line_buffer_.size();
+            std::memcpy(buffer, partial_line_buffer_.data(), partial_size);
+            available_buffer_space -= partial_size;
         }
 
-        // Read data - initially try to stay within target bounds
+        // Read data directly into output buffer - initially try to stay within
+        // target bounds
         std::size_t max_bytes_to_read = target_end_bytes_ - current_position_;
         std::size_t bytes_to_read =
             std::min(max_bytes_to_read, available_buffer_space);
@@ -119,8 +118,7 @@ class GzipLineByteStream : public GzipStream {
         if (bytes_to_read > 0) {
             bool status = inflater_.read(
                 file_handle_,
-                reinterpret_cast<unsigned char *>(temp_buffer_.data() +
-                                                  partial_line_buffer_.size()),
+                reinterpret_cast<unsigned char *>(buffer + partial_size),
                 bytes_to_read, bytes_read);
 
             if (!status || bytes_read == 0) {
@@ -129,16 +127,16 @@ class GzipLineByteStream : public GzipStream {
             }
         }
 
-        std::size_t total_data_size = partial_line_buffer_.size() + bytes_read;
+        std::size_t total_data_size = partial_size + bytes_read;
 
         DFTRACER_UTILS_LOG_DEBUG(
             "Read %zu bytes from compressed stream, partial_buffer_size=%zu, "
             "current_position=%zu, target_end=%zu, total_data_size=%zu",
-            bytes_read, partial_line_buffer_.size(), current_position_,
-            target_end_bytes_, total_data_size);
+            bytes_read, partial_size, current_position_, target_end_bytes_,
+            total_data_size);
 
-        std::size_t adjusted_size = apply_range_and_boundary_limits(
-            temp_buffer_.data(), total_data_size);
+        std::size_t adjusted_size =
+            apply_range_and_boundary_limits(buffer, total_data_size);
 
         current_position_ += bytes_read;
 
@@ -152,9 +150,7 @@ class GzipLineByteStream : public GzipStream {
             return 0;
         }
 
-        std::memcpy(buffer, temp_buffer_.data(), adjusted_size);
-
-        update_partial_buffer(adjusted_size, total_data_size);
+        update_partial_buffer(buffer, adjusted_size, total_data_size);
 
         return adjusted_size;
     }
@@ -163,25 +159,17 @@ class GzipLineByteStream : public GzipStream {
         GzipStream::reset();
         partial_line_buffer_.clear();
         partial_line_buffer_.shrink_to_fit();
-        temp_buffer_.clear();
-        temp_buffer_.shrink_to_fit();
         actual_start_bytes_ = 0;
     }
 
    private:
-    void ensure_temp_buffer_size(std::size_t required_size) {
-        if (temp_buffer_.size() < required_size) {
-            temp_buffer_.resize(required_size);
-        }
-    }
-
-    void update_partial_buffer(std::size_t adjusted_size,
+    void update_partial_buffer(const char *buffer, std::size_t adjusted_size,
                                std::size_t total_data_size) {
         if (adjusted_size < total_data_size) {
             std::size_t remaining_size = total_data_size - adjusted_size;
             partial_line_buffer_.resize(remaining_size);
-            std::memcpy(partial_line_buffer_.data(),
-                        temp_buffer_.data() + adjusted_size, remaining_size);
+            std::memcpy(partial_line_buffer_.data(), buffer + adjusted_size,
+                        remaining_size);
         } else {
             partial_line_buffer_.clear();
         }
