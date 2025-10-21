@@ -591,3 +591,173 @@ TEST_CASE("TaskResult - Mixed static and dynamic futures") {
     CHECK(static_result.get() == "processed 42");
     CHECK(emit_future.get() == 142);
 }
+
+TEST_CASE("TaskResult - Pipeline task exception handling") {
+    SUBCASE("Sequential executor") {
+        Pipeline pipeline;
+
+        auto throwing_task = [](int input, TaskContext&) -> int {
+            if (input < 0) {
+                throw std::runtime_error("Pipeline task error: negative input");
+            }
+            return input * 2;
+        };
+
+        auto result = pipeline.add_task<int, int>(throwing_task);
+
+        SequentialExecutor executor;
+        executor.execute(pipeline, -10);
+
+        CHECK_THROWS_WITH(result.get(), "Pipeline task error: negative input");
+    }
+
+    SUBCASE("Thread executor") {
+        Pipeline pipeline;
+
+        auto throwing_task = [](int input, TaskContext&) -> int {
+            if (input < 0) {
+                throw std::runtime_error("Pipeline task error: negative input");
+            }
+            return input * 2;
+        };
+
+        auto result = pipeline.add_task<int, int>(throwing_task);
+
+        ThreadExecutor executor(2);
+        executor.execute(pipeline, -10);
+
+        CHECK_THROWS_WITH(result.get(), "Pipeline task error: negative input");
+    }
+}
+
+TEST_CASE("TaskResult - Dynamic task exception handling") {
+    SUBCASE("Sequential executor") {
+        Pipeline pipeline;
+        TaskResult<int>::Future dynamic_future;
+
+        auto parent_task = [&dynamic_future](int input,
+                                             TaskContext& ctx) -> int {
+            auto throwing_child = [](int x, TaskContext&) -> int {
+                if (x > 50) {
+                    throw std::runtime_error(
+                        "Dynamic task error: value too large");
+                }
+                return x * 2;
+            };
+
+            auto result = ctx.emit<int, int>(throwing_child, Input{input});
+            dynamic_future = std::move(result.future());
+            return input + 1;
+        };
+
+        auto parent_result = pipeline.add_task<int, int>(parent_task);
+
+        SequentialExecutor executor;
+        executor.execute(pipeline, 100);
+
+        CHECK(parent_result.get() == 101);
+        CHECK_THROWS_WITH(dynamic_future.get(),
+                          "Dynamic task error: value too large");
+    }
+
+    SUBCASE("Thread executor") {
+        Pipeline pipeline;
+        TaskResult<int>::Future dynamic_future;
+
+        auto parent_task = [&dynamic_future](int input,
+                                             TaskContext& ctx) -> int {
+            auto throwing_child = [](int x, TaskContext&) -> int {
+                if (x > 50) {
+                    throw std::runtime_error(
+                        "Dynamic task error: value too large");
+                }
+                return x * 2;
+            };
+
+            auto result = ctx.emit<int, int>(throwing_child, Input{input});
+            dynamic_future = std::move(result.future());
+            return input + 1;
+        };
+
+        auto parent_result = pipeline.add_task<int, int>(parent_task);
+
+        ThreadExecutor executor(2);
+        executor.execute(pipeline, 100);
+
+        CHECK(parent_result.get() == 101);
+        CHECK_THROWS_WITH(dynamic_future.get(),
+                          "Dynamic task error: value too large");
+    }
+}
+
+TEST_CASE("TaskResult - Multiple dynamic tasks with exceptions") {
+    SUBCASE("Sequential executor") {
+        Pipeline pipeline;
+        std::vector<TaskResult<int>::Future> dynamic_futures;
+
+        auto parent_task = [&dynamic_futures](std::vector<int> input,
+                                              TaskContext& ctx) -> int {
+            int sum = 0;
+            for (size_t i = 0; i < input.size(); ++i) {
+                auto child = [i](int x, TaskContext&) -> int {
+                    if (x < 0) {
+                        throw std::runtime_error("Dynamic task " +
+                                                 std::to_string(i) + " failed");
+                    }
+                    return x * x;
+                };
+
+                auto result = ctx.emit<int, int>(child, Input{input[i]});
+                dynamic_futures.push_back(std::move(result.future()));
+                sum += input[i];
+            }
+            return sum;
+        };
+
+        auto result = pipeline.add_task<std::vector<int>, int>(parent_task);
+
+        SequentialExecutor executor;
+        std::vector<int> input = {2, -3, 4};
+        executor.execute(pipeline, input);
+
+        CHECK(result.get() == 3);
+        CHECK(dynamic_futures[0].get() == 4);
+        CHECK_THROWS_WITH(dynamic_futures[1].get(), "Dynamic task 1 failed");
+        CHECK(dynamic_futures[2].get() == 16);
+    }
+
+    SUBCASE("Thread executor") {
+        Pipeline pipeline;
+        std::vector<TaskResult<int>::Future> dynamic_futures;
+
+        auto parent_task = [&dynamic_futures](std::vector<int> input,
+                                              TaskContext& ctx) -> int {
+            int sum = 0;
+            for (size_t i = 0; i < input.size(); ++i) {
+                auto child = [i](int x, TaskContext&) -> int {
+                    if (x < 0) {
+                        throw std::runtime_error("Dynamic task " +
+                                                 std::to_string(i) + " failed");
+                    }
+                    return x * x;
+                };
+
+                auto result = ctx.emit<int, int>(child, Input{input[i]});
+                dynamic_futures.push_back(std::move(result.future()));
+                sum += input[i];
+            }
+            return sum;
+        };
+
+        auto result = pipeline.add_task<std::vector<int>, int>(parent_task);
+
+        ThreadExecutor executor(2);
+        std::vector<int> input = {2, -3, 4};
+        executor.execute(pipeline, input);
+
+        CHECK(result.get() == 3);
+        CHECK(dynamic_futures[0].get() == 4);
+        CHECK_THROWS_WITH(dynamic_futures[1].get(), "Dynamic task 1 failed");
+        CHECK(dynamic_futures[2].get() == 16);
+    }
+}
