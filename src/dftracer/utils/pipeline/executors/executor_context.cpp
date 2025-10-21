@@ -300,6 +300,12 @@ void ExecutorContext::set_promise_fulfiller(
     promise_fulfillers_[index] = std::move(fulfiller);
 }
 
+void ExecutorContext::set_promise_exception_fulfiller(
+    TaskIndex index, std::function<void(std::exception_ptr)> fulfiller) {
+    std::lock_guard<std::mutex> lock(promise_fulfillers_mutex_);
+    promise_exception_fulfillers_[index] = std::move(fulfiller);
+}
+
 void ExecutorContext::fulfill_dynamic_promise(TaskIndex index,
                                               const std::any& result) const {
     std::function<void(const std::any&)> fulfiller;
@@ -312,6 +318,21 @@ void ExecutorContext::fulfill_dynamic_promise(TaskIndex index,
     }
     if (fulfiller) {
         fulfiller(result);
+    }
+}
+
+void ExecutorContext::fulfill_dynamic_promise_exception(
+    TaskIndex index, std::exception_ptr exception) const {
+    std::function<void(std::exception_ptr)> fulfiller;
+    {
+        std::lock_guard<std::mutex> lock(promise_fulfillers_mutex_);
+        auto it = promise_exception_fulfillers_.find(index);
+        if (it != promise_exception_fulfillers_.end()) {
+            fulfiller = it->second;
+        }
+    }
+    if (fulfiller) {
+        fulfiller(exception);
     }
 }
 

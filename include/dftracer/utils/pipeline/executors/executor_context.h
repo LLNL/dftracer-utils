@@ -65,7 +65,11 @@ class ExecutorContext {
 
     void set_promise_fulfiller(TaskIndex index,
                                std::function<void(const std::any&)> fulfiller);
+    void set_promise_exception_fulfiller(
+        TaskIndex index, std::function<void(std::exception_ptr)> fulfiller);
     void fulfill_dynamic_promise(TaskIndex index, const std::any& result) const;
+    void fulfill_dynamic_promise_exception(TaskIndex index,
+                                           std::exception_ptr exception) const;
 
     void reset();
     void initialize_task_tracking();
@@ -96,6 +100,8 @@ class ExecutorContext {
     mutable std::mutex promise_fulfillers_mutex_;
     std::unordered_map<TaskIndex, std::function<void(const std::any&)>>
         promise_fulfillers_;
+    std::unordered_map<TaskIndex, std::function<void(std::exception_ptr)>>
+        promise_exception_fulfillers_;
 };
 
 }  // namespace dftracer::utils
