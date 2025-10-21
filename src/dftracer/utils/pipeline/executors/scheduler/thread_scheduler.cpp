@@ -309,13 +309,23 @@ void ThreadScheduler::worker_thread() {
                         task.task_id);
                 }
 
-                // Additionally fulfill promise with exception if this is a
-                // pipeline task
-                if (current_pipeline_ &&
+                // Check if this is a pipeline task
+                bool is_pipeline_task =
+                    current_pipeline_ &&
                     task.task_id <
-                        static_cast<TaskIndex>(current_pipeline_->size())) {
+                        static_cast<TaskIndex>(current_pipeline_->size());
+
+                if (is_pipeline_task) {
+                    // Fulfill promise with exception for pipeline tasks
                     current_pipeline_->fulfill_promise_exception(
                         task.task_id, std::current_exception());
+                } else {
+                    // Fulfill promise with exception for dynamic tasks
+                    if (current_execution_context_) {
+                        current_execution_context_
+                            ->fulfill_dynamic_promise_exception(
+                                task.task_id, std::current_exception());
+                    }
                 }
             }
             report_progress(task.task_id, current_pipeline_name_);
