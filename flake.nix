@@ -30,6 +30,9 @@
             # sqlite
             # zlib
             # spdlog
+            gnutar
+            python311
+            python312
             (python310.withPackages (p: [
               p.cython
               p.setuptools

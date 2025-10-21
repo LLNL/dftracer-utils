@@ -2,6 +2,8 @@
 # Dependencies
 # ##############################################################################
 
+add_rpath()
+
 need_zlib()
 need_sqlite3()
 need_argparse()
@@ -9,8 +11,6 @@ need_ghc_filesystem()
 need_xxhash()
 need_cpplogger()
 need_yyjson()
-
-add_rpath()
 
 # ##############################################################################
 # Libraries
@@ -92,8 +92,8 @@ add_library(dftracer_utils::static ALIAS dftracer_utils)
 set_target_properties(dftracer_utils PROPERTIES OUTPUT_NAME dftracer_utils)
 target_link_libraries(
   dftracer_utils
-  PRIVATE 
-  PUBLIC ghc_filesystem cpp-logger Threads::Threads yyjson::yyjson_static xxHash::xxhash_static)
+  PRIVATE Threads::Threads yyjson::yyjson_static xxHash::xxhash_static
+  PUBLIC ghc_filesystem cpp-logger)
 add_stdfs_if_needed(dftracer_utils)
 
 # Link SQLite3, zlib, and Arrow with appropriate variants for static library
@@ -174,7 +174,8 @@ foreach(bin ${DFTRACER_BINARIES})
   add_executable(${bin_exec} ${bin})
   set_target_properties(${bin_exec} PROPERTIES OUTPUT_NAME "${bin_exec}")
   target_link_libraries(
-    ${bin_exec} PRIVATE dftracer_utils argparse::argparse ghc_filesystem)
+    ${bin_exec} PRIVATE dftracer_utils argparse::argparse ghc_filesystem
+    yyjson::yyjson_static xxHash::xxhash_static)
   link_sqlite3(${bin_exec} STATIC)
   link_zlib(${bin_exec} STATIC)
 
@@ -190,10 +191,12 @@ foreach(bin ${DFTRACER_BINARIES})
     target_link_libraries(${bin_exec} PRIVATE --coverage)
   endif()
 
-  # Install executable
+  # Install executable to dftracer/bin
   install(TARGETS ${bin_exec} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+  # Create Python wrapper for venv/bin that calls the binary in site-packages
   if (SKBUILD)
-    create_venv_symlink(${bin_exec})
+    create_python_wrapper(${bin_exec})
   endif()
 endforeach()
 
@@ -219,8 +222,7 @@ if(Python_FOUND)
   # "MinSizeRel" "RelWithDebInfo") endif()
 
   # Python C API binding sources
-  add_library(
-    dftracer_utils_ext MODULE
+  python_add_library(dftracer_utils_ext MODULE WITH_SOABI
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/python/dftracer_utils_ext.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/python/indexer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/python/indexer.h
@@ -231,16 +233,15 @@ if(Python_FOUND)
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/python/json.h
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/python/json.cpp)
 
-  target_include_directories(dftracer_utils_ext PRIVATE ${Python_INCLUDE_DIRS})
-
-  target_link_libraries(dftracer_utils_ext PRIVATE dftracer_utils::shared
-                                                   Python::Module)
+  target_link_libraries(dftracer_utils_ext PRIVATE dftracer_utils::shared)
 
   set_target_properties(
     dftracer_utils_ext
-    PROPERTIES PREFIX "" SUFFIX ".${Python_SOABI}${CMAKE_SHARED_MODULE_SUFFIX}")
+    PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/dftracer/utils")
 
-  install(TARGETS dftracer_utils_ext LIBRARY DESTINATION dftracer/utils)
+  install(TARGETS dftracer_utils_ext
+          LIBRARY DESTINATION "dftracer/utils")
+
 endif()
 
 # ##############################################################################
