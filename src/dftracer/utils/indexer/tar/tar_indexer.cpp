@@ -9,7 +9,6 @@
 #include <dftracer/utils/utils/filesystem.h>
 
 #include <chrono>
-#include <filesystem>
 #include <fstream>
 #include <sstream>
 
