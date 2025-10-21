@@ -4,8 +4,6 @@
 #include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/indexer/tar/tar_indexer.h>
 
-#include <filesystem>
-
 namespace dftracer::utils {
 
 std::unique_ptr<Indexer> IndexerFactory::create(const std::string &archive_path,

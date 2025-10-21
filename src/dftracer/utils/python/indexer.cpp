@@ -29,7 +29,8 @@ static int Indexer_init(IndexerObject *self, PyObject *args, PyObject *kwds) {
                                    "force_rebuild", NULL};
     const char *gz_path;
     const char *idx_path = NULL;
-    std::uint64_t checkpoint_size = 1024 * 1024;  // Default 1MB
+    std::uint64_t checkpoint_size =
+        dftracer::utils::constants::indexer::DEFAULT_CHECKPOINT_SIZE;
     int force_rebuild = 0;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|snp", (char **)kwlist,
