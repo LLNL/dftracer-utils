@@ -1,10 +1,10 @@
-#ifndef DFTRACER_UTILS_CORE_PIPELINE_TASKS_TASK_CONTEXT_H
-#define DFTRACER_UTILS_CORE_PIPELINE_TASKS_TASK_CONTEXT_H
+#ifndef DFTRACER_UTILS_CORE_TASKS_TASK_CONTEXT_H
+#define DFTRACER_UTILS_CORE_TASKS_TASK_CONTEXT_H
 
 #include <dftracer/utils/core/common/typedefs.h>
 #include <dftracer/utils/core/pipeline/executors/executor_context.h>
-#include <dftracer/utils/core/pipeline/tasks/task_result.h>
-#include <dftracer/utils/core/pipeline/tasks/task_tag.h>
+#include <dftracer/utils/core/tasks/task_result.h>
+#include <dftracer/utils/core/tasks/task_tag.h>
 
 #include <any>
 #include <functional>
@@ -172,4 +172,4 @@ class TaskContext {
 
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_CORE_PIPELINE_TASKS_TASK_CONTEXT_H
+#endif  // DFTRACER_UTILS_CORE_TASKS_TASK_CONTEXT_H

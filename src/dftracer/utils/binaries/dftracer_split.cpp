@@ -3,7 +3,7 @@
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/pipeline/executors/thread_executor.h>
 #include <dftracer/utils/core/pipeline/pipeline.h>
-#include <dftracer/utils/core/pipeline/tasks/task_tag.h>
+#include <dftracer/utils/core/tasks/task_tag.h>
 #include <dftracer/utils/core/utils/string.h>
 #include <dftracer/utils/indexer/indexer.h>
 #include <dftracer/utils/reader/line_processor.h>

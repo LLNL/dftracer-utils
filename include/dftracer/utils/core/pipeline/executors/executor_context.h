@@ -3,7 +3,7 @@
 
 #include <dftracer/utils/core/common/typedefs.h>
 #include <dftracer/utils/core/pipeline/executors/executor_task_output.h>
-#include <dftracer/utils/core/pipeline/tasks/task.h>
+#include <dftracer/utils/core/tasks/task.h>
 
 #include <any>
 #include <atomic>

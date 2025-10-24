@@ -1,6 +1,6 @@
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/pipeline/pipeline.h>
-#include <dftracer/utils/core/pipeline/tasks/function_task.h>
+#include <dftracer/utils/core/tasks/function_task.h>
 
 namespace dftracer::utils {
 

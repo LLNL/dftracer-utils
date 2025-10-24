@@ -4,7 +4,7 @@
 #include <dftracer/utils/core/pipeline/executors/scheduler/task_item.h>
 #include <dftracer/utils/core/pipeline/executors/scheduler/thread_scheduler.h>
 #include <dftracer/utils/core/pipeline/pipeline.h>
-#include <dftracer/utils/core/pipeline/tasks/task_context.h>
+#include <dftracer/utils/core/tasks/task_context.h>
 
 #include <algorithm>
 #include <any>

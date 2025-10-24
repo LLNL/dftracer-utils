@@ -4,11 +4,7 @@
 #include <dftracer/utils/core/common/typedefs.h>
 #include <dftracer/utils/core/pipeline/error.h>
 #include <dftracer/utils/core/pipeline/executors/executor_context.h>
-#include <dftracer/utils/core/pipeline/tasks/function_task.h>
-#include <dftracer/utils/core/pipeline/tasks/task.h>
-#include <dftracer/utils/core/pipeline/tasks/task_context.h>
-#include <dftracer/utils/core/pipeline/tasks/task_result.h>
-#include <dftracer/utils/core/pipeline/tasks/task_tag.h>
+#include <dftracer/utils/core/tasks/tasks.h>
 
 #include <any>
 #include <atomic>

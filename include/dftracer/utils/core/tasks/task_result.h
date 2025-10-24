@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_CORE_PIPELINE_TASKS_TASK_RESULT_H
-#define DFTRACER_UTILS_CORE_PIPELINE_TASKS_TASK_RESULT_H
+#ifndef DFTRACER_UTILS_CORE_TASKS_TASK_RESULT_H
+#define DFTRACER_UTILS_CORE_TASKS_TASK_RESULT_H
 
 #include <dftracer/utils/core/common/typedefs.h>
 
@@ -92,4 +92,4 @@ class TaskResult {
 };
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_CORE_PIPELINE_TASKS_TASK_RESULT_H
+#endif  // DFTRACER_UTILS_CORE_TASKS_TASK_RESULT_H

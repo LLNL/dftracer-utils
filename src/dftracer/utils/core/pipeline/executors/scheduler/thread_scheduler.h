@@ -4,7 +4,7 @@
 #include <dftracer/utils/core/common/typedefs.h>
 #include <dftracer/utils/core/pipeline/executors/scheduler/scheduler.h>
 #include <dftracer/utils/core/pipeline/executors/scheduler/task_item.h>
-#include <dftracer/utils/core/pipeline/tasks/task.h>
+#include <dftracer/utils/core/tasks/tasks.h>
 
 #include <atomic>
 #include <condition_variable>

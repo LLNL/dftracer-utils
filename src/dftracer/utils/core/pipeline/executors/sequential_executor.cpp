@@ -1,8 +1,7 @@
 #include <dftracer/utils/core/pipeline/error.h>
 #include <dftracer/utils/core/pipeline/executors/scheduler/sequential_scheduler.h>
 #include <dftracer/utils/core/pipeline/executors/sequential_executor.h>
-#include <dftracer/utils/core/pipeline/tasks/task_context.h>
-#include <dftracer/utils/core/pipeline/tasks/task_result.h>
+#include <dftracer/utils/core/tasks/task_context.h>
 
 #include <any>
 #include <unordered_map>

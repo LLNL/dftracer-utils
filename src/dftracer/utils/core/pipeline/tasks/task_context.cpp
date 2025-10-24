@@ -2,8 +2,8 @@
 #include <dftracer/utils/core/pipeline/executors/scheduler/sequential_scheduler.h>
 #include <dftracer/utils/core/pipeline/executors/scheduler/thread_scheduler.h>
 #include <dftracer/utils/core/pipeline/pipeline.h>
-#include <dftracer/utils/core/pipeline/tasks/function_task.h>
-#include <dftracer/utils/core/pipeline/tasks/task_context.h>
+#include <dftracer/utils/core/tasks/function_task.h>
+#include <dftracer/utils/core/tasks/task_context.h>
 
 namespace dftracer::utils {
 

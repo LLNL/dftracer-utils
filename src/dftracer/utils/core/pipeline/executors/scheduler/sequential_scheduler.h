@@ -3,7 +3,7 @@
 
 #include <dftracer/utils/core/common/typedefs.h>
 #include <dftracer/utils/core/pipeline/executors/scheduler/scheduler.h>
-#include <dftracer/utils/core/pipeline/tasks/task.h>
+#include <dftracer/utils/core/tasks/task.h>
 
 #include <any>
 #include <functional>
