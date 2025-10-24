@@ -20,7 +20,7 @@ function(need_cpplogger)
   if(NOT cpplogger_ADDED)
     cpmaddpackage(
       NAME cpplogger GITHUB_REPOSITORY hariharan-devarajan/cpp-logger
-      GIT_TAG 22201852471578483f3aa6b754dcb35a09d6838f
+      VERSION 0.0.6
       OPTIONS
       FORCE YES)
     if(cpplogger_ADDED AND SKBUILD)

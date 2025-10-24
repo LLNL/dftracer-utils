@@ -1,6 +1,7 @@
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/utils/timer.h>
 
+#include <cinttypes>
 #include <cstdio>
 
 namespace dftracer::utils {
@@ -23,15 +24,10 @@ Timer::~Timer() {
     stop();
     if (verbose_) {
         if (name_.empty()) {
-            printf("Elapsed time: %lld ns\n", elapsed());
-            // DFTRACER_UTILS_LOG_INFO("Elapsed time: %lld ns", elapsed());
-            // DFTRACER_UTILS_LOG_DEBUG("Elapsed time: %lld ns", elapsed());
+            std::printf("Elapsed time: %" PRId64 " ns\n", elapsed());
         } else {
-            printf("[%s] Elapsed time: %lld ns\n", name_.c_str(), elapsed());
-            // DFTRACER_UTILS_LOG_INFO("[%s] Elapsed time: %lld ns",
-            // name_.c_str(), elapsed());
-            // DFTRACER_UTILS_LOG_DEBUG("[%s] Elapsed time: %lld ns",
-            // name_.c_str(), elapsed());
+            std::printf("[%s] Elapsed time: %" PRId64 " ns\n", name_.c_str(),
+                        elapsed());
         }
     }
 }

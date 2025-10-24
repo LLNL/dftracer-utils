@@ -24,6 +24,8 @@ PipelineOutput SequentialScheduler::execute(const Pipeline& pipeline,
                             "Pipeline validation failed");
     }
 
+    execution_context.initialize_task_tracking();
+
     task_completed_.clear();
     dependency_count_.clear();
     while (!task_queue_.empty()) {
@@ -176,11 +178,23 @@ void SequentialScheduler::process_all_tasks() {
                 "SequentialScheduler: Exception executing task %d: %s",
                 task.task_id, e.what());
 
-            // Fulfill pipeline promise with exception if this is a pipeline
-            // task
-            if (current_pipeline_) {
+            // Check if this is a pipeline task
+            bool is_pipeline_task =
+                current_pipeline_ &&
+                task.task_id <
+                    static_cast<TaskIndex>(current_pipeline_->size());
+
+            if (is_pipeline_task) {
+                // Fulfill promise with exception for pipeline tasks
                 current_pipeline_->fulfill_promise_exception(
                     task.task_id, std::current_exception());
+            } else {
+                // Fulfill promise with exception for dynamic tasks
+                if (current_execution_context_) {
+                    current_execution_context_
+                        ->fulfill_dynamic_promise_exception(
+                            task.task_id, std::current_exception());
+                }
             }
 
             task_completed_[task.task_id] = true;

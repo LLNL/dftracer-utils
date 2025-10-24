@@ -52,6 +52,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/CPM.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/Dependencies.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/Utils.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/Rpath.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/PythonHelpers.cmake)
 
 if(SKBUILD)
   set(CMAKE_INSTALL_LIBDIR

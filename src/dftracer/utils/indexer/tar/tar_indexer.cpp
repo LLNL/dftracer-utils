@@ -9,7 +9,6 @@
 #include <dftracer/utils/indexer/tar/tar_parser.h>
 
 #include <chrono>
-#include <filesystem>
 #include <fstream>
 #include <sstream>
 

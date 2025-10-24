@@ -62,6 +62,15 @@ class TaskContext {
                 }
             });
 
+        execution_context_->set_promise_exception_fulfiller(
+            task_id, [promise](std::exception_ptr exception) {
+                try {
+                    promise->set_exception(exception);
+                } catch (const std::future_error& e) {
+                    // Promise already set, ignore
+                }
+            });
+
         schedule(task_id, input.value());
         return TaskResult<O>{task_id, std::move(future), execution_context_};
     }
@@ -102,6 +111,15 @@ class TaskContext {
                 }
             });
 
+        execution_context_->set_promise_exception_fulfiller(
+            task_id, [promise](std::exception_ptr exception) {
+                try {
+                    promise->set_exception(exception);
+                } catch (const std::future_error& e) {
+                    // Promise already set, ignore
+                }
+            });
+
         return TaskResult<O>{task_id, std::move(future), execution_context_};
     }
 
@@ -126,6 +144,15 @@ class TaskContext {
                     promise->set_exception(
                         std::make_exception_ptr(std::runtime_error(
                             "Type mismatch in dynamic promise fulfillment")));
+                }
+            });
+
+        execution_context_->set_promise_exception_fulfiller(
+            task_id, [promise](std::exception_ptr exception) {
+                try {
+                    promise->set_exception(exception);
+                } catch (const std::future_error& e) {
+                    // Promise already set, ignore
                 }
             });
 

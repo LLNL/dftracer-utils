@@ -44,10 +44,12 @@ class GzipStream : public Stream {
           use_checkpoint_(false),
           start_bytes_(0) {}
 
-    bool matches(const std::string &gz_path, std::size_t start_bytes,
+    bool matches(const std::string &gz_path, std::size_t /*start_bytes*/,
                  std::size_t end_bytes) const {
-        return current_gz_path_ == gz_path && start_bytes_ == start_bytes &&
-               target_end_bytes_ == end_bytes;
+        // Reuse the stream if same file and same end position.
+        // For POSIX-style sequential reads, the stream continues from
+        // current_position_ regardless of start_bytes (which is unused).
+        return current_gz_path_ == gz_path && target_end_bytes_ == end_bytes;
     }
 
     bool is_finished() const { return is_finished_; }

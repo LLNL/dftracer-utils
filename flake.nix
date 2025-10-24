@@ -24,10 +24,15 @@
             lcov
             openmpi
             cmake-format
+            doxygen
+            graphviz
             # valgrind-light
             # sqlite
             # zlib
             # spdlog
+            gnutar
+            python311
+            python312
             (python310.withPackages (p: [
               p.cython
               p.setuptools
@@ -41,6 +46,7 @@
           shellHook = ''
             export CC=gcc
             export CXX=g++
+            unset SOURCE_DATE_EPOCH
           '';
         };
       });

@@ -19,17 +19,18 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: C++",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "pytest>=6.0", 
-  "ruff", 
-  "dask[bag,dataframe,distributed]>=2024.1.0,<2025; python_version >= '3.9'",
-  "dask_jobqueue~=0.8.0; python_version >= '3.9'",
-  "dask_jobqueue~=0.8.0"
+  "pytest>=6.0",
+  "ruff",
+  "dask[bag,dataframe,distributed]>=2024.1.0,<2025; python_version >= '3.9' and python_version < '3.14'",
+  "dask_jobqueue~=0.8.0; python_version >= '3.9' and python_version < '3.14'"
 ]
 
 [build-system]
@@ -43,17 +44,12 @@ minimum-version = "build-system.requires"
 # Setuptools-style build caching in a local directory
 build-dir = "build/{wheel_tag}"
 
-# Build stable ABI wheels for CPython 3.12+
-wheel.py-api = "cp312"
-
 # Package discovery
-wheel.packages = ["dftracer"]
-sdist.include = ["dftracer/utils/_version.py"]
+wheel.packages = ["python/dftracer"]
+sdist.include = ["python/dftracer/utils/_version.py", "cmake/tests"]
 sdist.exclude = [
   "tests/**",
-  "cmake/**",
   "*.DS_Store",
-  "*.txt",
   "*.sh",
   "*.gz",
   "*.tar.gz",
@@ -67,23 +63,35 @@ sdist.exclude = [
   "temp*",
   ".clang-*",
   "*.lock",
+  "*.venv*",
+  "*venv*",
+  "*.env",
+  "*.egg-info",
   "DEVELOPERS_GUIDE.md",
+  "DOCUMENTATION_SETUP.md",
+  "docs",
+  "Doxygen",
+  ".readthedocs.yaml",
 ]
 
 cmake.build-type = "Release"
 
 [tool.cibuildwheel]
 build-verbosity = 1
+before-test = [
+  "pip install tomli",
+  "python -c 'import tomli, subprocess, sys; subprocess.check_call([sys.executable, \"-m\", \"pip\", \"install\"] + tomli.load(open(\"pyproject.toml\", \"rb\"))[\"project\"][\"optional-dependencies\"][\"dev\"])'"
+]
 test-command = "pytest {project}/tests"
 test-requires = "pytest"
 
-# Don't test Python 3.8 wheels on macOS/arm64
-test-skip="cp38-macosx_*:arm64"
+# @note: enable this if you are using nix, see issue https://github.com/matthew-brett/delocate/issues/247
+# [tool.cibuildwheel.macos]
+# dependency-versions = { packages = ["delocate==0.12.0"] }
 
-# Needed for full C++17 support
 [tool.cibuildwheel.macos.environment]
-MACOSX_DEPLOYMENT_TARGET = "10.14"
+MACOSX_DEPLOYMENT_TARGET = "11.3"
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
-version_file = "dftracer/utils/_version.py"
+version_file = "python/dftracer/utils/_version.py"
