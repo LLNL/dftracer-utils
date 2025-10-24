@@ -169,8 +169,8 @@ foreach(bin ${DFTRACER_BINARIES})
   add_executable(${bin_exec} ${bin})
   set_target_properties(${bin_exec} PROPERTIES OUTPUT_NAME "${bin_exec}")
   target_link_libraries(
-    ${bin_exec} PRIVATE dftracer_utils argparse::argparse ghc_filesystem
-    yyjson::yyjson_static xxHash::xxhash_static)
+    ${bin_exec} PRIVATE dftracer_utils::shared argparse::argparse ghc_filesystem
+    yyjson::yyjson xxHash::xxhash)
   link_sqlite3(${bin_exec} STATIC)
   link_zlib(${bin_exec} STATIC)
 
