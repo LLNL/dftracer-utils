@@ -3,15 +3,21 @@
 
 /**
  * @file workflows.h
- * @brief Convenience header for all workflow utilities.
+ * @brief Convenience header for all workflows.
  *
- * Workflow utilities compose multiple atomic components to implement
- * common patterns found in data processing pipelines.
+ * This header provides a single include for all general-purpose workflows,
+ * DFTracer-specific workflows, and related types.
  */
 
-#include <dftracer/utils/components/workflows/directory_file_processor.h>
-#include <dftracer/utils/components/workflows/indexed_file_reader.h>
-#include <dftracer/utils/components/workflows/line_batch_processor.h>
+// Core workflow types
 #include <dftracer/utils/components/workflows/workflow_types.h>
+
+// Generic workflows
+#include <dftracer/utils/components/workflows/batch_processor.h>
+#include <dftracer/utils/components/workflows/chunk_verifier.h>
+#include <dftracer/utils/components/workflows/directory_file_processor.h>
+
+// DFTracer-specific workflows
+#include <dftracer/utils/components/workflows/dft/dft.h>
 
 #endif  // DFTRACER_UTILS_COMPONENTS_WORKFLOWS_WORKFLOWS_H

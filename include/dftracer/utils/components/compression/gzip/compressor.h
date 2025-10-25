@@ -1,7 +1,7 @@
 #ifndef DFTRACER_UTILS_COMPONENTS_COMPRESSION_GZIP_COMPRESSOR_H
 #define DFTRACER_UTILS_COMPONENTS_COMPRESSION_GZIP_COMPRESSOR_H
 
-#include <dftracer/utils/components/io/shared.h>
+#include <dftracer/utils/components/io/types/types.h>
 #include <dftracer/utils/core/utilities/utility.h>
 #include <zlib.h>
 

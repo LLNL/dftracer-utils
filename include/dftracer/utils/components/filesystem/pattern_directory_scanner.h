@@ -23,6 +23,23 @@ struct PatternDirectory {
     PatternDirectory(std::string p, std::vector<std::string> pats,
                      bool rec = false)
         : path(std::move(p)), recursive(rec), patterns(std::move(pats)) {}
+
+    // Fluent builder pattern
+    static PatternDirectory from_path(std::string p) {
+        PatternDirectory input;
+        input.path = std::move(p);
+        return input;
+    }
+
+    PatternDirectory& with_patterns(std::vector<std::string> pats) {
+        patterns = std::move(pats);
+        return *this;
+    }
+
+    PatternDirectory& with_recursive(bool rec) {
+        recursive = rec;
+        return *this;
+    }
 };
 
 /**

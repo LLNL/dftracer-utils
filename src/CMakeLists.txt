@@ -80,6 +80,12 @@ set(DFTRACER_UTILS_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/reader/tar_reader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/reader/reader_factory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/reader/error.cpp
+    # Workflows
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/components/workflows/dft/metadata_collector.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/components/workflows/dft/chunk_extractor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/components/workflows/dft/chunk_manifest_mapper.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/components/workflows/dft/event_collector.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/components/workflows/dft/event_hasher.cpp
 )
 
 # +++++++++++++++++++++++++++++++++++++++++
@@ -159,7 +165,8 @@ set(DFTRACER_BINARIES
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_pgzip.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_merge.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_split.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_info.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_info.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/test_utilities.cpp)
 
 foreach(bin ${DFTRACER_BINARIES})
   string(REPLACE ".cpp" "" bin_exec ${bin})

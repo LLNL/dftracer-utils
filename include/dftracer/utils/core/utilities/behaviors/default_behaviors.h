@@ -33,27 +33,29 @@ namespace behaviors {
  * @endcode
  */
 template <typename I, typename O>
-void register_default_behaviors(BehaviorFactory<I, O>& factory) {
+void register_default_behaviors(
+    [[maybe_unused]] BehaviorFactory<I, O>& factory) {
     // Register Cacheable -> CachingBehavior
-    factory.template register_behavior<tags::Cacheable>(
-        [](const tags::Cacheable& tag) {
-            return std::make_shared<CachingBehavior<I, O>>(
-                tag.max_cache_size, tag.ttl, tag.use_lru);
-        });
+    // factory.template register_behavior<tags::Cacheable>(
+    //     [](const tags::Cacheable& tag) {
+    //         return std::make_shared<CachingBehavior<I, O>>(
+    //             tag.max_cache_size, tag.ttl, tag.use_lru);
+    //     });
 
     // Register Retryable -> RetryBehavior
-    factory.template register_behavior<tags::Retryable>(
-        [](const tags::Retryable& tag) {
-            return std::make_shared<RetryBehavior<I, O>>(
-                tag.max_retries, tag.retry_delay, tag.exponential_backoff);
-        });
+    // factory.template register_behavior<tags::Retryable>(
+    //     [](const tags::Retryable& tag) {
+    //         return std::make_shared<RetryBehavior<I, O>>(
+    //             tag.max_retries, tag.retry_delay, tag.exponential_backoff);
+    //     });
 
-    // Register Monitored -> MonitoringBehavior
-    factory.template register_behavior<tags::Monitored>(
-        [](const tags::Monitored& tag) {
-            return std::make_shared<MonitoringBehavior<I, O>>(tag.log_callback,
-                                                              tag.utility_name);
-        });
+    // // Register Monitored -> MonitoringBehavior
+    // factory.template register_behavior<tags::Monitored>(
+    //     [](const tags::Monitored& tag) {
+    //         return std::make_shared<MonitoringBehavior<I,
+    //         O>>(tag.log_callback,
+    //                                                           tag.utility_name);
+    //     });
 }
 
 /**

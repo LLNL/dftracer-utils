@@ -2,8 +2,8 @@
 #define DFTRACER_UTILS_COMPONENTS_IO_STREAMING_FILE_READER_H
 
 #include <dftracer/utils/components/io/chunk_iterator.h>
-#include <dftracer/utils/components/io/shared.h>
 #include <dftracer/utils/components/io/streaming.h>
+#include <dftracer/utils/components/io/types/types.h>
 #include <dftracer/utils/core/utilities/utility.h>
 
 #include <stdexcept>

@@ -2,7 +2,7 @@
 #define DFTRACER_UTILS_COMPONENTS_IO_BINARY_FILE_READER_H
 
 #include <dftracer/utils/components/filesystem/directory_scanner.h>
-#include <dftracer/utils/components/io/shared.h>
+#include <dftracer/utils/components/io/types/types.h>
 #include <dftracer/utils/core/utilities/utility.h>
 
 #include <fstream>

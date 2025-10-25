@@ -2,7 +2,7 @@
 #define DFTRACER_UTILS_COMPONENTS_COMPRESSION_GZIP_COMPRESSED_CHUNK_ITERATOR_H
 
 #include <dftracer/utils/components/io/chunk_iterator.h>
-#include <dftracer/utils/components/io/shared.h>
+#include <dftracer/utils/components/io/types/types.h>
 #include <zlib.h>
 
 #include <cstring>

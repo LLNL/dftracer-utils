@@ -1,6 +1,7 @@
 #ifndef DFTRACER_UTILS_COMPONENTS_IO_LINES_STREAMING_LINE_READER_H
 #define DFTRACER_UTILS_COMPONENTS_IO_LINES_STREAMING_LINE_READER_H
 
+#include <dftracer/utils/components/io/lines/line_bytes_range.h>
 #include <dftracer/utils/components/io/lines/line_range.h>
 #include <dftracer/utils/components/io/lines/line_types.h>
 #include <dftracer/utils/core/common/filesystem.h>
@@ -139,6 +140,46 @@ class StreamingLineReader {
             (end_line > 0) ? end_line : reader->get_num_lines();
 
         return LineRange::from_indexed_file(reader, actual_start, actual_end);
+    }
+
+    /**
+     * @brief Read lines from an indexed file using byte offsets.
+     *
+     * Reads lines that fall within the specified byte range.
+     * Line boundaries are automatically aligned to ensure complete lines.
+     * Uses the Reader's byte-based API for precise I/O control.
+     *
+     * @param file_path Path to the compressed file
+     * @param idx_path Path to the index file
+     * @param start_byte Starting byte offset (0-based, inclusive)
+     * @param end_byte Ending byte offset (0-based, exclusive)
+     * @return LineBytesRange for streaming iteration
+     */
+    static LineBytesRange read_bytes_indexed(const std::string& file_path,
+                                             const std::string& idx_path,
+                                             std::size_t start_byte,
+                                             std::size_t end_byte) {
+        auto reader =
+            dftracer::utils::ReaderFactory::create(file_path, idx_path);
+
+        return LineBytesRange::from_indexed_file(reader, start_byte, end_byte);
+    }
+
+    /**
+     * @brief Read lines from a plain text file using byte offsets.
+     *
+     * Reads lines that fall within the specified byte range.
+     * Line boundaries are automatically aligned to ensure complete lines.
+     *
+     * @param file_path Path to the plain text file
+     * @param start_byte Starting byte offset (0-based, inclusive)
+     * @param end_byte Ending byte offset (0-based, exclusive)
+     * @return LineBytesRange for streaming iteration
+     */
+    static LineBytesRange read_bytes(const std::string& file_path,
+                                     std::size_t start_byte,
+                                     std::size_t end_byte) {
+        return LineBytesRange::from_plain_file(file_path, start_byte, end_byte);
     }
 
    private:

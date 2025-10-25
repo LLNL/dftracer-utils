@@ -18,7 +18,7 @@
  * - ManualStreamingCompressor: Manual chunk-by-chunk compression
  * - StreamingDecompressor: Manual chunk-by-chunk decompression
  *
- * Note: RawData and CompressedData are defined in components/io/shared.h
+ * Note: RawData and CompressedData are defined in components/io/types/types.h
  *
  * Usage (In-Memory):
  * @code

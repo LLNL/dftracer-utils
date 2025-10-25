@@ -1,7 +1,7 @@
 #ifndef DFTRACER_UTILS_COMPONENTS_IO_STREAMING_H
 #define DFTRACER_UTILS_COMPONENTS_IO_STREAMING_H
 
-#include <dftracer/utils/components/io/shared.h>
+#include <dftracer/utils/components/io/types/types.h>
 
 #include <functional>
 #include <vector>

@@ -3,7 +3,7 @@
 
 #include <dftracer/utils/components/compression/gzip/compressed_chunk_iterator.h>
 #include <dftracer/utils/components/io/chunk_iterator.h>
-#include <dftracer/utils/components/io/shared.h>
+#include <dftracer/utils/components/io/types/types.h>
 #include <dftracer/utils/core/utilities/utility.h>
 #include <zlib.h>
 
