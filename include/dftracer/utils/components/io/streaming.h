@@ -1,0 +1,71 @@
+#ifndef DFTRACER_UTILS_COMPONENTS_IO_STREAMING_H
+#define DFTRACER_UTILS_COMPONENTS_IO_STREAMING_H
+
+#include <dftracer/utils/components/io/shared.h>
+
+#include <functional>
+#include <vector>
+
+namespace dftracer::utils::components::io {
+
+/**
+ * @brief Configuration for streaming file read operations.
+ */
+struct StreamReadRequest {
+    fs::path path;
+    std::size_t chunk_size = 64 * 1024;  // 64KB default
+
+    StreamReadRequest() = default;
+
+    explicit StreamReadRequest(fs::path p, std::size_t cs = 64 * 1024)
+        : path(std::move(p)), chunk_size(cs) {}
+
+    // Equality for caching support
+    bool operator==(const StreamReadRequest& other) const {
+        return path == other.path && chunk_size == other.chunk_size;
+    }
+
+    bool operator!=(const StreamReadRequest& other) const {
+        return !(*this == other);
+    }
+};
+
+/**
+ * @brief Result of a streaming write operation.
+ */
+struct StreamWriteResult {
+    fs::path path;
+    std::size_t bytes_written = 0;
+    std::size_t chunks_written = 0;
+    bool success = false;
+
+    StreamWriteResult() = default;
+
+    static StreamWriteResult success_result(fs::path p, std::size_t bytes,
+                                            std::size_t chunks) {
+        StreamWriteResult result;
+        result.path = std::move(p);
+        result.bytes_written = bytes;
+        result.chunks_written = chunks;
+        result.success = true;
+        return result;
+    }
+};
+
+}  // namespace dftracer::utils::components::io
+
+// Hash specializations to enable caching
+namespace std {
+template <>
+struct hash<dftracer::utils::components::io::StreamReadRequest> {
+    std::size_t operator()(
+        const dftracer::utils::components::io::StreamReadRequest& req)
+        const noexcept {
+        std::size_t h1 = std::hash<std::string>{}(req.path.string());
+        std::size_t h2 = std::hash<std::size_t>{}(req.chunk_size);
+        return h1 ^ (h2 << 1);
+    }
+};
+}  // namespace std
+
+#endif  // DFTRACER_UTILS_COMPONENTS_IO_STREAMING_H
