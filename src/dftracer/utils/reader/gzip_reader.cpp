@@ -34,8 +34,8 @@ static void validate_parameters(
     }
 }
 
-static void check_reader_state(bool is_open, const void *indexer_ptr) {
-    if (!is_open || !indexer_ptr) {
+static void check_reader_state(bool is_open, const void *indexer) {
+    if (!is_open || !indexer) {
         throw std::runtime_error("Reader is not open");
     }
 }
@@ -51,53 +51,48 @@ GzipReader::GzipReader(const std::string &gz_path_,
       idx_path(idx_path_),
       is_open(false),
       default_buffer_size(DEFAULT_READER_BUFFER_SIZE),
-      indexer_ptr(nullptr) {
+      indexer(nullptr) {
     try {
-        owned_indexer =
+        indexer =
             IndexerFactory::create(gz_path, idx_path, index_ckpt_size, false);
-        indexer_ptr = owned_indexer.get();
         is_open = true;
 
-        stream_factory = std::make_unique<GzipStreamFactory>(*indexer_ptr);
+        stream_factory = std::make_unique<GzipStreamFactory>(*indexer);
 
         DFTRACER_UTILS_LOG_DEBUG(
             "Successfully created GZIP reader for gz: %s and index: %s",
             gz_path.c_str(), idx_path.c_str());
     } catch (const std::exception &e) {
         throw ReaderError(ReaderError::INITIALIZATION_ERROR,
-                          "Failed to initialize reader with indexer_ptr: " +
+                          "Failed to initialize reader with indexer: " +
                               std::string(e.what()));
     }
 }
 
-GzipReader::GzipReader(Indexer *indexer_)
-    : default_buffer_size(DEFAULT_READER_BUFFER_SIZE), indexer_ptr(indexer_) {
-    if (indexer_ptr == nullptr) {
+GzipReader::GzipReader(std::shared_ptr<Indexer> indexer_)
+    : default_buffer_size(DEFAULT_READER_BUFFER_SIZE), indexer(indexer_) {
+    if (!indexer) {
         throw ReaderError(ReaderError::INITIALIZATION_ERROR,
                           "Invalid indexer provided");
     }
-    stream_factory = std::make_unique<GzipStreamFactory>(*indexer_ptr);
+    stream_factory = std::make_unique<GzipStreamFactory>(*indexer);
     is_open = true;
-    gz_path = indexer_ptr->get_archive_path();
-    idx_path = indexer_ptr->get_idx_path();
+    gz_path = indexer->get_archive_path();
+    idx_path = indexer->get_idx_path();
 }
 
-GzipReader::~GzipReader() {
-    // unique_ptr will automatically handle cleanup
-}
+GzipReader::~GzipReader() = default;
 
 GzipReader::GzipReader(GzipReader &&other) noexcept
     : gz_path(std::move(other.gz_path)),
       idx_path(std::move(other.idx_path)),
       is_open(other.is_open),
       default_buffer_size(other.default_buffer_size),
-      owned_indexer(std::move(other.owned_indexer)),
-      indexer_ptr(other.indexer_ptr),
+      indexer(std::move(other.indexer)),
       stream_factory(std::move(other.stream_factory)),
       byte_stream(std::move(other.byte_stream)),
       line_byte_stream(std::move(other.line_byte_stream)) {
     other.is_open = false;
-    other.indexer_ptr = nullptr;
 }
 
 GzipReader &GzipReader::operator=(GzipReader &&other) noexcept {
@@ -106,29 +101,26 @@ GzipReader &GzipReader::operator=(GzipReader &&other) noexcept {
         idx_path = std::move(other.idx_path);
         is_open = other.is_open;
         default_buffer_size = other.default_buffer_size;
-        owned_indexer = std::move(other.owned_indexer);
-        indexer_ptr = other.indexer_ptr;
+        indexer = std::move(other.indexer);
         stream_factory = std::move(other.stream_factory);
         byte_stream = std::move(other.byte_stream);
         line_byte_stream = std::move(other.line_byte_stream);
         other.is_open = false;
-        other.indexer_ptr = nullptr;
     }
     return *this;
 }
 
 std::size_t GzipReader::get_max_bytes() const {
-    check_reader_state(is_open, indexer_ptr);
+    check_reader_state(is_open, indexer.get());
     std::size_t max_bytes =
-        static_cast<std::size_t>(indexer_ptr->get_max_bytes());
+        static_cast<std::size_t>(indexer.get()->get_max_bytes());
     DFTRACER_UTILS_LOG_DEBUG("Maximum bytes available: %zu", max_bytes);
     return max_bytes;
 }
 
 std::size_t GzipReader::get_num_lines() const {
-    check_reader_state(is_open, indexer_ptr);
-    std::size_t num_lines =
-        static_cast<std::size_t>(indexer_ptr->get_num_lines());
+    check_reader_state(is_open, indexer.get());
+    std::size_t num_lines = static_cast<std::size_t>(indexer->get_num_lines());
     DFTRACER_UTILS_LOG_DEBUG("Total lines available: %zu", num_lines);
     return num_lines;
 }
@@ -142,7 +134,7 @@ void GzipReader::set_buffer_size(std::size_t size) {
 }
 
 void GzipReader::reset() {
-    check_reader_state(is_open, indexer_ptr);
+    check_reader_state(is_open, indexer.get());
     if (line_byte_stream) {
         line_byte_stream->reset();
     }
@@ -153,9 +145,9 @@ void GzipReader::reset() {
 
 std::size_t GzipReader::read(std::size_t start_bytes, std::size_t end_bytes,
                              char *buffer, std::size_t buffer_size) {
-    check_reader_state(is_open, indexer_ptr);
+    check_reader_state(is_open, indexer.get());
     validate_parameters(buffer, buffer_size, start_bytes, end_bytes,
-                        indexer_ptr->get_max_bytes());
+                        indexer.get()->get_max_bytes());
 
     DFTRACER_UTILS_LOG_DEBUG(
         "GzipReader::read - request: start_bytes=%zu, end_bytes=%zu, "
@@ -186,14 +178,14 @@ std::size_t GzipReader::read(std::size_t start_bytes, std::size_t end_bytes,
 std::size_t GzipReader::read_line_bytes(std::size_t start_bytes,
                                         std::size_t end_bytes, char *buffer,
                                         std::size_t buffer_size) {
-    check_reader_state(is_open, indexer_ptr);
+    check_reader_state(is_open, indexer.get());
 
-    if (end_bytes > indexer_ptr->get_max_bytes()) {
-        end_bytes = indexer_ptr->get_max_bytes();
+    if (end_bytes > indexer.get()->get_max_bytes()) {
+        end_bytes = indexer.get()->get_max_bytes();
     }
 
     validate_parameters(buffer, buffer_size, start_bytes, end_bytes,
-                        indexer_ptr->get_max_bytes());
+                        indexer.get()->get_max_bytes());
 
     if (stream_factory->needs_new_line_stream(line_byte_stream.get(), gz_path,
                                               start_bytes, end_bytes)) {
@@ -210,17 +202,17 @@ std::size_t GzipReader::read_line_bytes(std::size_t start_bytes,
 
 std::string GzipReader::read_lines(std::size_t start_line,
                                    std::size_t end_line) {
-    check_reader_state(is_open, indexer_ptr);
+    check_reader_state(is_open, indexer.get());
 
     if (start_line == 0 || end_line == 0) {
         throw std::runtime_error("Line numbers must be 1-based (start from 1)");
     }
-    check_reader_state(is_open, indexer_ptr);
+    check_reader_state(is_open, indexer.get());
     if (start_line > end_line) {
         throw std::runtime_error("Start line must be <= end line");
     }
 
-    std::size_t total_lines = indexer_ptr->get_num_lines();
+    std::size_t total_lines = indexer.get()->get_num_lines();
     if (start_line > total_lines || end_line > total_lines) {
         throw std::runtime_error("Line numbers exceed total lines in file (" +
                                  std::to_string(total_lines) + ")");
@@ -235,7 +227,7 @@ std::string GzipReader::read_lines(std::size_t start_line,
 void GzipReader::read_lines_with_processor(std::size_t start_line,
                                            std::size_t end_line,
                                            LineProcessor &processor) {
-    check_reader_state(is_open, indexer_ptr);
+    check_reader_state(is_open, indexer.get());
 
     if (start_line == 0 || end_line == 0) {
         throw std::runtime_error("Line numbers must be 1-based (start from 1)");
@@ -245,7 +237,7 @@ void GzipReader::read_lines_with_processor(std::size_t start_line,
         throw std::runtime_error("Start line must be <= end line");
     }
 
-    std::size_t total_lines = indexer_ptr->get_num_lines();
+    std::size_t total_lines = indexer.get()->get_num_lines();
     if (start_line > total_lines || end_line > total_lines) {
         throw std::runtime_error("Line numbers exceed total lines in file (" +
                                  std::to_string(total_lines) + ")");
@@ -257,10 +249,10 @@ void GzipReader::read_lines_with_processor(std::size_t start_line,
     std::size_t buffer_usage = 0;
 
     std::vector<IndexerCheckpoint> checkpoints =
-        indexer_ptr->get_checkpoints_for_line_range(start_line, end_line);
+        indexer.get()->get_checkpoints_for_line_range(start_line, end_line);
 
     if (checkpoints.empty()) {
-        std::size_t max_bytes = indexer_ptr->get_max_bytes();
+        std::size_t max_bytes = indexer.get()->get_max_bytes();
         line_byte_stream =
             stream_factory->create_line_stream(gz_path, 0, max_bytes);
 
@@ -295,7 +287,7 @@ void GzipReader::read_lines_with_processor(std::size_t start_line,
             total_start_offset = 0;
             first_line_in_data = 1;
         } else {
-            auto all_checkpoints = indexer_ptr->get_checkpoints();
+            auto all_checkpoints = indexer.get()->get_checkpoints();
             for (const auto &prev_ckpt : all_checkpoints) {
                 if (prev_ckpt.checkpoint_idx ==
                     checkpoints[0].checkpoint_idx - 1) {
@@ -340,10 +332,10 @@ void GzipReader::read_lines_with_processor(std::size_t start_line,
 void GzipReader::read_line_bytes_with_processor(std::size_t start_bytes,
                                                 std::size_t end_bytes,
                                                 LineProcessor &processor) {
-    check_reader_state(is_open, indexer_ptr);
+    check_reader_state(is_open, indexer.get());
 
-    if (end_bytes > indexer_ptr->get_max_bytes()) {
-        end_bytes = indexer_ptr->get_max_bytes();
+    if (end_bytes > indexer.get()->get_max_bytes()) {
+        end_bytes = indexer.get()->get_max_bytes();
     }
 
     if (start_bytes >= end_bytes) {
@@ -407,7 +399,7 @@ void GzipReader::read_line_bytes_with_processor(std::size_t start_bytes,
     processor.end();
 }
 
-bool GzipReader::is_valid() const { return is_open && indexer_ptr; }
+bool GzipReader::is_valid() const { return is_open && indexer.get(); }
 
 std::string GzipReader::get_format_name() const { return "GZIP"; }
 

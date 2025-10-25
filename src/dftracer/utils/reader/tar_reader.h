@@ -45,7 +45,7 @@ class TarReader : public Reader {
     TarReader(
         const std::string &tar_gz_path, const std::string &idx_path,
         std::size_t index_ckpt_size = TarIndexer::DEFAULT_CHECKPOINT_SIZE);
-    explicit TarReader(TarIndexer *indexer);
+    explicit TarReader(std::shared_ptr<TarIndexer> indexer);
     ~TarReader();
 
     // Disable copy constructor and copy assignment
@@ -102,8 +102,7 @@ class TarReader : public Reader {
     std::string idx_path;
     bool is_open;
     std::size_t default_buffer_size;
-    std::unique_ptr<TarIndexer> indexer;
-    bool is_indexer_initialized_internally;
+    std::shared_ptr<TarIndexer> indexer;
 
     // Cached logical view mapping
     mutable bool logical_mapping_cached;

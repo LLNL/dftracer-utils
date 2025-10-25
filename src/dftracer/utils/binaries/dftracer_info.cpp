@@ -79,7 +79,7 @@ static FileInfo get_file_info(const std::string& file_path,
 
         info.has_index = fs::exists(info.idx_path);
 
-        std::unique_ptr<Indexer> indexer;
+        std::shared_ptr<Indexer> indexer;
         if (!info.has_index || force_rebuild) {
             if (force_rebuild && info.has_index) {
                 DFTRACER_UTILS_LOG_DEBUG("Removing existing index: %s",

@@ -6,7 +6,7 @@
 
 namespace dftracer::utils {
 
-std::unique_ptr<Indexer> IndexerFactory::create(const std::string &archive_path,
+std::shared_ptr<Indexer> IndexerFactory::create(const std::string &archive_path,
                                                 const std::string &idx_path,
                                                 std::uint64_t checkpoint_size,
                                                 bool force) {
@@ -16,11 +16,11 @@ std::unique_ptr<Indexer> IndexerFactory::create(const std::string &archive_path,
 
     switch (format) {
         case ArchiveFormat::GZIP:
-            return std::make_unique<GzipIndexer>(archive_path, final_idx_path,
+            return std::make_shared<GzipIndexer>(archive_path, final_idx_path,
                                                  checkpoint_size, force);
 
         case ArchiveFormat::TAR_GZ:
-            return std::make_unique<tar_indexer::TarIndexer>(
+            return std::make_shared<tar_indexer::TarIndexer>(
                 archive_path, final_idx_path, checkpoint_size, force);
 
         case ArchiveFormat::UNKNOWN:

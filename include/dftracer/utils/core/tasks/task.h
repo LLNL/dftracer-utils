@@ -21,7 +21,7 @@ class Task {
 
    public:
     virtual ~Task() = default;
-    virtual std::any execute(std::any& in) = 0;
+    virtual std::any execute(const std::any& in) = 0;
 
     virtual void setup_context(TaskContext*) {}
     virtual bool needs_context() const { return false; }

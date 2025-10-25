@@ -82,7 +82,40 @@ void SequentialScheduler::submit_dynamic_task(TaskIndex task_id, Task* task_ptr,
     }
 
     total_tasks_++;
-    task_queue_.emplace(task_id, task_ptr, input);
+
+    // For sequential execution: execute the task immediately instead of queuing
+    // This allows emitted tasks to complete before the parent task returns,
+    // avoiding deadlock when the parent calls future.get()
+    try {
+        std::any result;
+        TaskContext task_context(this, current_execution_context_, task_id);
+
+        if (task_ptr->needs_context()) {
+            task_ptr->setup_context(&task_context);
+        }
+
+        DFTRACER_UTILS_LOG_DEBUG(
+            "SequentialScheduler: Immediately executing dynamic task %d",
+            task_id);
+        result = task_ptr->execute(input);
+
+        current_execution_context_->set_task_output(task_id, result);
+        current_execution_context_->fulfill_dynamic_promise(task_id, result);
+        current_execution_context_->mark_task_completed(task_id);
+        task_completed_[task_id] = true;
+
+    } catch (const std::exception& e) {
+        DFTRACER_UTILS_LOG_ERROR(
+            "SequentialScheduler: Exception executing dynamic task %d: %s",
+            task_id, e.what());
+
+        if (current_execution_context_) {
+            current_execution_context_->fulfill_dynamic_promise_exception(
+                task_id, std::current_exception());
+            current_execution_context_->mark_task_completed(task_id);
+        }
+        task_completed_[task_id] = true;
+    }
 }
 
 void SequentialScheduler::execute_task_with_dependencies(
@@ -200,9 +233,11 @@ void SequentialScheduler::process_all_tasks() {
             task_completed_[task.task_id] = true;
             report_progress(task.task_id, current_pipeline_name_);
         }
-    }
 
-    process_remaining_dynamic_tasks();
+        // Process any dynamic tasks that were emitted during task execution
+        // This adds them to the queue so the while loop will pick them up
+        process_remaining_dynamic_tasks();
+    }
 }
 
 void SequentialScheduler::process_remaining_dynamic_tasks() {
