@@ -1,3 +1,5 @@
+#include <dftracer/utils/components/io/types/types.h>
+#include <dftracer/utils/components/workflows/workflows.h>
 #include <dftracer/utils/core/common/config.h>
 #include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/common/logging.h>
@@ -31,667 +33,16 @@
 
 using namespace dftracer::utils;
 
-struct FileMetadata {
-    std::string file_path;
-    std::string idx_path;
-    double size_mb;
-    std::size_t start_line;
-    std::size_t end_line;
-    std::size_t valid_events;
-    double size_per_line;
-    bool success;
-};
-
-struct ChunkSpec {
-    std::string file_path;
-    std::string idx_path;
-    double size_mb;
-    std::size_t start_line;
-    std::size_t end_line;
-};
-
-struct ChunkData {
-    int chunk_index;
-    std::vector<ChunkSpec> specs;
-    double total_size_mb;
-};
-
-struct ChunkResult {
-    int chunk_index;
-    std::string output_path;
-    double size_mb;
-    std::size_t events;
-    bool success;
-};
-
-class SizeEstimator : public LineProcessor {
-   public:
-    std::atomic<std::size_t> total_bytes{0};
-    std::atomic<std::size_t> valid_lines{0};
-
-    bool process(const char* data, std::size_t length) override {
-        const char* trimmed;
-        std::size_t trimmed_length;
-        if (json_trim_and_validate(data, length, trimmed, trimmed_length) &&
-            trimmed_length > 8) {
-            total_bytes += length;
-            valid_lines++;
-        }
-        return true;
-    }
-};
-
-struct EventId {
-    std::int64_t id;
-    std::int64_t pid;
-    std::int64_t tid;
-
-    bool operator<(const EventId& other) const {
-        if (id != other.id) return id < other.id;
-        if (pid != other.pid) return pid < other.pid;
-        return tid < other.tid;
-    }
-};
-
-class EventIdCollector : public LineProcessor {
-   public:
-    std::vector<EventId>& events;
-
-    EventIdCollector(std::vector<EventId>& event_list) : events(event_list) {}
-
-    bool process(const char* data, std::size_t length) override {
-        const char* trimmed;
-        std::size_t trimmed_length;
-        if (!json_trim_and_validate(data, length, trimmed, trimmed_length) ||
-            trimmed_length <= 8) {
-            return true;
-        }
-
-        yyjson_doc* doc = yyjson_read(trimmed, trimmed_length, 0);
-        if (!doc) return true;
-
-        yyjson_val* root = yyjson_doc_get_root(doc);
-        if (!yyjson_is_obj(root)) {
-            yyjson_doc_free(doc);
-            return true;
-        }
-
-        EventId event{-1, -1, -1};
-        yyjson_val* id_val = yyjson_obj_get(root, "id");
-        if (id_val && yyjson_is_int(id_val)) {
-            event.id = yyjson_get_int(id_val);
-        }
-
-        yyjson_val* pid_val = yyjson_obj_get(root, "pid");
-        if (pid_val && yyjson_is_int(pid_val)) {
-            event.pid = yyjson_get_int(pid_val);
-        }
-
-        yyjson_val* tid_val = yyjson_obj_get(root, "tid");
-        if (tid_val && yyjson_is_int(tid_val)) {
-            event.tid = yyjson_get_int(tid_val);
-        }
-
-        if (event.id >= 0) {
-            events.push_back(event);
-        }
-
-        yyjson_doc_free(doc);
-        return true;
-    }
-};
-
-static std::uint64_t compute_event_hash(
-    const std::vector<FileMetadata>& files) {
-    std::vector<EventId> events;
-
-    for (const auto& file : files) {
-        if (!file.success) continue;
-
-        if (!file.idx_path.empty()) {
-            auto reader = ReaderFactory::create(file.file_path, file.idx_path);
-            EventIdCollector collector(events);
-            reader->read_lines_with_processor(file.start_line, file.end_line,
-                                              collector);
-        } else {
-            std::ifstream infile(file.file_path);
-            if (!infile.is_open()) continue;
-
-            EventIdCollector collector(events);
-            std::string line;
-            std::size_t current_line = 0;
-            while (std::getline(infile, line)) {
-                current_line++;
-                if (current_line < file.start_line) continue;
-                if (current_line > file.end_line) break;
-                collector.process(line.c_str(), line.length());
-            }
-        }
-    }
-
-    std::sort(events.begin(), events.end());
-
-    XXH3_state_t* state = XXH3_createState();
-    if (!state) {
-        DFTRACER_UTILS_LOG_ERROR("%s", "Failed to create XXH3 state");
-        return 0;
-    }
-    XXH3_64bits_reset_withSeed(state, 0);
-
-    for (const auto& event : events) {
-        XXH3_64bits_update(state, &event.id, sizeof(event.id));
-        XXH3_64bits_update(state, &event.pid, sizeof(event.pid));
-        XXH3_64bits_update(state, &event.tid, sizeof(event.tid));
-    }
-
-    std::uint64_t hash = XXH3_64bits_digest(state);
-    XXH3_freeState(state);
-    return hash;
-}
-
-static std::vector<EventId> collect_output_events(const ChunkResult& result,
-                                                  std::size_t checkpoint_size,
-                                                  TaskContext&) {
-    std::vector<EventId> events;
-    if (!result.success) return events;
-
-    bool is_compressed =
-        (result.output_path.size() > 3 &&
-         result.output_path.substr(result.output_path.size() - 3) == ".gz");
-    EventIdCollector collector(events);
-
-    if (is_compressed) {
-        fs::path tmp_idx =
-            fs::temp_directory_path() /
-            (fs::path(result.output_path).filename().string() + ".idx");
-
-        if (fs::exists(tmp_idx)) {
-            fs::remove(tmp_idx);
-        }
-
-        auto indexer = IndexerFactory::create(
-            result.output_path, tmp_idx.string(), checkpoint_size, true);
-        indexer->build();
-
-        auto reader = ReaderFactory::create(indexer);
-        std::size_t num_lines = reader->get_num_lines();
-        if (num_lines > 0) {
-            reader->read_lines_with_processor(1, num_lines, collector);
-        }
-
-        if (fs::exists(tmp_idx)) {
-            fs::remove(tmp_idx);
-        }
-    } else {
-        std::ifstream chunk_file(result.output_path);
-        if (!chunk_file.is_open()) {
-            DFTRACER_UTILS_LOG_ERROR("Cannot open chunk file: %s",
-                                     result.output_path.c_str());
-            return events;
-        }
-
-        std::string line;
-        while (std::getline(chunk_file, line)) {
-            collector.process(line.c_str(), line.length());
-        }
-    }
-    return events;
-}
-
-static FileMetadata collect_metadata_gz(const std::string& gz_path,
-                                        const std::string& idx_path,
-                                        std::size_t checkpoint_size,
-                                        bool force_rebuild, TaskContext&) {
-    FileMetadata meta{gz_path, idx_path, 0, 0, 0, 0, 0, false};
-
-    try {
-        if (!fs::exists(idx_path) || force_rebuild) {
-            if (force_rebuild && fs::exists(idx_path)) {
-                fs::remove(idx_path);
-            }
-            DFTRACER_UTILS_LOG_DEBUG("Building index for %s", gz_path.c_str());
-            auto indexer = IndexerFactory::create(gz_path, idx_path,
-                                                  checkpoint_size, true);
-            indexer->build();
-        } else {
-            auto indexer = IndexerFactory::create(gz_path, idx_path,
-                                                  checkpoint_size, false);
-            if (indexer->need_rebuild()) {
-                DFTRACER_UTILS_LOG_DEBUG("Rebuilding index for %s",
-                                         gz_path.c_str());
-                fs::remove(idx_path);
-                auto new_indexer = IndexerFactory::create(
-                    gz_path, idx_path, checkpoint_size, true);
-                new_indexer->build();
-            }
-        }
-
-        auto reader = ReaderFactory::create(gz_path, idx_path);
-        std::size_t total_lines = reader->get_num_lines();
-
-        if (total_lines == 0) {
-            DFTRACER_UTILS_LOG_DEBUG("File %s has no lines", gz_path.c_str());
-            return meta;
-        }
-
-        SizeEstimator estimator;
-        reader->read_lines_with_processor(1, total_lines, estimator);
-
-        meta.size_mb = static_cast<double>(estimator.total_bytes.load()) /
-                       (1024.0 * 1024.0);
-        meta.start_line = 1;
-        meta.end_line = total_lines;
-        meta.valid_events = estimator.valid_lines.load();
-
-        if (meta.valid_events > 0) {
-            meta.size_per_line =
-                meta.size_mb / static_cast<double>(meta.valid_events);
-        } else {
-            meta.size_per_line = 0;
-        }
-
-        meta.success = true;
-
-        DFTRACER_UTILS_LOG_DEBUG(
-            "File %s: %.2f MB, %zu valid events from %zu lines, %.8f MB/event",
-            gz_path.c_str(), meta.size_mb, meta.valid_events, total_lines,
-            meta.size_per_line);
-
-    } catch (const std::exception& e) {
-        DFTRACER_UTILS_LOG_ERROR("Failed to process %s: %s", gz_path.c_str(),
-                                 e.what());
-    }
-
-    return meta;
-}
-
-static FileMetadata collect_metadata_pfw(const std::string& pfw_path,
-                                         TaskContext&) {
-    FileMetadata meta{pfw_path, "", 0, 0, 0, 0, 0, false};
-
-    try {
-        std::ifstream file(pfw_path);
-        if (!file.is_open()) {
-            DFTRACER_UTILS_LOG_ERROR("Cannot open file: %s", pfw_path.c_str());
-            return meta;
-        }
-
-        std::string line;
-        std::size_t total_lines = 0;
-        std::size_t total_bytes = 0;
-        std::size_t valid_events = 0;
-
-        while (std::getline(file, line)) {
-            total_lines++;
-            const char* trimmed;
-            std::size_t trimmed_length;
-            if (json_trim_and_validate(line.c_str(), line.length(), trimmed,
-                                       trimmed_length) &&
-                trimmed_length > 8) {
-                total_bytes += line.length();
-                valid_events++;
-            }
-        }
-
-        meta.size_mb = static_cast<double>(total_bytes) / (1024.0 * 1024.0);
-        meta.start_line = 1;
-        meta.end_line = total_lines;
-        meta.valid_events = valid_events;
-
-        if (valid_events > 0) {
-            meta.size_per_line =
-                meta.size_mb / static_cast<double>(valid_events);
-        } else {
-            meta.size_per_line = 0;
-        }
-
-        meta.success = true;
-
-        DFTRACER_UTILS_LOG_DEBUG(
-            "File %s: %.2f MB, %zu valid events from %zu lines, %.8f MB/event",
-            pfw_path.c_str(), meta.size_mb, valid_events, total_lines,
-            meta.size_per_line);
-
-    } catch (const std::exception& e) {
-        DFTRACER_UTILS_LOG_ERROR("Error processing file %s: %s",
-                                 pfw_path.c_str(), e.what());
-    }
-
-    return meta;
-}
-
-static std::vector<FileMetadata> collect_all_metadata(
-    const std::vector<std::string>& files, std::size_t checkpoint_size,
-    bool force_rebuild, const std::string& index_dir, TaskContext& p_ctx) {
-    std::vector<TaskResult<FileMetadata>::Future> futures;
-    futures.reserve(files.size());
-
-    auto process_file = [checkpoint_size, force_rebuild, &index_dir](
-                            std::string file_path,
-                            TaskContext& ctx) -> FileMetadata {
-        const std::string pfw_gz_suffix = ".pfw.gz";
-        const std::string pfw_suffix = ".pfw";
-
-        if (file_path.size() >= pfw_gz_suffix.size() &&
-            file_path.compare(file_path.size() - pfw_gz_suffix.size(),
-                              pfw_gz_suffix.size(), pfw_gz_suffix) == 0) {
-            fs::path idx_dir = index_dir.empty() ? fs::temp_directory_path()
-                                                 : fs::path(index_dir);
-            std::string base_name = fs::path(file_path).filename().string();
-            std::string idx_path = (idx_dir / (base_name + ".idx")).string();
-            return collect_metadata_gz(file_path, idx_path, checkpoint_size,
-                                       force_rebuild, ctx);
-        } else if (file_path.size() >= pfw_suffix.size() &&
-                   file_path.compare(file_path.size() - pfw_suffix.size(),
-                                     pfw_suffix.size(), pfw_suffix) == 0) {
-            return collect_metadata_pfw(file_path, ctx);
-        } else {
-            DFTRACER_UTILS_LOG_ERROR("Unknown file type: %s",
-                                     file_path.c_str());
-            return FileMetadata{file_path, "", 0, 0, 0, 0, 0, false};
-        }
-    };
-
-    for (const auto& file_path : files) {
-        auto task_result = p_ctx.emit<std::string, FileMetadata>(
-            process_file, Input{file_path});
-        futures.push_back(std::move(task_result.future()));
-    }
-
-    std::vector<FileMetadata> results;
-    results.reserve(files.size());
-
-    for (auto& future : futures) {
-        results.push_back(future.get());
-    }
-
-    return results;
-}
-
-static std::vector<ChunkData> create_chunk_mappings(
-    const std::vector<FileMetadata>& metadata, double chunk_size_mb) {
-    std::vector<ChunkData> chunks;
-    ChunkData current_chunk;
-    current_chunk.chunk_index = 1;
-    current_chunk.total_size_mb = 0;
-
-    for (const auto& file : metadata) {
-        if (!file.success || file.size_mb <= 0 || file.valid_events == 0)
-            continue;
-
-        std::size_t remaining_events = file.valid_events;
-        std::size_t current_start = file.start_line;
-        std::size_t total_lines = file.end_line - file.start_line + 1;
-
-        while (remaining_events > 0) {
-            double available_space =
-                chunk_size_mb - current_chunk.total_size_mb;
-
-            std::size_t events_that_fit = 0;
-            if (available_space > 0 && file.size_per_line > 0) {
-                events_that_fit = static_cast<std::size_t>(
-                    std::floor(available_space / file.size_per_line));
-            }
-
-            // Always respect chunk size limit
-            std::size_t events_to_take =
-                (events_that_fit > 0)
-                    ? std::min(remaining_events, events_that_fit)
-                    : remaining_events;
-
-            if (events_to_take == 0 && remaining_events > 0) {
-                if (!current_chunk.specs.empty()) {
-                    chunks.push_back(current_chunk);
-                    current_chunk = ChunkData();
-                    current_chunk.chunk_index =
-                        static_cast<int>(chunks.size() + 1);
-                    current_chunk.total_size_mb = 0;
-                }
-                continue;
-            }
-
-            double event_ratio = static_cast<double>(events_to_take) /
-                                 static_cast<double>(file.valid_events);
-            std::size_t lines_to_take = static_cast<std::size_t>(
-                std::ceil(event_ratio * static_cast<double>(total_lines)));
-
-            std::size_t available_lines = file.end_line - current_start + 1;
-            if (lines_to_take > available_lines) {
-                lines_to_take = available_lines;
-            }
-
-            double size_to_take =
-                static_cast<double>(events_to_take) * file.size_per_line;
-
-            ChunkSpec spec;
-            spec.file_path = file.file_path;
-            spec.idx_path = file.idx_path;
-            spec.size_mb = size_to_take;
-            spec.start_line = current_start;
-            spec.end_line = current_start + lines_to_take - 1;
-            if (spec.end_line > file.end_line) {
-                spec.end_line = file.end_line;
-            }
-
-            current_chunk.specs.push_back(spec);
-            current_chunk.total_size_mb += size_to_take;
-
-            current_start = spec.end_line + 1;
-            remaining_events -= events_to_take;
-
-            if (current_chunk.total_size_mb >= chunk_size_mb * 0.95) {
-                chunks.push_back(current_chunk);
-                current_chunk = ChunkData();
-                current_chunk.chunk_index = static_cast<int>(chunks.size() + 1);
-                current_chunk.total_size_mb = 0;
-            }
-        }
-    }
-
-    if (!current_chunk.specs.empty()) {
-        chunks.push_back(current_chunk);
-    }
-
-    return chunks;
-}
-
-static ChunkResult extract_chunk(const ChunkData& chunk,
-                                 const std::string& output_dir,
-                                 const std::string& app_name, bool compress,
-                                 TaskContext&) {
-    std::string output_path = output_dir + "/" + app_name + "-" +
-                              std::to_string(chunk.chunk_index) + ".pfw";
-
-    ChunkResult result{chunk.chunk_index, output_path, 0, 0, false};
-
-    try {
-        FILE* output_fp = std::fopen(output_path.c_str(), "w");
-        if (!output_fp) {
-            DFTRACER_UTILS_LOG_ERROR("Cannot open output file: %s",
-                                     output_path.c_str());
-            return result;
-        }
-
-        setvbuf(output_fp, nullptr, _IOFBF, 1024 * 1024);
-        std::fprintf(output_fp, "[\n");
-
-        std::size_t total_events = 0;
-        XXH3_state_t* hash_state = XXH3_createState();
-        if (!hash_state) {
-            DFTRACER_UTILS_LOG_ERROR("Failed to create XXH3 state for chunk %d",
-                                     chunk.chunk_index);
-            std::fclose(output_fp);
-            result.success = false;
-            return result;
-        }
-        XXH3_64bits_reset_withSeed(hash_state, 0);
-
-        for (const auto& spec : chunk.specs) {
-            class ChunkWriter : public LineProcessor {
-               public:
-                FILE* fp;
-                XXH3_state_t* hasher;
-                std::atomic<std::size_t>& event_count;
-
-                ChunkWriter(FILE* file, XXH3_state_t* hash_state,
-                            std::atomic<std::size_t>& count)
-                    : fp(file), hasher(hash_state), event_count(count) {}
-
-                bool process(const char* data, std::size_t length) override {
-                    const char* trimmed;
-                    std::size_t trimmed_length;
-                    if (json_trim_and_validate(data, length, trimmed,
-                                               trimmed_length) &&
-                        trimmed_length > 8) {
-                        std::fwrite(trimmed, 1, trimmed_length, fp);
-                        std::fwrite("\n", 1, 1, fp);
-                        XXH3_64bits_update(hasher, trimmed, trimmed_length);
-                        XXH3_64bits_update(hasher, "\n", 1);
-                        event_count++;
-                    }
-                    return true;
-                }
-            };
-
-            std::atomic<std::size_t> spec_events{0};
-
-            if (!spec.idx_path.empty()) {
-                auto reader =
-                    ReaderFactory::create(spec.file_path, spec.idx_path);
-                ChunkWriter writer(output_fp, hash_state, spec_events);
-                reader->read_lines_with_processor(spec.start_line,
-                                                  spec.end_line, writer);
-            } else {
-                std::ifstream infile(spec.file_path);
-                if (!infile.is_open()) {
-                    DFTRACER_UTILS_LOG_ERROR("Cannot open input file: %s",
-                                             spec.file_path.c_str());
-                    continue;
-                }
-
-                std::string line;
-                std::size_t current_line = 0;
-
-                while (std::getline(infile, line)) {
-                    current_line++;
-                    if (current_line < spec.start_line) continue;
-                    if (current_line > spec.end_line) break;
-
-                    const char* trimmed;
-                    std::size_t trimmed_length;
-                    if (json_trim_and_validate(line.c_str(), line.length(),
-                                               trimmed, trimmed_length) &&
-                        trimmed_length > 8) {
-                        std::fwrite(trimmed, 1, trimmed_length, output_fp);
-                        std::fwrite("\n", 1, 1, output_fp);
-                        XXH3_64bits_update(hash_state, trimmed, trimmed_length);
-                        XXH3_64bits_update(hash_state, "\n", 1);
-                        spec_events++;
-                    }
-                }
-            }
-
-            total_events += spec_events.load();
-        }
-
-        std::fprintf(output_fp, "\n]\n");
-        std::fclose(output_fp);
-
-        XXH3_freeState(hash_state);
-
-        result.events = total_events;
-        result.size_mb = chunk.total_size_mb;
-
-        if (compress && total_events > 0) {
-            std::string compressed_path = output_path + ".gz";
-            std::ifstream infile(output_path, std::ios::binary);
-            std::ofstream outfile(compressed_path, std::ios::binary);
-
-            if (infile && outfile) {
-                z_stream strm{};
-                if (deflateInit2(&strm, Z_DEFAULT_COMPRESSION, Z_DEFLATED,
-                                 15 + 16, 8, Z_DEFAULT_STRATEGY) == Z_OK) {
-                    constexpr std::size_t BUFFER_SIZE = 64 * 1024;
-                    std::vector<unsigned char> in_buffer(BUFFER_SIZE);
-                    std::vector<unsigned char> out_buffer(BUFFER_SIZE);
-
-                    int flush = Z_NO_FLUSH;
-                    do {
-                        infile.read(reinterpret_cast<char*>(in_buffer.data()),
-                                    BUFFER_SIZE);
-                        std::streamsize bytes_read = infile.gcount();
-
-                        if (bytes_read == 0) break;
-
-                        strm.avail_in = static_cast<uInt>(bytes_read);
-                        strm.next_in = in_buffer.data();
-                        flush = infile.eof() ? Z_FINISH : Z_NO_FLUSH;
-
-                        do {
-                            strm.avail_out = BUFFER_SIZE;
-                            strm.next_out = out_buffer.data();
-                            deflate(&strm, flush);
-
-                            std::size_t bytes_to_write =
-                                BUFFER_SIZE - strm.avail_out;
-                            outfile.write(reinterpret_cast<const char*>(
-                                              out_buffer.data()),
-                                          bytes_to_write);
-                        } while (strm.avail_out == 0);
-                    } while (flush != Z_FINISH);
-
-                    deflateEnd(&strm);
-                    infile.close();
-                    outfile.close();
-
-                    if (fs::exists(compressed_path)) {
-                        fs::remove(output_path);
-                        result.output_path = compressed_path;
-                    }
-                }
-            }
-        }
-
-        result.success = true;
-
-        DFTRACER_UTILS_LOG_DEBUG("Chunk %d: %zu events, %.2f MB written to %s",
-                                 chunk.chunk_index, result.events,
-                                 result.size_mb, result.output_path.c_str());
-
-    } catch (const std::exception& e) {
-        DFTRACER_UTILS_LOG_ERROR("Failed to extract chunk %d: %s",
-                                 chunk.chunk_index, e.what());
-    }
-
-    return result;
-}
-
-static std::vector<ChunkResult> extract_all_chunks(
-    const std::vector<ChunkData>& chunks, const std::string& output_dir,
-    const std::string& app_name, bool compress, TaskContext& p_ctx) {
-    std::vector<TaskResult<ChunkResult>::Future> futures;
-    futures.reserve(chunks.size());
-
-    auto extract_fn = [output_dir, app_name, compress](
-                          ChunkData chunk, TaskContext& ctx) -> ChunkResult {
-        return extract_chunk(chunk, output_dir, app_name, compress, ctx);
-    };
-
-    for (const auto& chunk : chunks) {
-        auto task_result =
-            p_ctx.emit<ChunkData, ChunkResult>(extract_fn, Input{chunk});
-        futures.push_back(std::move(task_result.future()));
-    }
-
-    std::vector<ChunkResult> results;
-    results.reserve(chunks.size());
-
-    for (auto& future : futures) {
-        results.push_back(future.get());
-    }
-
-    return results;
-}
+// Use the workflow types
+using FileMetadata = components::workflows::dft::DFTracerMetadataOutput;
+using ChunkExtractionInput =
+    components::workflows::dft::DFTracerChunkExtractionInput;
+using ChunkResult = components::workflows::dft::DFTracerChunkExtractionResult;
+using EventId = components::workflows::dft::EventId;
+
+// create_chunk_mappings function removed - now using
+// DFTracerChunkManifestMapper workflow extract_chunk function removed - now
+// using DFTracerChunkExtractor workflow
 
 int main(int argc, char** argv) {
     DFTRACER_UTILS_LOGGER_INIT();
@@ -795,51 +146,61 @@ int main(int argc, char** argv) {
         fs::create_directories(output_dir);
     }
 
-    std::vector<std::string> input_files;
-    for (const auto& entry : fs::directory_iterator(log_dir)) {
-        if (entry.is_regular_file()) {
-            std::string path = entry.path().string();
-            const std::string pfw_gz_suffix = ".pfw.gz";
-            const std::string pfw_suffix = ".pfw";
+    auto start_time = std::chrono::high_resolution_clock::now();
 
-            if (path.size() >= pfw_gz_suffix.size() &&
-                path.compare(path.size() - pfw_gz_suffix.size(),
-                             pfw_gz_suffix.size(), pfw_gz_suffix) == 0) {
-                input_files.push_back(path);
-            } else if (path.size() >= pfw_suffix.size() &&
-                       path.compare(path.size() - pfw_suffix.size(),
-                                    pfw_suffix.size(), pfw_suffix) == 0) {
-                input_files.push_back(path);
-            }
+    // Phase 1: Collect metadata in parallel using DirectoryFileProcessor
+    DFTRACER_UTILS_LOG_INFO("%s", "Phase 1: Collecting file metadata...");
+
+    auto metadata_processor = [checkpoint_size, force, &index_dir](
+                                  const std::string& file_path,
+                                  TaskContext& /*ctx*/) -> FileMetadata {
+        components::workflows::dft::DFTracerMetadataCollector collector;
+
+        // Build input with optional custom index directory
+        auto input =
+            components::workflows::dft::DFTracerMetadataInput::from_file(
+                file_path)
+                .with_checkpoint_size(checkpoint_size)
+                .with_force_rebuild(force);
+
+        // Override index path if custom index directory specified
+        if (!index_dir.empty()) {
+            fs::path idx_dir = fs::path(index_dir);
+            std::string base_name = fs::path(file_path).filename().string();
+            std::string idx_path = (idx_dir / (base_name + ".idx")).string();
+            input.with_index(idx_path);
         }
-    }
+        // Otherwise, workflow auto-detects format and generates index path
 
-    if (input_files.empty()) {
+        return collector.process(input);
+    };
+
+    auto workflow = std::make_shared<
+        components::workflows::DirectoryFileProcessor<FileMetadata>>(
+        metadata_processor);
+
+    auto dir_input =
+        components::workflows::DirectoryProcessInput::from_directory(log_dir)
+            .with_extensions({".pfw", ".pfw.gz"});
+
+    Pipeline metadata_pipeline("Metadata Collection");
+    auto task = utilities::use(workflow).emit_on(metadata_pipeline);
+
+    ThreadExecutor executor(num_threads);
+    PipelineOutput output = executor.execute(metadata_pipeline, dir_input);
+    auto batch_result =
+        output.get<components::workflows::BatchProcessOutput<FileMetadata>>(
+            task.id());
+
+    if (batch_result.results.empty()) {
         DFTRACER_UTILS_LOG_ERROR(
             "No .pfw or .pfw.gz files found in directory: %s", log_dir.c_str());
         return 1;
     }
 
-    DFTRACER_UTILS_LOG_INFO("Found %zu files to process", input_files.size());
-
-    auto start_time = std::chrono::high_resolution_clock::now();
-
-    // Phase 1: Collect metadata in parallel
-    DFTRACER_UTILS_LOG_INFO("%s", "Phase 1: Collecting file metadata...");
-    Pipeline metadata_pipeline;
-    auto metadata_task =
-        metadata_pipeline
-            .add_task<std::vector<std::string>, std::vector<FileMetadata>>(
-                [checkpoint_size, force, index_dir](
-                    std::vector<std::string> file_list,
-                    TaskContext& ctx) -> std::vector<FileMetadata> {
-                    return collect_all_metadata(file_list, checkpoint_size,
-                                                force, index_dir, ctx);
-                });
-
-    ThreadExecutor executor(num_threads);
-    executor.execute(metadata_pipeline, input_files);
-    std::vector<FileMetadata> all_metadata = metadata_task.get();
+    DFTRACER_UTILS_LOG_INFO("Found %zu files to process",
+                            batch_result.results.size());
+    std::vector<FileMetadata> all_metadata = std::move(batch_result.results);
 
     std::size_t successful_files = 0;
     double total_size_mb = 0;
@@ -859,41 +220,85 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    // Phase 2: Create chunk mappings
+    // Phase 2: Create chunk mappings using DFTracerChunkManifestMapper workflow
     DFTRACER_UTILS_LOG_INFO("%s", "Phase 2: Creating chunk mappings...");
-    std::vector<ChunkData> chunks =
-        create_chunk_mappings(all_metadata, static_cast<double>(chunk_size_mb));
 
-    DFTRACER_UTILS_LOG_INFO("Created %zu chunks", chunks.size());
+    components::workflows::dft::DFTracerChunkManifestMapper mapper;
+    auto mapper_input =
+        components::workflows::dft::DFTracerChunkManifestMapperInput::
+            from_metadata(all_metadata)
+                .with_target_size(static_cast<double>(chunk_size_mb));
 
-    if (chunks.empty()) {
+    std::vector<components::workflows::dft::DFTracerChunkManifest> manifests =
+        mapper.process(mapper_input);
+
+    // Log chunk distribution with line tracking
+    DFTRACER_UTILS_LOG_INFO("Created %zu chunks with line tracking:",
+                            manifests.size());
+    for (std::size_t i = 0; i < manifests.size(); ++i) {
+        DFTRACER_UTILS_LOG_DEBUG(
+            "  Chunk %zu: %.2f MB, %zu lines across %zu files", i + 1,
+            manifests[i].total_size_mb, manifests[i].total_lines(),
+            manifests[i].specs.size());
+        for (const auto& spec : manifests[i].specs) {
+            if (spec.has_line_info()) {
+                DFTRACER_UTILS_LOG_DEBUG(
+                    "    %s: lines %zu-%zu (bytes %zu-%zu)",
+                    fs::path(spec.file_path).filename().c_str(),
+                    spec.start_line, spec.end_line, spec.start_byte,
+                    spec.end_byte);
+            }
+        }
+    }
+
+    // Create ChunkExtractionInput with DFTracerChunkManifest (includes line
+    // tracking)
+    std::vector<ChunkExtractionInput> chunk_inputs;
+    for (int i = 0; i < static_cast<int>(manifests.size()); ++i) {
+        auto input = ChunkExtractionInput::from_manifest(i + 1, manifests[i])
+                         .with_output_dir(output_dir)
+                         .with_app_name(app_name)
+                         .with_compression(compress);
+        chunk_inputs.push_back(input);
+    }
+
+    if (chunk_inputs.empty()) {
         DFTRACER_UTILS_LOG_ERROR("%s", "No chunks created");
         return 1;
     }
 
-    // Phase 3: Extract chunks in parallel
+    // Phase 3: Extract chunks in parallel using DFTracerChunkExtractor workflow
     DFTRACER_UTILS_LOG_INFO("%s", "Phase 3: Extracting chunks...");
-    Pipeline extract_pipeline;
-    auto extract_task =
-        extract_pipeline
-            .add_task<std::vector<ChunkData>, std::vector<ChunkResult>>(
-                [output_dir, app_name, compress](
-                    std::vector<ChunkData> chunk_list,
-                    TaskContext& ctx) -> std::vector<ChunkResult> {
-                    return extract_all_chunks(chunk_list, output_dir, app_name,
-                                              compress, ctx);
-                });
 
-    executor.execute(extract_pipeline, chunks);
-    std::vector<ChunkResult> results = extract_task.get();
+    auto extractor_workflow =
+        std::make_shared<components::workflows::dft::DFTracerChunkExtractor>();
+
+    // Use BatchProcessor with comparator to automatically sort results by
+    // chunk_index
+    auto chunk_extractor =
+        std::make_shared<components::workflows::BatchProcessor<
+            ChunkExtractionInput, ChunkResult>>(
+            [extractor_workflow](const ChunkExtractionInput& input,
+                                 TaskContext&) -> ChunkResult {
+                return extractor_workflow->process(input);
+            });
+
+    chunk_extractor->with_comparator(
+        [](const ChunkResult& a, const ChunkResult& b) {
+            return a.chunk_index < b.chunk_index;
+        });
+
+    Pipeline extract_pipeline("Chunk Extraction");
+    auto extract_task =
+        utilities::use(chunk_extractor).emit_on(extract_pipeline);
+
+    PipelineOutput extract_output =
+        executor.execute(extract_pipeline, chunk_inputs);
+    std::vector<ChunkResult> results =
+        extract_output.get<std::vector<ChunkResult>>(extract_task.id());
 
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> duration = end_time - start_time;
-
-    std::sort(results.begin(), results.end(),
-              [](const ChunkResult& a, const ChunkResult& b) {
-                  return a.chunk_index < b.chunk_index;
-              });
 
     std::size_t successful_chunks = 0;
     std::size_t total_events = 0;
@@ -918,76 +323,67 @@ int main(int argc, char** argv) {
     if (verify) {
         auto verify_start = std::chrono::high_resolution_clock::now();
         std::printf("  Validating output chunks match input...\n");
-        std::vector<FileMetadata> chunk_metadata;
-        for (const auto& chunk : chunks) {
-            for (const auto& spec : chunk.specs) {
-                FileMetadata meta;
-                meta.file_path = spec.file_path;
-                meta.idx_path = spec.idx_path;
-                meta.start_line = spec.start_line;
-                meta.end_line = spec.end_line;
-                meta.success = true;
-                chunk_metadata.push_back(meta);
-            }
-        }
-        std::uint64_t input_hash = compute_event_hash(chunk_metadata);
 
-        Pipeline verify_pipeline;
-        auto verify_task = verify_pipeline.add_task<
-            std::vector<ChunkResult>, std::vector<std::vector<EventId>>>(
-            [checkpoint_size](
-                std::vector<ChunkResult> result_list,
-                TaskContext& p_ctx) -> std::vector<std::vector<EventId>> {
-                std::vector<TaskResult<std::vector<EventId>>::Future> futures;
-                futures.reserve(result_list.size());
+        // Create verification workflow using composable workflows
+        auto metadata_collector = std::make_shared<
+            components::workflows::dft::EventCollectorFromMetadata>();
+        auto chunks_collector = std::make_shared<
+            components::workflows::dft::EventCollectorFromChunks>();
+        auto hasher =
+            std::make_shared<components::workflows::dft::EventHasher>();
 
-                for (const auto& result : result_list) {
-                    auto task_result =
-                        p_ctx.emit<ChunkResult, std::vector<EventId>>(
-                            [checkpoint_size](
-                                ChunkResult chunk_result,
-                                TaskContext& ctx) -> std::vector<EventId> {
-                                return collect_output_events(
-                                    chunk_result, checkpoint_size, ctx);
-                            },
-                            Input{result});
-                    futures.push_back(std::move(task_result.future()));
-                }
+        // Input hasher: collect events from metadata files and hash them
+        auto input_hasher = [metadata_collector, hasher](
+                                const std::vector<FileMetadata>& metadata) {
+            auto collect_input = components::workflows::dft::
+                EventCollectionFromMetadataInput::from_metadata(metadata);
+            auto events = metadata_collector->process(collect_input);
+            auto hash_input =
+                components::workflows::dft::EventHashInput::from_events(
+                    std::move(events));
+            return hasher->process(hash_input);
+        };
 
-                std::vector<std::vector<EventId>> all_events;
-                all_events.reserve(result_list.size());
-                for (auto& future : futures) {
-                    all_events.push_back(future.get());
-                }
-                return all_events;
-            });
+        // Event collector: collect events from output chunks
+        auto event_collector = [chunks_collector, checkpoint_size](
+                                   const ChunkResult& result, TaskContext&) {
+            std::vector<ChunkResult> single_chunk = {result};
+            auto collect_input =
+                components::workflows::dft::EventCollectionFromChunksInput::
+                    from_chunks(std::move(single_chunk))
+                        .with_checkpoint_size(checkpoint_size);
+            return chunks_collector->process(collect_input);
+        };
 
-        executor.execute(verify_pipeline, results);
-        auto all_output_events = verify_task.get();
+        // Event hasher: hash collected events
+        auto event_hasher = [hasher](const std::vector<EventId>& events) {
+            auto hash_input =
+                components::workflows::dft::EventHashInput::from_events(events);
+            return hasher->process(hash_input);
+        };
 
-        std::vector<EventId> output_events;
-        for (const auto& events : all_output_events) {
-            output_events.insert(output_events.end(), events.begin(),
-                                 events.end());
-        }
+        auto verifier = std::make_shared<components::workflows::ChunkVerifier<
+            ChunkResult, FileMetadata, EventId>>(input_hasher, event_collector,
+                                                 event_hasher);
 
-        std::sort(output_events.begin(), output_events.end());
+        auto verify_input = components::workflows::VerificationInput<
+                                ChunkResult, FileMetadata>::from_chunks(results)
+                                .with_metadata(all_metadata);
 
-        XXH3_state_t* output_state = XXH3_createState();
-        XXH3_64bits_reset_withSeed(output_state, 0);
-        for (const auto& event : output_events) {
-            XXH3_64bits_update(output_state, &event.id, sizeof(event.id));
-            XXH3_64bits_update(output_state, &event.pid, sizeof(event.pid));
-            XXH3_64bits_update(output_state, &event.tid, sizeof(event.tid));
-        }
-        std::uint64_t output_hash = XXH3_64bits_digest(output_state);
-        XXH3_freeState(output_state);
+        Pipeline verify_pipeline("Chunk Verification");
+        auto verify_task = utilities::use(verifier).emit_on(verify_pipeline);
+
+        PipelineOutput verify_output =
+            executor.execute(verify_pipeline, verify_input);
+        auto verify_result =
+            verify_output.get<components::workflows::VerificationResult>(
+                verify_task.id());
 
         auto verify_end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> verify_duration =
             verify_end - verify_start;
 
-        if (input_hash == output_hash) {
+        if (verify_result.passed) {
             std::printf(
                 "  \u2713 Verification: PASSED - all events present in output "
                 "(%.2f seconds)\n",
@@ -999,8 +395,8 @@ int main(int argc, char** argv) {
                 verify_duration.count() / 1000.0);
             DFTRACER_UTILS_LOG_ERROR(
                 "Hash mismatch: input=%016llx output=%016llx",
-                (unsigned long long)input_hash,
-                (unsigned long long)output_hash);
+                (unsigned long long)verify_result.input_hash,
+                (unsigned long long)verify_result.output_hash);
         }
     }
 
