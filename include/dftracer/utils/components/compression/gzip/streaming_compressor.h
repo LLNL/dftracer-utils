@@ -37,7 +37,7 @@ using io::RawData;
  * io::StreamingFileWriter writer("/output.gz");
  *
  * // Get lazy chunk range
- * ChunkRange chunks = reader->process(StreamReadRequest{"/large/file.txt"});
+ * ChunkRange chunks = reader->process(StreamReadInput{"/large/file.txt"});
  *
  * // Compress lazily
  * CompressedChunkRange compressed = compressor->process(chunks);

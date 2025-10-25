@@ -104,19 +104,7 @@ class Utility {
      */
     virtual O process([[maybe_unused]] const I& input) = 0;
 
-   private:
-    /**
-     * @brief Set TaskContext reference.
-     *
-     * @param ctx TaskContext reference to store
-     */
-    void set_context(TaskContext& ctx) { ctx_ = &ctx; }
-
-    /**
-     * @brief Clear TaskContext reference.
-     */
-    void clear_context() { ctx_ = nullptr; }
-
+   protected:
     /**
      * @brief Get TaskContext reference (only for utilities with NeedsContext
      * tag).
@@ -146,6 +134,19 @@ class Utility {
         }
         return *ctx_;
     }
+
+   private:
+    /**
+     * @brief Set TaskContext reference.
+     *
+     * @param ctx TaskContext reference to store
+     */
+    void set_context(TaskContext& ctx) { ctx_ = &ctx; }
+
+    /**
+     * @brief Clear TaskContext reference.
+     */
+    void clear_context() { ctx_ = nullptr; }
 
    public:
     /**

@@ -22,7 +22,7 @@ namespace dftracer::utils::components::io {
  * gzip::StreamingCompressor compressor(9);
  * StreamingFileWriter writer("/output.gz");
  *
- * ChunkRange chunks = reader->process(StreamReadRequest{"/large/file.txt"});
+ * ChunkRange chunks = reader->process(StreamReadInput{"/large/file.txt"});
  * for (const auto& chunk : chunks) {
  *     // Compress chunk
  *     auto compressed = compressor.compress_chunk(chunk);

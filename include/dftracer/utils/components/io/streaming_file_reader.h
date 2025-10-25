@@ -17,15 +17,15 @@ namespace dftracer::utils::components::io {
  * Only ONE chunk is in memory at a time - true streaming!
  *
  * Composable utility pattern:
- * - Input: StreamReadRequest (file path + chunk size)
+ * - Input: StreamReadInput (file path + chunk size)
  * - Output: ChunkRange (lazy iterator)
  *
  * Usage:
  * @code
  * auto reader = std::make_shared<StreamingFileReader>();
  *
- * StreamReadRequest request{"/path/to/large/file.txt", 64 * 1024};
- * ChunkRange chunks = reader->process(request);
+ * StreamReadInput input{"/path/to/large/file.txt", 64 * 1024};
+ * ChunkRange chunks = reader->process(input);
  *
  * // Only one chunk in memory at a time!
  * for (const auto& chunk : chunks) {
@@ -39,14 +39,14 @@ namespace dftracer::utils::components::io {
  * auto reader = std::make_shared<StreamingFileReader>();
  * StreamingCompressor compressor(&writer);
  *
- * for (const auto& chunk : reader->process(StreamReadRequest{"input.txt"})) {
+ * for (const auto& chunk : reader->process(StreamReadInput{"input.txt"})) {
  *     compressor.process_chunk(chunk);  // True streaming - constant memory!
  * }
  * compressor.finalize();
  * @endcode
  */
 class StreamingFileReader
-    : public utilities::Utility<StreamReadRequest, ChunkRange> {
+    : public utilities::Utility<StreamReadInput, ChunkRange> {
    public:
     StreamingFileReader() = default;
     ~StreamingFileReader() override = default;
@@ -54,11 +54,11 @@ class StreamingFileReader
     /**
      * @brief Get lazy chunk iterator for file.
      *
-     * @param input StreamReadRequest with file path and chunk size
+     * @param input StreamReadInput with file path and chunk size
      * @return ChunkRange for iterating over chunks
      * @throws std::runtime_error if file cannot be accessed
      */
-    ChunkRange process(const StreamReadRequest& input) override {
+    ChunkRange process(const StreamReadInput& input) override {
         if (!fs::exists(input.path)) {
             throw std::runtime_error("File does not exist: " +
                                      input.path.string());

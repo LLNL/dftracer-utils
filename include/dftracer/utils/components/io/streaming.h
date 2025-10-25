@@ -11,21 +11,21 @@ namespace dftracer::utils::components::io {
 /**
  * @brief Configuration for streaming file read operations.
  */
-struct StreamReadRequest {
+struct StreamReadInput {
     fs::path path;
     std::size_t chunk_size = 64 * 1024;  // 64KB default
 
-    StreamReadRequest() = default;
+    StreamReadInput() = default;
 
-    explicit StreamReadRequest(fs::path p, std::size_t cs = 64 * 1024)
+    explicit StreamReadInput(fs::path p, std::size_t cs = 64 * 1024)
         : path(std::move(p)), chunk_size(cs) {}
 
     // Equality for caching support
-    bool operator==(const StreamReadRequest& other) const {
+    bool operator==(const StreamReadInput& other) const {
         return path == other.path && chunk_size == other.chunk_size;
     }
 
-    bool operator!=(const StreamReadRequest& other) const {
+    bool operator!=(const StreamReadInput& other) const {
         return !(*this == other);
     }
 };
@@ -57,9 +57,9 @@ struct StreamWriteResult {
 // Hash specializations to enable caching
 namespace std {
 template <>
-struct hash<dftracer::utils::components::io::StreamReadRequest> {
+struct hash<dftracer::utils::components::io::StreamReadInput> {
     std::size_t operator()(
-        const dftracer::utils::components::io::StreamReadRequest& req)
+        const dftracer::utils::components::io::StreamReadInput& req)
         const noexcept {
         std::size_t h1 = std::hash<std::string>{}(req.path.string());
         std::size_t h2 = std::hash<std::size_t>{}(req.chunk_size);

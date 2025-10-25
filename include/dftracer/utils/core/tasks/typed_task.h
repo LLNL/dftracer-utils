@@ -16,14 +16,14 @@ class TypedTask : public Task {
    public:
     virtual ~TypedTask() = default;
 
-    I get_input(std::any& in) { return std::any_cast<I>(in); }
+    I get_input(const std::any& in) { return std::any_cast<I>(in); }
 
-    O get_output(std::any& out) { return std::any_cast<O>(out); }
+    O get_output(const std::any& out) { return std::any_cast<O>(out); }
 
-    virtual O apply(I in) = 0;
+    virtual O apply(const I& in) = 0;
 
    protected:
-    bool validate(I in) {
+    bool validate(const I& in) {
         bool result = std::type_index(typeid(in)) == this->get_input_type();
         if (!result) {
             DFTRACER_UTILS_LOG_ERROR(
@@ -34,8 +34,17 @@ class TypedTask : public Task {
     }
 
    public:
-    std::any execute(std::any& in) override final {
-        return apply(std::any_cast<I>(in));
+    std::any execute(const std::any& in) override final {
+        // Cast to const reference to avoid copy
+        // std::any stores by value, so we cast to const reference
+        try {
+            return apply(std::any_cast<const I&>(in));
+        } catch (const std::bad_any_cast& e) {
+            DFTRACER_UTILS_LOG_ERROR(
+                "TypedTask: bad_any_cast - expected type %s, got type %s",
+                typeid(I).name(), in.type().name());
+            throw;
+        }
     }
 };
 

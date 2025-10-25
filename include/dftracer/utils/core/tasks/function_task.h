@@ -34,7 +34,7 @@ class FunctionTask : public TypedTask<I, O> {
     /**
      * Execute the wrapped function with TaskContext for task emission
      */
-    O apply(I input) override {
+    O apply(const I& input) override {
         // This will be set by the executor before calling apply
         TaskContext* context = get_context();
         if (!context) {

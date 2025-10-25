@@ -46,7 +46,7 @@
  * auto compressor = std::make_shared<compression::gzip::StreamingCompressor>();
  *
  * io::ChunkRange chunks =
- * reader->process(io::StreamReadRequest{"/large/file.txt"});
+ * reader->process(io::StreamReadInput{"/large/file.txt"});
  * compression::gzip::CompressedChunkRange compressed =
  * compressor->process(chunks);
  *
