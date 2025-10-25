@@ -4,6 +4,7 @@
 #include <dftracer/utils/components/io/chunk_iterator.h>
 #include <dftracer/utils/components/io/streaming.h>
 #include <dftracer/utils/components/io/types/types.h>
+#include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utility.h>
 
 #include <stdexcept>
@@ -46,7 +47,8 @@ namespace dftracer::utils::components::io {
  * @endcode
  */
 class StreamingFileReader
-    : public utilities::Utility<StreamReadInput, ChunkRange> {
+    : public utilities::Utility<StreamReadInput, ChunkRange,
+                                utilities::tags::Parallelizable> {
    public:
     StreamingFileReader() = default;
     ~StreamingFileReader() override = default;

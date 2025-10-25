@@ -2,6 +2,7 @@
 #define DFTRACER_UTILS_COMPONENTS_TEXT_LINE_FILTER_H
 
 #include <dftracer/utils/components/text/shared.h>
+#include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utility.h>
 
 #include <functional>
@@ -86,7 +87,8 @@ class LineFilter
  *
  * This is a batch version that processes all lines at once.
  */
-class LinesFilter : public utilities::Utility<Lines, Lines> {
+class LinesFilter
+    : public utilities::Utility<Lines, Lines, utilities::tags::Parallelizable> {
    private:
     std::function<bool(const Line&)> predicate_;
 

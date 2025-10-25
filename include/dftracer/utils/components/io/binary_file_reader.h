@@ -3,6 +3,7 @@
 
 #include <dftracer/utils/components/filesystem/directory_scanner.h>
 #include <dftracer/utils/components/io/types/types.h>
+#include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utility.h>
 
 #include <fstream>
@@ -53,7 +54,8 @@ namespace dftracer::utils::components::io {
  * @endcode
  */
 class BinaryFileReader
-    : public utilities::Utility<filesystem::FileEntry, RawData> {
+    : public utilities::Utility<filesystem::FileEntry, RawData,
+                                utilities::tags::Parallelizable> {
    public:
     BinaryFileReader() = default;
     ~BinaryFileReader() override = default;

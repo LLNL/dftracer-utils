@@ -2,6 +2,7 @@
 #define DFTRACER_UTILS_COMPONENTS_FILESYSTEM_DIRECTORY_SCANNER_H
 
 #include <dftracer/utils/core/common/filesystem.h>
+#include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utility.h>
 
 #include <functional>
@@ -81,7 +82,8 @@ struct FileEntry {
  * @endcode
  */
 class DirectoryScanner
-    : public utilities::Utility<Directory, std::vector<FileEntry>> {
+    : public utilities::Utility<Directory, std::vector<FileEntry>,
+                                utilities::tags::Parallelizable> {
    public:
     DirectoryScanner() = default;
     ~DirectoryScanner() override = default;

@@ -2,6 +2,7 @@
 #define DFTRACER_UTILS_COMPONENTS_COMPRESSION_GZIP_DECOMPRESSOR_H
 
 #include <dftracer/utils/components/io/types/types.h>
+#include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utility.h>
 #include <zlib.h>
 
@@ -53,7 +54,9 @@ using io::RawData;
  * auto restored = output.get<RawData>(decompress_task.id());
  * @endcode
  */
-class Decompressor : public utilities::Utility<CompressedData, RawData> {
+class Decompressor
+    : public utilities::Utility<CompressedData, RawData,
+                                utilities::tags::Parallelizable> {
    public:
     Decompressor() = default;
     ~Decompressor() override = default;

@@ -3,6 +3,7 @@
 
 #include <dftracer/utils/components/filesystem/directory_scanner.h>
 #include <dftracer/utils/components/text/shared.h>
+#include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utility.h>
 
 #include <fstream>
@@ -51,8 +52,8 @@ namespace dftracer::utils::components::io {
  * }
  * @endcode
  */
-class FileReader
-    : public utilities::Utility<filesystem::FileEntry, text::Text> {
+class FileReader : public utilities::Utility<filesystem::FileEntry, text::Text,
+                                             utilities::tags::Parallelizable> {
    public:
     FileReader() = default;
     ~FileReader() override = default;

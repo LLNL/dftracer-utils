@@ -2,6 +2,7 @@
 #define DFTRACER_UTILS_COMPONENTS_FILESYSTEM_PATTERN_DIRECTORY_SCANNER_H
 
 #include <dftracer/utils/components/filesystem/directory_scanner.h>
+#include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utilities.h>
 
 #include <algorithm>
@@ -59,7 +60,8 @@ struct PatternDirectory {
  * @endcode
  */
 class PatternDirectoryScanner
-    : public utilities::Utility<PatternDirectory, std::vector<FileEntry>> {
+    : public utilities::Utility<PatternDirectory, std::vector<FileEntry>,
+                                utilities::tags::Parallelizable> {
    private:
     std::shared_ptr<DirectoryScanner> base_scanner_;
 

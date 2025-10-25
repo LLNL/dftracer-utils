@@ -2,6 +2,7 @@
 #define DFTRACER_UTILS_COMPONENTS_TEXT_TEXT_HASHER_H
 
 #include <dftracer/utils/components/text/shared.h>
+#include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utility.h>
 #include <xxhash.h>
 
@@ -48,7 +49,8 @@ enum class HashAlgorithm {
  * Hash hash = line_hasher->process(line);
  * @endcode
  */
-class TextHasher : public utilities::Utility<Text, Hash> {
+class TextHasher
+    : public utilities::Utility<Text, Hash, utilities::tags::Parallelizable> {
    private:
     HashAlgorithm algorithm_ = HashAlgorithm::XXH3_64;  // Default: fastest
 
@@ -99,7 +101,8 @@ class TextHasher : public utilities::Utility<Text, Hash> {
  * Similar to TextHasher but operates on Line instead of Text.
  * Hashes the line content only (ignores line_number).
  */
-class LineHasher : public utilities::Utility<Line, Hash> {
+class LineHasher
+    : public utilities::Utility<Line, Hash, utilities::tags::Parallelizable> {
    private:
     HashAlgorithm algorithm_ = HashAlgorithm::XXH3_64;
 

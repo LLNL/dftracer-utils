@@ -79,7 +79,76 @@ struct has_process_impl<
 template <typename T, typename I, typename O>
 inline constexpr bool has_process_v = has_process_impl<T, I, O>::value;
 
+/**
+ * @brief SFINAE trait to detect if a utility has a specific tag.
+ *
+ * This checks if Tag exists in the Utility's TagsTuple.
+ */
+template <typename Tag, typename TagsTuple>
+struct has_tag_in_tuple;
+
+// Base case: empty tuple
+template <typename Tag>
+struct has_tag_in_tuple<Tag, std::tuple<>> : std::false_type {};
+
+// Recursive case: check first element, then rest
+template <typename Tag, typename First, typename... Rest>
+struct has_tag_in_tuple<Tag, std::tuple<First, Rest...>>
+    : std::conditional_t<std::is_same_v<Tag, First>, std::true_type,
+                         has_tag_in_tuple<Tag, std::tuple<Rest...>>> {};
+
+/**
+ * @brief Convenience variable template for has_tag_in_tuple.
+ */
+template <typename Tag, typename TagsTuple>
+inline constexpr bool has_tag_in_tuple_v =
+    has_tag_in_tuple<Tag, TagsTuple>::value;
+
+// SFINAE helper to detect if a type has TagsTuple
+template <typename T, typename = void>
+struct has_tags_tuple : std::false_type {};
+
+template <typename T>
+struct has_tags_tuple<T, std::void_t<typename T::TagsTuple>> : std::true_type {
+};
+
+template <typename T>
+inline constexpr bool has_tags_tuple_v = has_tags_tuple<T>::value;
+
 }  // namespace detail
+
+/**
+ * @brief Check if a Utility type has a specific tag.
+ *
+ * Usage:
+ * @code
+ * if constexpr (has_tag<tags::Parallelizable, MyUtility>()) {
+ *     // Utility is parallelizable
+ * }
+ * @endcode
+ */
+template <typename Tag, typename UtilityType>
+constexpr bool has_tag() {
+    if constexpr (detail::has_tags_tuple_v<UtilityType>) {
+        return detail::has_tag_in_tuple_v<Tag, typename UtilityType::TagsTuple>;
+    } else {
+        return false;
+    }
+}
+
+/**
+ * @brief Check if a utility instance has a specific tag.
+ *
+ * Usage:
+ * @code
+ * auto utility = std::make_shared<MyUtility>();
+ * if constexpr (has_tag_v<tags::Parallelizable, decltype(*utility)>) {
+ *     // Utility is parallelizable
+ * }
+ * @endcode
+ */
+template <typename Tag, typename UtilityType>
+inline constexpr bool has_tag_v = has_tag<Tag, UtilityType>();
 
 }  // namespace dftracer::utils::utilities
 

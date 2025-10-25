@@ -4,10 +4,13 @@
 #include <dftracer/utils/core/tasks/task_context.h>
 #include <dftracer/utils/core/tasks/task_result.h>
 #include <dftracer/utils/core/tasks/task_tag.h>
+#include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utilities.h>
+#include <dftracer/utils/core/utilities/utility_traits.h>
 
 #include <algorithm>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <vector>
 
@@ -41,6 +44,37 @@ class BatchProcessor
      */
     explicit BatchProcessor(ItemProcessorFn processor)
         : processor_(std::move(processor)), comparator_(std::nullopt) {}
+
+    ~BatchProcessor() override = default;
+
+    /**
+     * @brief Construct batch processor with a parallelizable utility.
+     *
+     * This constructor enforces at compile-time that the utility has the
+     * tags::Parallelizable tag, ensuring thread-safety.
+     *
+     * @tparam UtilityType Type of the utility (must have tags::Parallelizable)
+     * @param utility Shared pointer to the utility
+     */
+    template <typename UtilityType,
+              typename = std::enable_if_t<utilities::detail::has_process_v<
+                  UtilityType, ItemInput, ItemOutput>>>
+    explicit BatchProcessor(std::shared_ptr<UtilityType> utility)
+        : comparator_(std::nullopt) {
+        // Compile-time check: Utility must have tags::Parallelizable
+        static_assert(
+            utilities::has_tag_v<utilities::tags::Parallelizable, UtilityType>,
+            "Utility must have tags::Parallelizable for parallel "
+            "BatchProcessor! "
+            "Add tags::Parallelizable to your Utility class template "
+            "parameters.");
+
+        // Create processor function from utility
+        processor_ = [utility](const ItemInput& input,
+                               TaskContext&) -> ItemOutput {
+            return utility->process(input);
+        };
+    }
 
     /**
      * @brief Set a comparator for sorting results.

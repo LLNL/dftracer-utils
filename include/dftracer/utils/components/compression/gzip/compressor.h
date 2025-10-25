@@ -2,6 +2,7 @@
 #define DFTRACER_UTILS_COMPONENTS_COMPRESSION_GZIP_COMPRESSOR_H
 
 #include <dftracer/utils/components/io/types/types.h>
+#include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utility.h>
 #include <zlib.h>
 
@@ -46,7 +47,8 @@ using io::RawData;
  * auto compressed = output.get<CompressedData>(task.id());
  * @endcode
  */
-class Compressor : public utilities::Utility<RawData, CompressedData> {
+class Compressor : public utilities::Utility<RawData, CompressedData,
+                                             utilities::tags::Parallelizable> {
    private:
     int compression_level_ = Z_DEFAULT_COMPRESSION;  // Default: 6
 

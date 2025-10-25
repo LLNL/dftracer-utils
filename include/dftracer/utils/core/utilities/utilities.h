@@ -39,8 +39,7 @@
 // All utility tags
 #include <dftracer/utils/core/utilities/tags/tags.h>
 
-// Optional: Include behaviors if needed
-// Uncomment when behaviors are implemented:
-// #include <dftracer/utils/core/utilities/behaviors/behaviors.h>
+// Utility behaviors
+#include <dftracer/utils/core/utilities/behaviors/behaviors.h>
 
 #endif  // DFTRACER_UTILS_CORE_UTILITIES_UTILITIES_H

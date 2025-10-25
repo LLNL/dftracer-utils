@@ -12,6 +12,11 @@ class TaskContext;
 
 namespace dftracer::utils::utilities {
 
+// Forward declare tags namespace
+namespace tags {
+struct NeedsContext;
+}  // namespace tags
+
 /**
  * @brief Base class for composable utilities with tag-based features.
  *
@@ -126,11 +131,20 @@ class Utility {
      * @endcode
      */
     TaskContext& context() {
+        // Compile-time check: Utility must have NeedsContext tag
+        static_assert(
+            has_tag<tags::NeedsContext>(),
+            "Utility must have tags::NeedsContext to access TaskContext! "
+            "Add tags::NeedsContext to your Utility class template "
+            "parameters.");
+
+        // Runtime check: Context must be set by executor
         if (!ctx_) {
             throw std::runtime_error(
-                "TaskContext not available. Ensure utility has NeedsContext "
-                "tag "
-                "and is executed via UtilityExecutor.");
+                "TaskContext not available. Utility has NeedsContext tag but "
+                "context was not set. Ensure utility is executed via "
+                "UtilityExecutor "
+                "or pipeline with proper executor.");
         }
         return *ctx_;
     }

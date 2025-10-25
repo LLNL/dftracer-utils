@@ -2,6 +2,7 @@
 #define DFTRACER_UTILS_COMPONENTS_TEXT_LINE_SPLITTER_H
 
 #include <dftracer/utils/components/text/shared.h>
+#include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utility.h>
 
 #include <sstream>
@@ -41,7 +42,8 @@ namespace dftracer::utils::components::text {
  * auto lines = output.get<Lines>(task.id());
  * @endcode
  */
-class LineSplitter : public utilities::Utility<Text, Lines> {
+class LineSplitter
+    : public utilities::Utility<Text, Lines, utilities::tags::Parallelizable> {
    public:
     LineSplitter() = default;
     ~LineSplitter() override = default;
