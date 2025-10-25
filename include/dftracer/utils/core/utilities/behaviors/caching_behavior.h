@@ -6,6 +6,7 @@
 #include <chrono>
 #include <list>
 #include <optional>
+#include <shared_mutex>
 #include <unordered_map>
 
 namespace dftracer {
@@ -27,15 +28,23 @@ struct CacheEntry {
 };
 
 /**
- * @brief Caching behavior with LRU eviction and TTL support.
+ * @brief Thread-safe caching behavior with LRU eviction and TTL support.
  *
  * Implements caching using:
  * - LRU (Least Recently Used) eviction when cache is full
  * - TTL (Time To Live) to invalidate stale entries
  * - Optional hash function for custom input types
+ * - Read-write lock for thread-safety
  *
  * The cache intercepts utility execution in after_process to store
- * results, and can return cached results on future calls.
+ * results, and can return cached results on future calls via get().
+ *
+ * Thread-safety: Uses std::shared_mutex for concurrent access:
+ * - Read-only operations (size()) use shared locks for parallel reads
+ * - Modifying operations (get(), after_process(), clear()) use exclusive locks
+ *
+ * Note: get() requires exclusive lock because LRU tracking updates access
+ * order.
  *
  * @tparam I Input type (must be hashable or provide custom hash)
  * @tparam O Output type (must be copyable)
@@ -46,6 +55,9 @@ class CachingBehavior : public UtilityBehavior<I, O> {
     std::size_t max_cache_size_;
     std::chrono::seconds ttl_;
     bool use_lru_;
+
+    // Thread-safety: read-write lock for parallel reads
+    mutable std::shared_mutex cache_mutex_;
 
     // LRU list: most recently used at front
     std::list<I> lru_list_;
@@ -87,6 +99,37 @@ class CachingBehavior : public UtilityBehavior<I, O> {
         entry.lru_iterator = lru_list_.begin();
     }
 
+    /**
+     * @brief Store result in cache (assumes lock is held).
+     */
+    void store_in_cache(const I& input, const O& result) {
+        // Check if already in cache
+        auto it = cache_.find(input);
+        if (it != cache_.end()) {
+            // Update existing entry
+            it->second.value = result;
+            it->second.insertion_time = std::chrono::steady_clock::now();
+            touch(input, it->second);
+            return;
+        }
+
+        // Need to insert new entry
+        if (cache_.size() >= max_cache_size_) {
+            evict_lru();
+        }
+
+        CacheEntry<I, O> entry;
+        entry.value = result;
+        entry.insertion_time = std::chrono::steady_clock::now();
+
+        if (use_lru_) {
+            lru_list_.push_front(input);
+            entry.lru_iterator = lru_list_.begin();
+        }
+
+        cache_[input] = std::move(entry);
+    }
+
    public:
     /**
      * @brief Construct caching behavior.
@@ -100,64 +143,63 @@ class CachingBehavior : public UtilityBehavior<I, O> {
         : max_cache_size_(max_size), ttl_(ttl), use_lru_(use_lru) {}
 
     /**
-     * @brief Check cache before processing.
+     * @brief Middleware process - handles caching transparently.
      *
-     * Currently just a hook point. Cache lookup happens in after_process
-     * to avoid duplicating the lookup logic.
+     * Implements automatic caching:
+     * 1. Check cache for cached result
+     * 2. If cache HIT: return cached value (skip execution!)
+     * 3. If cache MISS: call next() to execute, then store result
+     *
+     * This makes caching completely transparent - just add the behavior
+     * and re-running the pipeline will use cached results automatically.
+     *
+     * @param input Input to process
+     * @param next Next function in chain (the actual utility or next behavior)
+     * @return Cached or freshly computed result
      */
-    void before_process([[maybe_unused]] const I& input) override {
-        // Hook point for future extensions (e.g., cache warming)
+    O process(const I& input,
+              typename UtilityBehavior<I, O>::NextFunction next) override {
+        std::unique_lock<std::shared_mutex> lock(cache_mutex_);
+
+        // Check cache first
+        auto it = cache_.find(input);
+        if (it != cache_.end() && !is_expired(it->second)) {
+            // Cache HIT - return cached value, skip execution!
+            touch(input, it->second);
+            return it->second.value;
+        }
+
+        // Cache MISS - need to execute
+        lock.unlock();           // Release lock during execution
+
+        O result = next(input);  // Execute the utility
+
+        lock.lock();             // Re-acquire for cache update
+
+        store_in_cache(input, result);
+
+        return result;
     }
+
+    /**
+     * @brief Check cache before processing.
+     */
+    void before_process([[maybe_unused]] const I& input) override {}
 
     /**
      * @brief Cache the result after processing.
      *
-     * Stores result in cache with current timestamp. Handles:
-     * - Cache eviction when full
-     * - LRU list updates
-     * - Entry expiration
+     * With the new middleware pattern, caching happens in process().
+     * This hook is kept for compatibility when behaviors don't override
+     * process().
      *
      * @param input The input key
      * @param result The output to cache
      * @return The unmodified result
      */
     O after_process(const I& input, O result) override {
-        // Check if already in cache
-        auto it = cache_.find(input);
-        if (it != cache_.end()) {
-            // Update existing entry
-            if (is_expired(it->second)) {
-                // Remove expired entry
-                if (use_lru_) {
-                    lru_list_.erase(it->second.lru_iterator);
-                }
-                cache_.erase(it);
-            } else {
-                // Update value and touch LRU
-                it->second.value = result;
-                it->second.insertion_time = std::chrono::steady_clock::now();
-                touch(input, it->second);
-                return result;
-            }
-        }
-
-        // Need to insert new entry
-        if (cache_.size() >= max_cache_size_) {
-            evict_lru();
-        }
-
-        // Create new entry
-        CacheEntry<I, O> entry;
-        entry.value = result;
-        entry.insertion_time = std::chrono::steady_clock::now();
-
-        if (use_lru_) {
-            lru_list_.push_front(input);
-            entry.lru_iterator = lru_list_.begin();
-        }
-
-        cache_[input] = std::move(entry);
-
+        std::unique_lock<std::shared_mutex> lock(cache_mutex_);
+        store_in_cache(input, result);
         return result;
     }
 
@@ -176,6 +218,8 @@ class CachingBehavior : public UtilityBehavior<I, O> {
     std::variant<BehaviorErrorResult, std::optional<O>> on_error(
         const I& input, [[maybe_unused]] const std::exception& e,
         [[maybe_unused]] std::size_t attempt) override {
+        std::unique_lock<std::shared_mutex> lock(cache_mutex_);
+
         auto it = cache_.find(input);
         if (it != cache_.end()) {
             // Return cached value even if expired (degraded mode)
@@ -193,6 +237,8 @@ class CachingBehavior : public UtilityBehavior<I, O> {
      * @return Cached output if available, nullopt otherwise
      */
     std::optional<O> get(const I& input) {
+        std::unique_lock<std::shared_mutex> lock(cache_mutex_);
+
         auto it = cache_.find(input);
         if (it != cache_.end() && !is_expired(it->second)) {
             touch(input, it->second);
@@ -205,6 +251,7 @@ class CachingBehavior : public UtilityBehavior<I, O> {
      * @brief Clear all cached entries.
      */
     void clear() {
+        std::unique_lock<std::shared_mutex> lock(cache_mutex_);
         cache_.clear();
         lru_list_.clear();
     }
@@ -212,7 +259,10 @@ class CachingBehavior : public UtilityBehavior<I, O> {
     /**
      * @brief Get current cache size.
      */
-    std::size_t size() const { return cache_.size(); }
+    std::size_t size() const {
+        std::shared_lock<std::shared_mutex> lock(cache_mutex_);
+        return cache_.size();
+    }
 };
 
 }  // namespace behaviors

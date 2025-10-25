@@ -4,6 +4,7 @@
 #include <dftracer/utils/core/utilities/behaviors/behavior_error_result.h>
 
 #include <exception>
+#include <functional>
 #include <optional>
 #include <variant>
 
@@ -12,15 +13,19 @@ namespace dftracer::utils::utilities::behaviors {
 /**
  * @brief Base interface for utility behaviors.
  *
- * Behaviors are composable hooks that can be applied to utilities to add
+ * Behaviors are composable middleware that can be applied to utilities to add
  * cross-cutting concerns like caching, retry logic, monitoring, etc.
  *
- * Each behavior can intercept three points in utility execution:
- * 1. before_process() - Called before utility.process()
- * 2. after_process() - Called after utility.process(), can transform result
- * 3. on_error() - Called when exception occurs, can handle or retry
+ * Behaviors can intercept execution at multiple points:
+ * 1. process() - Wraps the execution (middleware pattern) - can skip,
+ * transform, or retry
+ * 2. before_process() - Called before execution (hook)
+ * 3. after_process() - Called after execution (hook + transform)
+ * 4. on_error() - Called on exception (error handling)
  *
- * Behaviors are meant to be single-purpose.
+ * The process() method is the primary interception point using middleware
+ * pattern. Override it to wrap execution with custom logic (e.g., caching,
+ * retry).
  *
  * @tparam I Input type for the utility
  * @tparam O Output type for the utility
@@ -28,7 +33,35 @@ namespace dftracer::utils::utilities::behaviors {
 template <typename I, typename O>
 class UtilityBehavior {
    public:
+    using NextFunction = std::function<O(const I&)>;
+
     virtual ~UtilityBehavior() = default;
+
+    /**
+     * @brief Middleware-style process wrapper.
+     *
+     * This is the primary interception point. Override to wrap execution:
+     * - Caching: Check cache, call next() on miss, store result
+     * - Retry: Try/catch next(), retry on failure
+     * - Monitoring: Time execution around next()
+     * - Transform: Modify input before next(), output after next()
+     *
+     * The 'next' function represents the rest of the execution chain.
+     * Call next(input) to continue execution, or skip it to short-circuit.
+     *
+     * Default implementation calls before_process, then next, then
+     * after_process.
+     *
+     * @param input Input to process
+     * @param next Next function in the chain (could be another behavior or the
+     * utility)
+     * @return Processed output
+     */
+    virtual O process(const I& input, NextFunction next) {
+        before_process(input);
+        O result = next(input);
+        return after_process(input, std::move(result));
+    }
 
     /**
      * @brief Hook called before utility.process().

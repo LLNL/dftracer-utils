@@ -49,65 +49,22 @@ class UtilityExecutor {
         : utility_(utility), behavior_chain_(std::move(chain)) {}
 
     /**
-     * @brief Execute utility without context.
+     * @brief Execute utility without context using middleware pattern.
+     *
+     * Builds a middleware chain where each behavior wraps execution.
+     * Behaviors can intercept, skip, transform, retry, or cache execution.
      *
      * @param input Input to process
      * @return Output result
      * @throws Any exception from utility or behaviors
      */
     O execute(const I& input) {
-        std::size_t attempt = 0;
-
-        while (true) {
-            try {
-                // Run before hooks
-                behavior_chain_.before_process(input);
-
-                // Execute utility (context not available in this path)
-                O result = utility_->process(input);
-
-                // Run after hooks
-                result =
-                    behavior_chain_.after_process(input, std::move(result));
-
-                return result;
-
-            } catch (const std::exception& e) {
-                // Run error hooks - behaviors decide how to handle
-                auto result = behavior_chain_.on_error(input, e, attempt);
-
-                // Check if it's an error action (retry/rethrow)
-                if (std::holds_alternative<BehaviorErrorResult>(result)) {
-                    auto& error_result = std::get<BehaviorErrorResult>(result);
-
-                    if (error_result.action == BehaviorErrorAction::Retry) {
-                        // Retry requested
-                        ++attempt;
-                        continue;
-                    } else {
-                        // Rethrow requested
-                        if (error_result.exception) {
-                            std::rethrow_exception(error_result.exception);
-                        } else {
-                            throw;
-                        }
-                    }
-                }
-
-                // Check if it's a recovery value
-                auto& optional_result = std::get<std::optional<O>>(result);
-                if (optional_result.has_value()) {
-                    return optional_result.value();
-                }
-
-                // Should not reach here (chain returns rethrow by default)
-                throw;
-            }
-        }
+        return behavior_chain_.process(
+            input, [this](const I& inp) { return utility_->process(inp); });
     }
 
     /**
-     * @brief Execute utility with context.
+     * @brief Execute utility with context using middleware pattern.
      *
      * Sets context reference before calling process(), then clears it after.
      *
@@ -117,60 +74,18 @@ class UtilityExecutor {
      * @throws Any exception from utility or behaviors
      */
     O execute_with_context(const I& input, TaskContext& ctx) {
-        std::size_t attempt = 0;
+        return behavior_chain_.process(input, [this, &ctx](const I& inp) {
+            utility_->set_context(ctx);
 
-        while (true) {
             try {
-                behavior_chain_.before_process(input);
-
-                // Set context reference before calling process()
-                utility_->set_context(ctx);
-
-                O result = utility_->process(input);
-
-                // Clear context after process completes
+                O result = utility_->process(inp);
                 utility_->clear_context();
-
-                result =
-                    behavior_chain_.after_process(input, std::move(result));
-
                 return result;
-
-            } catch (const std::exception& e) {
-                // Clear context on error
+            } catch (...) {
                 utility_->clear_context();
-
-                // Run error hooks - behaviors decide how to handle
-                auto result = behavior_chain_.on_error(input, e, attempt);
-
-                // Check if it's an error action (retry/rethrow)
-                if (std::holds_alternative<BehaviorErrorResult>(result)) {
-                    auto& error_result = std::get<BehaviorErrorResult>(result);
-
-                    if (error_result.action == BehaviorErrorAction::Retry) {
-                        // Retry requested
-                        ++attempt;
-                        continue;
-                    } else {
-                        // Rethrow requested
-                        if (error_result.exception) {
-                            std::rethrow_exception(error_result.exception);
-                        } else {
-                            throw;
-                        }
-                    }
-                }
-
-                // Check if it's a recovery value
-                auto& optional_result = std::get<std::optional<O>>(result);
-                if (optional_result.has_value()) {
-                    return optional_result.value();
-                }
-
-                // Should not reach here (chain returns rethrow by default)
                 throw;
             }
-        }
+        });
     }
 
     /**

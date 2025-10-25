@@ -104,6 +104,65 @@ class RetryBehavior : public UtilityBehavior<I, O> {
           exponential_backoff_(exponential_backoff) {}
 
     /**
+     * @brief Middleware process with retry loop.
+     *
+     * Wraps execution with try/catch and retry logic:
+     * 1. Try to call next(input)
+     * 2. On success: return result
+     * 3. On error: check if should retry using on_error()
+     * 4. If retry: wait and try again (up to max_retries)
+     * 5. If max retries exceeded: throw MaxRetriesExceeded
+     *
+     * @param input Input to process
+     * @param next Next function in chain (could be another behavior or utility)
+     * @return Successful result (after retries if needed)
+     * @throws MaxRetriesExceeded if all retries fail
+     */
+    O process(const I& input,
+              typename UtilityBehavior<I, O>::NextFunction next) override {
+        std::size_t attempt = 0;
+        std::exception_ptr last_exception = nullptr;
+
+        while (true) {
+            try {
+                // Try to execute
+                return next(input);
+            } catch (const std::exception& e) {
+                last_exception = std::current_exception();
+
+                // Check if we should retry
+                auto error_result = on_error(input, e, attempt);
+
+                // Check if it's an explicit action (retry or rethrow)
+                if (std::holds_alternative<BehaviorErrorResult>(error_result)) {
+                    auto& action = std::get<BehaviorErrorResult>(error_result);
+                    if (action.should_retry()) {
+                        attempt++;
+                        continue;  // Retry
+                    } else {
+                        // Rethrow (possibly with custom exception)
+                        if (action.exception) {
+                            std::rethrow_exception(action.exception);
+                        } else {
+                            throw;  // Rethrow original
+                        }
+                    }
+                }
+
+                // Check if it's a recovery value
+                auto& optional_result =
+                    std::get<std::optional<O>>(error_result);
+                if (optional_result.has_value()) {
+                    return *optional_result;  // Use recovery value
+                }
+
+                // Should not reach here (on_error should return something)
+                throw;
+            }
+        }
+    }
+
+    /**
      * @brief Hook before processing (no-op for retry).
      */
     void before_process([[maybe_unused]] const I& input) override {

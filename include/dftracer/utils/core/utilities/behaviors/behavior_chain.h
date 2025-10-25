@@ -113,6 +113,40 @@ class BehaviorChain {
     }
 
     /**
+     * @brief Execute the middleware chain.
+     *
+     * Builds a middleware chain where each behavior can wrap execution.
+     * Behaviors are executed in forward order (first added, outermost wrapper).
+     *
+     * Example with [Monitor, Cache, Retry]:
+     * - Monitor wraps Cache wraps Retry wraps utility
+     * - Execution flow: Monitor → Cache (hit?) → Retry → utility
+     *
+     * @param input Input to process
+     * @param core Core function to execute
+     * @return Final result after all middleware
+     */
+    O process(const I& input, std::function<O(const I&)> core) {
+        // Build middleware chain from right to left
+        auto next = core;
+
+        // Wrap with each behavior in reverse order
+        // (so first behavior added becomes outermost wrapper)
+        for (auto it = behaviors_.rbegin(); it != behaviors_.rend(); ++it) {
+            auto& behavior = *it;
+            // Capture current next function
+            auto current_next = next;
+            // Wrap it with this behavior
+            next = [behavior, current_next](const I& inp) -> O {
+                return behavior->process(inp, current_next);
+            };
+        }
+
+        // Execute the fully wrapped chain
+        return next(input);
+    }
+
+    /**
      * @brief Check if chain is empty.
      * @return true if no behaviors in chain
      */

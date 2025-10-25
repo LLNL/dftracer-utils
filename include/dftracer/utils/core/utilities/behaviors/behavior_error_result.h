@@ -49,6 +49,20 @@ struct BehaviorErrorResult {
         std::exception_ptr ex = std::current_exception()) {
         return BehaviorErrorResult{BehaviorErrorAction::Rethrow, ex};
     }
+
+    /**
+     * @brief Check if this result indicates a retry should occur.
+     * @return true if action is Retry
+     */
+    bool should_retry() const { return action == BehaviorErrorAction::Retry; }
+
+    /**
+     * @brief Check if this result indicates the exception should be rethrown.
+     * @return true if action is Rethrow
+     */
+    bool should_rethrow() const {
+        return action == BehaviorErrorAction::Rethrow;
+    }
 };
 
 }  // namespace dftracer::utils::utilities::behaviors
