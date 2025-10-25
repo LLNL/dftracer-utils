@@ -26,7 +26,7 @@ class TarStream : public GzipStream {
 
     // Current file being read
     const TarReader::TarFileInfo* current_file_;
-    std::unique_ptr<Stream> underlying_stream_;
+    std::unique_ptr<dftracer::utils::ReaderStream> underlying_stream_;
 
    public:
     TarStream()
@@ -66,7 +66,7 @@ class TarStream : public GzipStream {
     }
 
     void reset() override {
-        Stream::reset();
+        GzipStream::reset();
         file_mapping_.clear();
         current_file_index_ = 0;
         current_file_offset_ = 0;

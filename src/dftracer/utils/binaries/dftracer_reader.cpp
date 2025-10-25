@@ -6,6 +6,7 @@
 #include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/reader/reader.h>
 #include <dftracer/utils/reader/reader_factory.h>
+#include <dftracer/utils/utilities/composites/composites.h>
 
 #include <algorithm>
 #include <argparse/argparse.hpp>
@@ -111,11 +112,8 @@ int main(int argc, char **argv) {
     if (!index_path.empty()) {
         idx_path = index_path;
     } else {
-        fs::path idx_dir =
-            index_dir.empty() ? fs::temp_directory_path() : fs::path(index_dir);
-        std::string base_name = fs::path(gz_path).filename().string();
-        idx_path =
-            (idx_dir / (base_name + constants::indexer::EXTENSION)).string();
+        idx_path = utilities::composites::dft::determine_index_path(gz_path,
+                                                                    index_dir);
     }
 
 #if DFTRACER_UTILS_LOGGER_DEBUG_ENABLED
@@ -216,7 +214,7 @@ int main(int argc, char **argv) {
                                      read_buffer_size);
             auto buffer = std::make_unique<char[]>(read_buffer_size);
             std::size_t bytes_written;
-#if DFTRACER_UTILS_LOGGER_DEBUG_ENABLED
+#if DFTRACER_UTILS_LOGGER_DEBUG_ENABLED == 1
             std::size_t total_bytes = 0;
 #endif
 
@@ -229,9 +227,10 @@ int main(int argc, char **argv) {
                                 : reader->read_line_bytes(
                                       start_bytes_, end_bytes_, buffer.get(),
                                       read_buffer_size)) > 0) {
-                    fwrite(buffer.get(), 1, bytes_written, stdout);
+                    std::fwrite(buffer.get(), 1, bytes_written, stdout);
+                    // std::printf("size: %zu\n", bytes_written);
                     start_bytes_ += bytes_written;  // Advance for next read
-#if DFTRACER_UTILS_LOGGER_DEBUG_ENABLED
+#if DFTRACER_UTILS_LOGGER_DEBUG_ENABLED == 1
                     total_bytes += bytes_written;
 #endif
                 }

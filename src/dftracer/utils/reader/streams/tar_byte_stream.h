@@ -48,7 +48,7 @@ class TarByteStream : public TarStream {
             current_position_);
     }
 
-    std::size_t stream(char *buffer, std::size_t buffer_size) override {
+    std::size_t read(char *buffer, std::size_t buffer_size) override {
 #ifdef __GNUC__
         __builtin_prefetch(buffer, 1, 3);
 #endif
@@ -93,8 +93,8 @@ class TarByteStream : public TarStream {
                 }
             }
 
-            std::size_t bytes_read = current_file_stream_->stream(
-                buffer + total_bytes_read, max_read);
+            std::size_t bytes_read =
+                current_file_stream_->read(buffer + total_bytes_read, max_read);
 
             DFTRACER_UTILS_LOG_DEBUG(
                 "TarByteStream::stream - read %zu bytes from file %s (offset "

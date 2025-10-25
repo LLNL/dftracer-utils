@@ -140,7 +140,7 @@ void SequentialScheduler::process_all_tasks() {
                     task.task_ptr->setup_context(&task_context);
                 }
 
-                DFTRACER_UTILS_LOG_INFO(
+                DFTRACER_UTILS_LOG_DEBUG(
                     "SequentialScheduler: Executing task %d, input type %s",
                     task.task_id, task.input.type().name());
                 result = task.task_ptr->execute(task.input);

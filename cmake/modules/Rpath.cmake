@@ -5,13 +5,16 @@ macro(add_rpath)
 
   if(APPLE)
     # macOS uses @loader_path
-    set(CMAKE_INSTALL_RPATH 
-        "@loader_path/../lib" "@loader_path/../../lib" 
-        "@loader_path/../lib64" "@loader_path/../../lib64" 
-        "@executable_path/../lib" "@executable_path/../../lib" 
-        "@executable_path/../lib64" "@executable_path/../../lib64" 
-        "${DEPENDENCY_LIBRARY_DIRS}"
-    )
+    set(CMAKE_INSTALL_RPATH
+        "@loader_path/../lib"
+        "@loader_path/../../lib"
+        "@loader_path/../lib64"
+        "@loader_path/../../lib64"
+        "@executable_path/../lib"
+        "@executable_path/../../lib"
+        "@executable_path/../lib64"
+        "@executable_path/../../lib64"
+        "${DEPENDENCY_LIBRARY_DIRS}")
     if(SKBUILD)
       set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
     else()
@@ -20,10 +23,9 @@ macro(add_rpath)
     set(CMAKE_MACOSX_RPATH ON)
   else()
     # Linux uses $ORIGIN
-    set(CMAKE_INSTALL_RPATH 
-        "$ORIGIN/../lib" "$ORIGIN/../../lib" 
-        "$ORIGIN/../lib64" "$ORIGIN/../../lib64" 
-        "${DEPENDENCY_LIBRARY_DIRS}")
+    set(CMAKE_INSTALL_RPATH
+        "$ORIGIN/../lib" "$ORIGIN/../../lib" "$ORIGIN/../lib64"
+        "$ORIGIN/../../lib64" "${DEPENDENCY_LIBRARY_DIRS}")
     set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
   endif()
 

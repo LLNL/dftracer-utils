@@ -1,7 +1,7 @@
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/indexer/tar/queries/queries.h>
-#include <dftracer/utils/reader/streams/tar_factory.h>
+#include <dftracer/utils/reader/streams/tar_byte_stream.h>
 #include <dftracer/utils/reader/string_line_processor.h>
 #include <dftracer/utils/reader/tar_reader.h>
 
@@ -107,6 +107,14 @@ const std::string &TarReader::get_idx_path() const { return idx_path; }
 
 void TarReader::set_buffer_size(std::size_t size) {
     default_buffer_size = size;
+}
+
+std::unique_ptr<ReaderStream> TarReader::stream(
+    [[maybe_unused]] StreamType stream_type,
+    [[maybe_unused]] RangeType range_type, [[maybe_unused]] std::size_t start,
+    [[maybe_unused]] std::size_t end) {
+    // TODO: Implement TAR stream creation
+    throw std::runtime_error("TarReader::stream() not yet implemented");
 }
 
 // Archive structure operations
@@ -504,22 +512,16 @@ std::string TarReader::read_file_content(const TarFileInfo &file_info,
         std::vector<char> buffer(actual_size);
 
         // Create a TAR byte stream to read file content
-        TarStreamFactory tar_stream_factory(*indexer);
-        auto byte_stream = tar_stream_factory.create_byte_stream(
-            tar_gz_path, file_data_start, file_data_end);
-
-        if (!byte_stream) {
-            DFTRACER_UTILS_LOG_DEBUG(
-                "%s", "Failed to create TAR byte stream for file content");
-            return "";
-        }
+        auto byte_stream = std::make_unique<TarByteStream>();
+        byte_stream->initialize(tar_gz_path, file_data_start, file_data_end,
+                                *indexer);
 
         std::size_t total_read = 0;
         while (total_read < actual_size) {
             std::size_t chunk_size = std::min(actual_size - total_read,
                                               static_cast<std::size_t>(8192));
             std::size_t bytes_read =
-                byte_stream->stream(buffer.data() + total_read, chunk_size);
+                byte_stream->read(buffer.data() + total_read, chunk_size);
 
             if (bytes_read == 0) {
                 break;  // EOF or error

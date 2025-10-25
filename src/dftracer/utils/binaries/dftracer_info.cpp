@@ -6,6 +6,7 @@
 #include <dftracer/utils/core/pipeline/pipeline.h>
 #include <dftracer/utils/indexer/indexer.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
+#include <dftracer/utils/utilities/composites/composites.h>
 
 #include <argparse/argparse.hpp>
 #include <chrono>
@@ -71,11 +72,8 @@ static FileInfo get_file_info(const std::string& file_path,
         info.format = IndexerFactory::detect_format(file_path);
         info.compressed_size = fs::file_size(file_path);
 
-        fs::path idx_dir =
-            index_dir.empty() ? fs::temp_directory_path() : fs::path(index_dir);
-        std::string base_name = fs::path(file_path).filename().string();
-        info.idx_path =
-            (idx_dir / (base_name + constants::indexer::EXTENSION)).string();
+        info.idx_path = utilities::composites::dft::determine_index_path(
+            file_path, index_dir);
 
         info.has_index = fs::exists(info.idx_path);
 

@@ -1,16 +1,16 @@
-#include <dftracer/utils/components/workflows/workflows.h>
 #include <dftracer/utils/core/common/config.h>
 #include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/pipeline/executors/thread_executor.h>
 #include <dftracer/utils/core/pipeline/pipeline.h>
+#include <dftracer/utils/utilities/composites/composites.h>
 
 #include <argparse/argparse.hpp>
 #include <chrono>
 #include <vector>
 
 using namespace dftracer::utils;
-using namespace dftracer::utils::components::workflows;
+using namespace dftracer::utils::utilities::composites;
 
 int main(int argc, char** argv) {
     DFTRACER_UTILS_LOGGER_INIT();
@@ -75,18 +75,18 @@ int main(int argc, char** argv) {
     auto compressor = std::make_shared<FileCompressor>();
 
     // Create batch processor for parallel compression
-    auto batch_compressor = std::make_shared<
-        BatchProcessor<FileCompressionInput, FileCompressionOutput>>(
-        [compressor](const FileCompressionInput& input, TaskContext&) {
-            return compressor->process(input);
-        });
+    auto batch_compressor =
+        std::make_shared<BatchProcessorUtility<FileCompressionUtilityInput,
+                                               FileCompressionUtilityOutput>>(
+            [compressor](const FileCompressionUtilityInput& input,
+                         TaskContext&) { return compressor->process(input); });
 
     // Create compression inputs
-    std::vector<FileCompressionInput> compression_inputs;
+    std::vector<FileCompressionUtilityInput> compression_inputs;
     compression_inputs.reserve(pfw_files.size());
     for (const auto& file : pfw_files) {
-        compression_inputs.push_back(
-            FileCompressionInput::from_file(file, Z_DEFAULT_COMPRESSION));
+        compression_inputs.push_back(FileCompressionUtilityInput::from_file(
+            file, Z_DEFAULT_COMPRESSION));
     }
 
     // Execute parallel compression using pipeline with ThreadExecutor
@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
     // Execute with thread pool
     ThreadExecutor executor(num_threads);
     executor.execute(pipeline, compression_inputs);
-    std::vector<FileCompressionOutput> results = compression_task.get();
+    std::vector<FileCompressionUtilityOutput> results = compression_task.get();
 
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> duration = end_time - start_time;

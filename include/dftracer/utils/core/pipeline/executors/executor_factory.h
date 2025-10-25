@@ -10,8 +10,9 @@ namespace dftracer::utils {
 
 class ExecutorFactory {
    public:
-    static std::unique_ptr<Executor> create_thread(std::size_t num_threads = 0);
-    static std::unique_ptr<Executor> create_sequential();
+    static std::shared_ptr<Executor> create_thread(std::size_t num_threads = 0);
+    static std::shared_ptr<Executor> create_sequential();
+    static std::shared_ptr<Executor> create(std::size_t num_threads = 0);
 
    private:
     static std::size_t get_default_thread_count();

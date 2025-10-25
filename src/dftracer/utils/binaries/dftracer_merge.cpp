@@ -9,6 +9,7 @@
 #include <dftracer/utils/reader/line_processor.h>
 #include <dftracer/utils/reader/reader.h>
 #include <dftracer/utils/reader/reader_factory.h>
+#include <dftracer/utils/utilities/composites/composites.h>
 #include <zlib.h>
 
 #include <argparse/argparse.hpp>
@@ -198,10 +199,9 @@ static std::vector<MergeResult> process_files_parallel(
         if (file_path.size() >= pfw_gz_suffix.size() &&
             file_path.compare(file_path.size() - pfw_gz_suffix.size(),
                               pfw_gz_suffix.size(), pfw_gz_suffix) == 0) {
-            fs::path idx_dir = index_dir.empty() ? fs::temp_directory_path()
-                                                 : fs::path(index_dir);
-            std::string base_name = fs::path(file_path).filename().string();
-            std::string idx_path = (idx_dir / (base_name + ".idx")).string();
+            std::string idx_path =
+                utilities::composites::dft::determine_index_path(file_path,
+                                                                 index_dir);
             return process_pfw_gz_file(file_path, idx_path, checkpoint_size,
                                        temp_dir, force_rebuild, ctx);
         } else if (file_path.size() >= pfw_suffix.size() &&

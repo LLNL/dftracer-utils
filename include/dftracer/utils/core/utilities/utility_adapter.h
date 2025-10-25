@@ -82,7 +82,7 @@ class UtilityAdapter {
             }
 
             // Create behavior from tag
-            auto behavior = factory.template create(tag);
+            auto behavior = factory.template create<FirstTag>(tag);
             if (behavior) {
                 behavior_chain_.add_behavior(behavior);
             }

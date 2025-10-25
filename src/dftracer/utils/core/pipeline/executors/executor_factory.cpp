@@ -8,17 +8,25 @@
 
 namespace dftracer::utils {
 
-std::unique_ptr<Executor> ExecutorFactory::create_thread(
+std::shared_ptr<Executor> ExecutorFactory::create_thread(
     std::size_t num_threads) {
     if (num_threads == 0) {
         num_threads = get_default_thread_count();
     }
 
-    return std::make_unique<ThreadExecutor>(num_threads);
+    return std::make_shared<ThreadExecutor>(num_threads);
 }
 
-std::unique_ptr<Executor> ExecutorFactory::create_sequential() {
-    return std::make_unique<SequentialExecutor>();
+std::shared_ptr<Executor> ExecutorFactory::create_sequential() {
+    return std::make_shared<SequentialExecutor>();
+}
+
+std::shared_ptr<Executor> ExecutorFactory::create(std::size_t num_threads) {
+    if (num_threads == 0 || num_threads == 1) {
+        return create_sequential();
+    } else {
+        return create_thread(num_threads);
+    }
 }
 
 std::size_t ExecutorFactory::get_default_thread_count() {

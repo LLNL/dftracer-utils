@@ -331,7 +331,7 @@ std::vector<TarIndexer::TarFileInfo> TarIndexer::find_files_in_range(
 
 // Include the helper functions from the impl file
 static void init_tar_schema(const SqliteDatabase &db) {
-    DFTRACER_UTILS_LOG_DEBUG("Initializing TAR indexer schema", "");
+    DFTRACER_UTILS_LOG_DEBUG("%s", "Initializing TAR indexer schema");
     int rc = sqlite3_exec(db.get(), SQL_SCHEMA, NULL, NULL, NULL);
     if (rc != SQLITE_OK) {
         throw IndexerError(IndexerError::Type::DATABASE_ERROR,

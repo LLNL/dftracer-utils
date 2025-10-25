@@ -22,7 +22,7 @@ ArchiveFormat FormatDetector::detect(const std::string& file_path) {
         return ArchiveFormat::GZIP;
     }
 
-    FILE* file = fopen(file_path.c_str(), "rb");
+    FILE* file = std::fopen(file_path.c_str(), "rb");
     if (!file) {
         DFTRACER_UTILS_LOG_ERROR("Failed to open file for format detection: %s",
                                  file_path.c_str());
@@ -30,7 +30,7 @@ ArchiveFormat FormatDetector::detect(const std::string& file_path) {
     }
 
     ArchiveFormat format = detect_from_content(file);
-    fclose(file);
+    std::fclose(file);
     return format;
 }
 

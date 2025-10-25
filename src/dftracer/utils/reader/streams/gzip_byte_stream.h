@@ -12,9 +12,9 @@ class GzipByteStream : public GzipStream {
    public:
     GzipByteStream() : GzipStream() {}
 
-    virtual void initialize(const std::string &gz_path, std::size_t start_bytes,
-                            std::size_t end_bytes,
-                            dftracer::utils::Indexer &indexer) override {
+    void initialize(const std::string &gz_path, std::size_t start_bytes,
+                    std::size_t end_bytes,
+                    dftracer::utils::Indexer &indexer) override {
         DFTRACER_UTILS_LOG_DEBUG(
             "GzipByteStream::initialize - start_bytes=%zu, end_bytes=%zu",
             start_bytes, end_bytes);
@@ -37,7 +37,7 @@ class GzipByteStream : public GzipStream {
             current_position_);
     }
 
-    virtual std::size_t stream(char *buffer, std::size_t buffer_size) override {
+    std::size_t read(char *buffer, std::size_t buffer_size) override {
 #ifdef __GNUC__
         __builtin_prefetch(buffer, 1, 3);
 #endif

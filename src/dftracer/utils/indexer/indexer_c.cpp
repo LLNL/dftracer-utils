@@ -234,7 +234,7 @@ void dft_indexer_free_checkpoints(dft_indexer_checkpoint_t *checkpoints,
 
 void dft_indexer_destroy(dft_indexer_handle_t indexer) {
     if (indexer) {
-        delete static_cast<Indexer *>(indexer);
+        delete cast_indexer(indexer);
     }
 }
 

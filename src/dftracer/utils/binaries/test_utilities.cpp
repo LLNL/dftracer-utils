@@ -26,23 +26,23 @@
 #include <dftracer/utils/core/pipeline/pipeline_output.h>
 
 // Include component utilities
-#include <dftracer/utils/components/compression/compression.h>
-#include <dftracer/utils/components/filesystem/filesystem.h>
-#include <dftracer/utils/components/io/streaming_file_reader.h>
-#include <dftracer/utils/components/io/streaming_file_writer.h>
-#include <dftracer/utils/components/io/types/types.h>
-#include <dftracer/utils/components/text/text.h>
 #include <dftracer/utils/core/common/filesystem.h>
+#include <dftracer/utils/utilities/compression/compression.h>
+#include <dftracer/utils/utilities/filesystem/filesystem.h>
+#include <dftracer/utils/utilities/io/streaming_file_reader.h>
+#include <dftracer/utils/utilities/io/streaming_file_writer.h>
+#include <dftracer/utils/utilities/io/types/types.h>
+#include <dftracer/utils/utilities/text/text.h>
 
 // Include line iterators
-#include <dftracer/utils/components/io/lines/line_range.h>
-#include <dftracer/utils/components/io/lines/line_types.h>
-#include <dftracer/utils/components/io/lines/sources/indexed_file_line_iterator.h>
-#include <dftracer/utils/components/io/lines/sources/plain_file_line_iterator.h>
-#include <dftracer/utils/components/io/lines/streaming_line_reader.h>
+#include <dftracer/utils/utilities/io/lines/line_range.h>
+#include <dftracer/utils/utilities/io/lines/line_types.h>
+#include <dftracer/utils/utilities/io/lines/sources/indexed_file_line_iterator.h>
+#include <dftracer/utils/utilities/io/lines/sources/plain_file_line_iterator.h>
+#include <dftracer/utils/utilities/io/lines/streaming_line_reader.h>
 
 // Include workflows
-#include <dftracer/utils/components/workflows/workflows.h>
+#include <dftracer/utils/utilities/workflows/workflows.h>
 
 #include <cstdio>
 #include <fstream>
@@ -273,7 +273,7 @@ int main() {
     std::cout << "Test 4: DirectoryScanner Component" << std::endl;
     std::cout << "-----------------------------------" << std::endl;
     {
-        using namespace dftracer::utils::components::filesystem;
+        using namespace dftracer::utils::utilities::filesystem;
 
         std::string dir_path = ".";
         bool recursive = false;
@@ -320,8 +320,8 @@ int main() {
     std::cout << "Test 5: Gzip Compression Component" << std::endl;
     std::cout << "-----------------------------------" << std::endl;
     {
-        using namespace dftracer::utils::components::compression::gzip;
-        using namespace dftracer::utils::components::io;
+        using namespace dftracer::utils::utilities::compression::gzip;
+        using namespace dftracer::utils::utilities::io;
 
         auto compressor = std::make_shared<Compressor>();
         auto decompressor = std::make_shared<Decompressor>();
@@ -452,7 +452,7 @@ int main() {
     std::cout << "Test 6: Text Component Utilities" << std::endl;
     std::cout << "----------------------------------" << std::endl;
     {
-        using namespace dftracer::utils::components::text;
+        using namespace dftracer::utils::utilities::text;
 
         std::string test_text =
             "Line 1: INFO: Application started\n"
@@ -486,7 +486,7 @@ int main() {
             auto splitter = std::make_shared<LineSplitter>();
             // Use full type name to avoid ambiguity
             auto filter = std::make_shared<
-                ::dftracer::utils::components::text::LinesFilter>(
+                ::dftracer::utils::utilities::text::LinesFilter>(
                 [](const Line& line) {
                     return line.content.find("ERROR") != std::string::npos;
                 });
@@ -574,7 +574,7 @@ int main() {
 
             // Now filter in separate pipeline
             auto filter = std::make_shared<
-                ::dftracer::utils::components::text::LinesFilter>(
+                ::dftracer::utils::utilities::text::LinesFilter>(
                 [](const Line& line) {
                     return line.content.find("ERROR") != std::string::npos;
                 });
@@ -601,8 +601,8 @@ int main() {
     std::cout << "Test 7: Streaming Compression with Iterators" << std::endl;
     std::cout << "---------------------------------------------" << std::endl;
     {
-        using namespace dftracer::utils::components::compression::gzip;
-        using namespace dftracer::utils::components::io;
+        using namespace dftracer::utils::utilities::compression::gzip;
+        using namespace dftracer::utils::utilities::io;
 
         // Create a test file
         std::string test_file_path = "/tmp/test_streaming_input.txt";
@@ -820,7 +820,7 @@ int main() {
     std::cout << "--------------------------------------------------"
               << std::endl;
     {
-        using namespace dftracer::utils::components::io::lines;
+        using namespace dftracer::utils::utilities::io::lines;
 
         // Create a test plain text file
         std::string test_file_path = "/tmp/test_lines.txt";
@@ -971,7 +971,10 @@ int main() {
         // Test 8f: StreamingLineReader auto-detect
         std::cout << "\n  8f: StreamingLineReader::read()" << std::endl;
         try {
-            auto range = StreamingLineReader::read(test_file_path, 40, 45);
+            auto reader_config = StreamingLineReaderConfig()
+                                     .with_file(test_file_path)
+                                     .with_line_range(40, 45);
+            auto range = StreamingLineReader::read(reader_config);
 
             std::size_t count = 0;
             while (range.has_next()) {
@@ -1004,7 +1007,7 @@ int main() {
     std::cout << "Test 9: Workflow Utilities" << std::endl;
     std::cout << "----------------------------" << std::endl;
     {
-        using namespace dftracer::utils::components::workflows;
+        using namespace dftracer::utils::utilities::workflows;
 
         // Create test directory with multiple files
         std::string test_dir = "/tmp/test_workflows";
@@ -1072,13 +1075,13 @@ int main() {
         // Test 9b: LineBatchProcessor with plain files
         std::cout << "\n  9b: LineBatchProcessor (plain file)" << std::endl;
         try {
-            using namespace dftracer::utils::components::io::lines;
+            using namespace dftracer::utils::utilities::io::lines;
 
             auto line_processor =
                 [](const Line& line) -> std::optional<std::string> {
                 // Only process lines containing "Line 5"
-                if (line.content.find("Line 5") != std::string::npos) {
-                    return line.content;
+                if (line.content.find("Line 5") != std::string_view::npos) {
+                    return std::string(line.content);
                 }
                 return std::nullopt;
             };
@@ -1116,7 +1119,7 @@ int main() {
         // Test 9c: SimpleLineBatchProcessor
         std::cout << "\n  9c: SimpleLineBatchProcessor" << std::endl;
         try {
-            using namespace dftracer::utils::components::io::lines;
+            using namespace dftracer::utils::utilities::io::lines;
 
             auto simple_processor = [](const Line& line) -> std::size_t {
                 return line.content.length();
