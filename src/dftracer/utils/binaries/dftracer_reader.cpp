@@ -128,7 +128,7 @@ int main(int argc, char **argv) {
 #endif
 
     // Create indexer first
-    std::unique_ptr<Indexer> indexer;
+    std::shared_ptr<Indexer> indexer;
     try {
         // check if idx file exists
         if (!fs::exists(idx_path)) {
@@ -176,9 +176,9 @@ int main(int argc, char **argv) {
 
     // read operations
     try {
-        // Use ReaderFactory to create appropriate reader, transferring
+        // Use ReaderFactory to create appropriate reader, sharing
         // ownership of indexer
-        auto reader = ReaderFactory::create(indexer.release());
+        auto reader = ReaderFactory::create(indexer);
 
         if (read_mode.find("bytes") == std::string::npos) {
             std::size_t start_line =

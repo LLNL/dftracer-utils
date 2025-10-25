@@ -213,7 +213,7 @@ static std::vector<EventId> collect_output_events(const ChunkResult& result,
             result.output_path, tmp_idx.string(), checkpoint_size, true);
         indexer->build();
 
-        auto reader = ReaderFactory::create(indexer.get());
+        auto reader = ReaderFactory::create(indexer);
         std::size_t num_lines = reader->get_num_lines();
         if (num_lines > 0) {
             reader->read_lines_with_processor(1, num_lines, collector);

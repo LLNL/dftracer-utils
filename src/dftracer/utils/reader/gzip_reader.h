@@ -17,7 +17,7 @@ class GzipReader : public Reader {
    public:
     GzipReader(const std::string &gz_path, const std::string &idx_path,
                std::size_t index_ckpt_size = Indexer::DEFAULT_CHECKPOINT_SIZE);
-    explicit GzipReader(Indexer *indexer);
+    explicit GzipReader(std::shared_ptr<Indexer> indexer);
     ~GzipReader();
 
     // Disable copy constructor and copy assignment
@@ -53,10 +53,7 @@ class GzipReader : public Reader {
     std::string idx_path;
     bool is_open;
     std::size_t default_buffer_size;
-    std::unique_ptr<Indexer>
-        owned_indexer;     // Only used when we create the indexer
-    Indexer *indexer_ptr;  // Non-owning pointer to indexer (could be owned or
-                           // external)
+    std::shared_ptr<Indexer> indexer;  // Shared ownership of indexer
     std::unique_ptr<GzipStreamFactory> stream_factory;
     std::unique_ptr<GzipByteStream> byte_stream;
     std::unique_ptr<GzipLineByteStream> line_byte_stream;

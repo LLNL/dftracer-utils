@@ -20,14 +20,13 @@ TarReader::TarReader(const std::string &tar_gz_path_,
       idx_path(idx_path_),
       is_open(false),
       default_buffer_size(DEFAULT_TAR_READER_BUFFER_SIZE),
-      is_indexer_initialized_internally(true),
       logical_mapping_cached(false),
       cached_total_logical_bytes(0),
       cached_total_logical_lines(0) {
     try {
         printf("Creating TAR reader for gz: %s and index: %s\n",
                tar_gz_path.c_str(), idx_path.c_str());
-        indexer = std::make_unique<TarIndexer>(tar_gz_path, idx_path,
+        indexer = std::make_shared<TarIndexer>(tar_gz_path, idx_path,
                                                index_ckpt_size, false);
         is_open = true;
 
@@ -41,10 +40,9 @@ TarReader::TarReader(const std::string &tar_gz_path_,
     }
 }
 
-TarReader::TarReader(TarIndexer *indexer_)
+TarReader::TarReader(std::shared_ptr<TarIndexer> indexer_)
     : default_buffer_size(DEFAULT_TAR_READER_BUFFER_SIZE),
-      indexer(std::unique_ptr<TarIndexer>(indexer_)),
-      is_indexer_initialized_internally(false),
+      indexer(indexer_),
       logical_mapping_cached(false),
       cached_total_logical_bytes(0),
       cached_total_logical_lines(0) {
@@ -56,33 +54,7 @@ TarReader::TarReader(TarIndexer *indexer_)
     idx_path = indexer->get_idx_path();
 }
 
-TarReader::~TarReader() {
-    try {
-        DFTRACER_UTILS_LOG_DEBUG("Destroying TarReader for %s",
-                                 tar_gz_path.c_str());
-
-        if (indexer) {
-            if (!is_indexer_initialized_internally) {
-                // For externally managed indexer, release ownership without
-                // deleting
-                DFTRACER_UTILS_LOG_DEBUG(
-                    "%s", "Releasing externally managed TAR indexer");
-                indexer.release();
-            } else {
-                // For internally managed indexer, let unique_ptr destructor
-                // handle it
-                DFTRACER_UTILS_LOG_DEBUG(
-                    "%s", "Destroying internally managed TAR indexer");
-            }
-        }
-
-        DFTRACER_UTILS_LOG_DEBUG("TarReader destruction completed for %s",
-                                 tar_gz_path.c_str());
-    } catch (const std::exception &e) {
-        DFTRACER_UTILS_LOG_ERROR("Error during TarReader destruction: %s",
-                                 e.what());
-    }
-}
+TarReader::~TarReader() = default;
 
 TarReader::TarReader(TarReader &&other) noexcept
     : tar_gz_path(std::move(other.tar_gz_path)),
@@ -90,8 +62,6 @@ TarReader::TarReader(TarReader &&other) noexcept
       is_open(other.is_open),
       default_buffer_size(other.default_buffer_size),
       indexer(std::move(other.indexer)),
-      is_indexer_initialized_internally(
-          other.is_indexer_initialized_internally),
       logical_mapping_cached(other.logical_mapping_cached),
       cached_file_mapping(std::move(other.cached_file_mapping)),
       cached_total_logical_bytes(other.cached_total_logical_bytes),
@@ -107,8 +77,6 @@ TarReader &TarReader::operator=(TarReader &&other) noexcept {
         is_open = other.is_open;
         default_buffer_size = other.default_buffer_size;
         indexer = std::move(other.indexer);
-        is_indexer_initialized_internally =
-            other.is_indexer_initialized_internally;
         logical_mapping_cached = other.logical_mapping_cached;
         cached_file_mapping = std::move(other.cached_file_mapping);
         cached_total_logical_bytes = other.cached_total_logical_bytes;
