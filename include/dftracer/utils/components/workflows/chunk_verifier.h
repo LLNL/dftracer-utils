@@ -24,7 +24,6 @@ struct VerificationInput {
     VerificationInput(std::vector<ChunkType> c, std::vector<MetadataType> m)
         : chunks(std::move(c)), metadata(std::move(m)) {}
 
-    // Fluent builder pattern
     static VerificationInput from_chunks(std::vector<ChunkType> c) {
         VerificationInput input;
         input.chunks = std::move(c);

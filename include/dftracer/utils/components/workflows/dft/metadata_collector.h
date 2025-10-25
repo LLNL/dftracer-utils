@@ -29,7 +29,6 @@ struct DFTracerMetadataInput {
           checkpoint_size(ckpt),
           force_rebuild(force) {}
 
-    // Fluent builder pattern
     static DFTracerMetadataInput from_file(std::string path) {
         DFTracerMetadataInput input;
         input.file_path = std::move(path);

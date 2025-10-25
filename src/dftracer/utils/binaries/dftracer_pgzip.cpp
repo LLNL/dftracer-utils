@@ -1,147 +1,16 @@
+#include <dftracer/utils/components/workflows/workflows.h>
 #include <dftracer/utils/core/common/config.h>
 #include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/pipeline/executors/thread_executor.h>
 #include <dftracer/utils/core/pipeline/pipeline.h>
-#include <zlib.h>
 
 #include <argparse/argparse.hpp>
-#include <atomic>
 #include <chrono>
-#include <fstream>
 #include <vector>
 
 using namespace dftracer::utils;
-
-struct CompressedResult {
-    std::string file_path;
-    bool success;
-    std::size_t original_size;
-    std::size_t compressed_size;
-};
-
-static CompressedResult compress_file(const std::string& input_path,
-                                      TaskContext&) {
-    CompressedResult result{input_path, false, 0, 0};
-
-    std::ifstream infile(input_path, std::ios::binary);
-    if (!infile) {
-        DFTRACER_UTILS_LOG_ERROR("Cannot open file: %s", input_path.c_str());
-        return result;
-    }
-
-    // Get file size
-    infile.seekg(0, std::ios::end);
-    result.original_size = infile.tellg();
-    infile.seekg(0, std::ios::beg);
-
-    // Use deflate stream with gzip wrapper for maximum efficiency
-    std::string output_path = input_path + ".gz";
-    std::ofstream outfile(output_path, std::ios::binary);
-    if (!outfile) {
-        DFTRACER_UTILS_LOG_ERROR("Cannot create output file: %s",
-                                 output_path.c_str());
-        return result;
-    }
-
-    // Initialize deflate stream with gzip wrapper (15 + 16)
-    z_stream strm{};
-    if (deflateInit2(&strm, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 15 + 16, 8,
-                     Z_DEFAULT_STRATEGY) != Z_OK) {
-        DFTRACER_UTILS_LOG_ERROR("Failed to initialize deflate for: %s",
-                                 input_path.c_str());
-        return result;
-    }
-
-    constexpr std::size_t BUFFER_SIZE = 64 * 1024;  // 64KB chunks
-    std::vector<unsigned char> in_buffer(BUFFER_SIZE);
-    std::vector<unsigned char> out_buffer(BUFFER_SIZE);
-
-    int flush = Z_NO_FLUSH;
-
-    do {
-        infile.read(reinterpret_cast<char*>(in_buffer.data()), BUFFER_SIZE);
-        std::streamsize bytes_read = infile.gcount();
-
-        if (bytes_read == 0) break;
-
-        strm.avail_in = static_cast<uInt>(bytes_read);
-        strm.next_in = in_buffer.data();
-        flush = infile.eof() ? Z_FINISH : Z_NO_FLUSH;
-
-        do {
-            strm.avail_out = BUFFER_SIZE;
-            strm.next_out = out_buffer.data();
-
-            int ret = deflate(&strm, flush);
-            if (ret == Z_STREAM_ERROR) {
-                deflateEnd(&strm);
-                DFTRACER_UTILS_LOG_ERROR("Deflate stream error for: %s",
-                                         input_path.c_str());
-                fs::remove(output_path);
-                return result;
-            }
-
-            std::size_t bytes_to_write = BUFFER_SIZE - strm.avail_out;
-            outfile.write(reinterpret_cast<const char*>(out_buffer.data()),
-                          bytes_to_write);
-            if (!outfile) {
-                deflateEnd(&strm);
-                DFTRACER_UTILS_LOG_ERROR("Write error for: %s",
-                                         output_path.c_str());
-                fs::remove(output_path);
-                return result;
-            }
-        } while (strm.avail_out == 0);
-
-    } while (flush != Z_FINISH);
-
-    deflateEnd(&strm);
-    infile.close();
-    outfile.close();
-
-    if (!outfile) {
-        DFTRACER_UTILS_LOG_ERROR("Failed to close gzip file: %s",
-                                 output_path.c_str());
-        fs::remove(output_path);
-        return result;
-    }
-
-    if (fs::exists(output_path)) {
-        result.compressed_size = fs::file_size(output_path);
-        try {
-            fs::remove(input_path);
-            result.success = true;
-        } catch (const std::exception& e) {
-            DFTRACER_UTILS_LOG_ERROR("Failed to remove original file %s: %s",
-                                     input_path.c_str(), e.what());
-            result.success = true;
-        }
-    }
-
-    return result;
-}
-
-static std::vector<CompressedResult> process_files_parallel(
-    const std::vector<std::string>& files, TaskContext& ctx) {
-    std::vector<TaskResult<CompressedResult>::Future> futures;
-    futures.reserve(files.size());
-
-    for (const auto& file_path : files) {
-        auto task_result = ctx.emit<std::string, CompressedResult>(
-            compress_file, Input{file_path});
-        futures.push_back(std::move(task_result.future()));
-    }
-
-    std::vector<CompressedResult> results;
-    results.reserve(files.size());
-
-    for (auto& future : futures) {
-        results.push_back(future.get());
-    }
-
-    return results;
-}
+using namespace dftracer::utils::components::workflows;
 
 int main(int argc, char** argv) {
     DFTRACER_UTILS_LOGGER_INIT();
@@ -202,15 +71,34 @@ int main(int argc, char** argv) {
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
-    Pipeline pipeline;
-    auto task_result =
-        pipeline
-            .add_task<std::vector<std::string>, std::vector<CompressedResult>>(
-                process_files_parallel);
+    // Create FileCompressor workflow
+    auto compressor = std::make_shared<FileCompressor>();
 
+    // Create batch processor for parallel compression
+    auto batch_compressor = std::make_shared<
+        BatchProcessor<FileCompressionInput, FileCompressionOutput>>(
+        [compressor](const FileCompressionInput& input, TaskContext&) {
+            return compressor->process(input);
+        });
+
+    // Create compression inputs
+    std::vector<FileCompressionInput> compression_inputs;
+    compression_inputs.reserve(pfw_files.size());
+    for (const auto& file : pfw_files) {
+        compression_inputs.push_back(
+            FileCompressionInput::from_file(file, Z_DEFAULT_COMPRESSION));
+    }
+
+    // Execute parallel compression using pipeline with ThreadExecutor
+    Pipeline pipeline("Parallel Gzip Compression");
+
+    // Use the workflow adapter to integrate BatchProcessor into pipeline
+    auto compression_task = use(batch_compressor).emit_on(pipeline);
+
+    // Execute with thread pool
     ThreadExecutor executor(num_threads);
-    executor.execute(pipeline, pfw_files);
-    std::vector<CompressedResult> results = task_result.get();
+    executor.execute(pipeline, compression_inputs);
+    std::vector<FileCompressionOutput> results = compression_task.get();
 
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> duration = end_time - start_time;
@@ -225,20 +113,27 @@ int main(int argc, char** argv) {
             successful++;
             total_original_size += result.original_size;
             total_compressed_size += result.compressed_size;
+
+            // Remove original file after successful compression
+            try {
+                fs::remove(result.input_path);
+            } catch (const std::exception& e) {
+                DFTRACER_UTILS_LOG_ERROR(
+                    "Failed to remove original file %s: %s",
+                    result.input_path.c_str(), e.what());
+            }
+
             if (verbose) {
-                double ratio =
-                    total_original_size > 0
-                        ? (double)result.compressed_size /
-                              static_cast<double>(result.original_size) * 100.0
-                        : 0.0;
+                double ratio = result.compression_ratio() * 100.0;
                 DFTRACER_UTILS_LOG_INFO(
                     "Compressed %s: %zu -> %zu bytes (%.1f%%)",
-                    fs::path(result.file_path).filename().c_str(),
+                    fs::path(result.input_path).filename().c_str(),
                     result.original_size, result.compressed_size, ratio);
             }
         } else {
-            DFTRACER_UTILS_LOG_ERROR("Failed to compress: %s",
-                                     result.file_path.c_str());
+            DFTRACER_UTILS_LOG_ERROR("Failed to compress %s: %s",
+                                     result.input_path.c_str(),
+                                     result.error_message.c_str());
         }
     }
 

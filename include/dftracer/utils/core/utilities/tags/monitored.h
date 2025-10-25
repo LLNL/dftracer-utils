@@ -27,7 +27,6 @@ struct Monitored {
     /** Optional name of the utility being monitored (for logging) */
     std::string utility_name = "Utility";
 
-    // Fluent builder methods
     Monitored& with_log_callback(
         std::function<void(const std::string&)> callback) {
         log_callback = std::move(callback);

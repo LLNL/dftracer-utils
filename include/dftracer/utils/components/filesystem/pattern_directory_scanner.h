@@ -24,7 +24,6 @@ struct PatternDirectory {
                      bool rec = false)
         : path(std::move(p)), recursive(rec), patterns(std::move(pats)) {}
 
-    // Fluent builder pattern
     static PatternDirectory from_path(std::string p) {
         PatternDirectory input;
         input.path = std::move(p);

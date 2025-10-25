@@ -63,15 +63,13 @@ class DoubleUtility : public Utility<int, int, Retryable, Monitored> {
 
    public:
     DoubleUtility() {
-        // Configure retry behavior: max 3 retries, 50ms delay (fluent builder
-        // style)
+        // Configure retry behavior: max 3 retries, 50ms delay
         set_tag(Retryable()
                     .with_max_retries(3)
                     .with_retry_delay(std::chrono::milliseconds(50))
                     .with_exponential_backoff(true));
 
-        // Configure monitoring behavior with simple console logger (fluent
-        // builder style)
+        // Configure monitoring behavior with simple console logger
         set_tag(Monitored().with_log_callback([](const std::string& msg) {
             std::cout << "    " << msg << std::endl;
         }));
@@ -190,7 +188,7 @@ int main() {
         class FailingUtility : public Utility<int, int, Retryable> {
            public:
             FailingUtility() {
-                // Configure retry with fluent builder style
+                // Configure retry
                 set_tag(Retryable()
                             .with_max_retries(2)  // Only 2 retries
                             .with_retry_delay(std::chrono::milliseconds(10))

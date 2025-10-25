@@ -119,7 +119,7 @@ class UtilityAdapter {
     }
 
     /**
-     * @brief Add a custom behavior to the chain (fluent).
+     * @brief Add a custom behavior to the chain.
      *
      * Manually adds a behavior beyond those automatically created from tags.
      * Useful for custom behaviors or when not using tags.
@@ -141,7 +141,7 @@ class UtilityAdapter {
     }
 
     /**
-     * @brief Set task dependency (fluent).
+     * @brief Set task dependency.
      *
      * The emitted task will depend on the specified task ID.
      *

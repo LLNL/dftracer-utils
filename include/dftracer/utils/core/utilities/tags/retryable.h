@@ -30,7 +30,6 @@ struct Retryable {
     /** Whether to use exponential backoff (delay *= 2^attempt) */
     bool exponential_backoff = true;
 
-    // Fluent builder methods
     Retryable& with_max_retries(std::size_t retries) {
         max_retries = retries;
         return *this;

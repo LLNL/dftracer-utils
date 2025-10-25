@@ -27,7 +27,6 @@ struct DirectoryProcessInput {
           recursive(recurse),
           extensions(std::move(exts)) {}
 
-    // Fluent builder pattern
     static DirectoryProcessInput from_directory(std::string path) {
         DirectoryProcessInput input;
         input.directory_path = std::move(path);

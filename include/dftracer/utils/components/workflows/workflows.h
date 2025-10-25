@@ -16,6 +16,10 @@
 #include <dftracer/utils/components/workflows/batch_processor.h>
 #include <dftracer/utils/components/workflows/chunk_verifier.h>
 #include <dftracer/utils/components/workflows/directory_file_processor.h>
+#include <dftracer/utils/components/workflows/file_compressor.h>
+#include <dftracer/utils/components/workflows/file_decompressor.h>
+#include <dftracer/utils/components/workflows/indexed_file_reader.h>
+#include <dftracer/utils/components/workflows/line_batch_processor.h>
 
 // DFTracer-specific workflows
 #include <dftracer/utils/components/workflows/dft/dft.h>

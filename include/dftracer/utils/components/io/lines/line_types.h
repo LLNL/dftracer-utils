@@ -33,7 +33,7 @@ struct Line {
  * range of lines from an indexed archive (gzip, tar.gz, etc.).
  * Used for lazy evaluation and caching strategies.
  *
- * Usage (fluent builder style):
+ * Usage:
  * @code
  * auto input = LineReadInput::from_file("data.txt")
  *                  .with_index("data.txt.idx")
@@ -55,7 +55,6 @@ struct LineReadInput {
           start_line(start_line_),
           end_line(end_line_) {}
 
-    // Fluent builder methods
     static LineReadInput from_file(std::string path) {
         LineReadInput input;
         input.file_path = std::move(path);
