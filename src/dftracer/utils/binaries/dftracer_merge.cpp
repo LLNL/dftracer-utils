@@ -187,7 +187,7 @@ static std::vector<MergeResult> process_files_parallel(
     const std::vector<std::string>& files, std::size_t checkpoint_size,
     bool force_rebuild, const std::string& temp_dir,
     const std::string& index_dir, TaskContext& p_ctx) {
-    std::vector<TaskResult<MergeResult>::Future> futures;
+    std::vector<std::future<MergeResult>> futures;
     futures.reserve(files.size());
 
     auto process_file = [&temp_dir, &index_dir, checkpoint_size, force_rebuild](

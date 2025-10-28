@@ -32,7 +32,7 @@ static std::size_t process_files_parallel(const std::vector<std::string>& files,
                                           bool force_rebuild,
                                           const std::string& index_dir,
                                           TaskContext& ctx) {
-    std::vector<TaskResult<std::size_t>::Future> futures;
+    std::vector<std::future<std::size_t>> futures;
     futures.reserve(files.size());
 
     auto process_file = [checkpoint_size, force_rebuild, &index_dir](

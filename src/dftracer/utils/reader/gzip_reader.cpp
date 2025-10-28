@@ -153,19 +153,20 @@ std::size_t GzipReader::read(std::size_t start_bytes, std::size_t end_bytes,
     // Check if we can reuse cached stream
     if (!stream_cache_.can_continue(StreamType::BYTES, gz_path, start_bytes,
                                     end_bytes)) {
-        DFTRACER_UTILS_LOG_DEBUG("GzipReader::read - creating new byte stream",
-                                 "");
+        DFTRACER_UTILS_LOG_DEBUG("%s",
+                                 "GzipReader::read - creating new byte stream");
         auto new_stream = stream(StreamType::BYTES, RangeType::BYTE_RANGE,
                                  start_bytes, end_bytes);
         stream_cache_.update(std::move(new_stream), StreamType::BYTES, gz_path,
                              start_bytes, end_bytes);
     } else {
         DFTRACER_UTILS_LOG_DEBUG(
-            "GzipReader::read - reusing cached byte stream", "");
+            "%s", "GzipReader::read - reusing cached byte stream");
     }
 
     std::size_t result = stream_cache_.get()->read(buffer, buffer_size);
-    DFTRACER_UTILS_LOG_DEBUG("GzipReader::read - returned %zu bytes", result);
+    DFTRACER_UTILS_LOG_DEBUG("%s", "GzipReader::read - returned %zu bytes",
+                             result);
 
     // Update position for next potential read
     stream_cache_.update_position(start_bytes + result);

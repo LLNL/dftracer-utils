@@ -69,6 +69,8 @@ class GzipByteStream : public GzipStream {
             result, bytes_read);
         if (!result || bytes_read == 0) {
             DFTRACER_UTILS_LOG_DEBUG(
+                "%s",
+
                 "GzipByteStream::stream - marking as finished due to read "
                 "failure "
                 "or 0 bytes",

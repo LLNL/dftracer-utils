@@ -277,7 +277,7 @@ int main(int argc, char** argv) {
             [checkpoint_size, force_rebuild, index_dir](
                 std::vector<std::string> file_list,
                 TaskContext& p_ctx) -> std::vector<FileInfo> {
-                std::vector<TaskResult<FileInfo>::Future> futures;
+                std::vector<std::future<FileInfo>> futures;
                 futures.reserve(file_list.size());
 
                 for (const auto& file_path : file_list) {

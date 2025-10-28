@@ -20,8 +20,8 @@ static int validate_handle(dft_reader_handle_t reader) {
 dft_reader_handle_t dft_reader_create(const char *gz_path, const char *idx_path,
                                       size_t index_ckpt_size) {
     if (!gz_path || !idx_path) {
-        DFTRACER_UTILS_LOG_ERROR("Both gz_path and idx_path cannot be null",
-                                 "");
+        DFTRACER_UTILS_LOG_ERROR("%s",
+                                 "Both gz_path and idx_path cannot be null");
         return nullptr;
     }
 
@@ -40,11 +40,11 @@ dft_reader_handle_t dft_reader_create(const char *gz_path, const char *idx_path,
 dft_reader_handle_t dft_reader_create_with_indexer(
     dft_indexer_handle_t indexer) {
     if (!indexer) {
-        DFTRACER_UTILS_LOG_ERROR("Indexer cannot be null", "");
+        DFTRACER_UTILS_LOG_ERROR("%s", "Indexer cannot be null");
         return nullptr;
     }
 
-    DFTRACER_UTILS_LOG_DEBUG("Creating DFT reader with provided indexer", "");
+    DFTRACER_UTILS_LOG_DEBUG("%s", "Creating DFT reader with provided indexer");
 
     try {
         // Indexer handle is now a shared_ptr<Indexer>*
