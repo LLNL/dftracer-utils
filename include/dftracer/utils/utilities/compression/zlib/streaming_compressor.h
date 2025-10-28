@@ -1,8 +1,9 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_STREAMING_COMPRESSOR_H
-#define DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_STREAMING_COMPRESSOR_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_COMPRESSOR_H
+#define DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_COMPRESSOR_H
 
 #include <dftracer/utils/core/utilities/utility.h>
-#include <dftracer/utils/utilities/compression/gzip/compressed_chunk_iterator.h>
+#include <dftracer/utils/utilities/compression/zlib/compressed_chunk_iterator.h>
+#include <dftracer/utils/utilities/compression/zlib/shared.h>
 #include <dftracer/utils/utilities/io/chunk_iterator.h>
 #include <dftracer/utils/utilities/io/types/types.h>
 #include <zlib.h>
@@ -11,7 +12,7 @@
 #include <memory>
 #include <stdexcept>
 
-namespace dftracer::utils::utilities::compression::gzip {
+namespace dftracer::utils::utilities::compression::zlib {
 
 using io::ChunkIterator;
 using io::ChunkRange;
@@ -98,6 +99,7 @@ class ManualStreamingCompressorUtility
     bool initialized_ = false;
     bool finalized_ = false;
     int compression_level_;
+    CompressionFormat format_;
     std::size_t total_in_ = 0;
     std::size_t total_out_ = 0;
 
@@ -106,16 +108,23 @@ class ManualStreamingCompressorUtility
 
    public:
     explicit ManualStreamingCompressorUtility(
-        int compression_level = Z_DEFAULT_COMPRESSION)
+        int compression_level = Z_DEFAULT_COMPRESSION,
+        CompressionFormat format = CompressionFormat::GZIP)
         : compression_level_(compression_level),
+          format_(format),
           output_buffer_(OUTPUT_BUFFER_SIZE) {}
 
     ~ManualStreamingCompressorUtility() {
+        if (!finalized_ && initialized_) {
+            // Finalize before ending the stream
+            try {
+                finalize();
+            } catch (...) {
+                // Ignore errors in destructor
+            }
+        }
         if (initialized_) {
             deflateEnd(&stream_);
-        }
-        if (!finalized_) {
-            finalize();
         }
     }
 
@@ -174,6 +183,10 @@ class ManualStreamingCompressorUtility
      * @return Vector of final compressed chunks
      */
     std::vector<CompressedData> finalize() {
+        if (finalized_) {
+            return {};  // Already finalized
+        }
+
         if (!initialized_) {
             initialize();
         }
@@ -226,9 +239,10 @@ class ManualStreamingCompressorUtility
     void initialize() {
         std::memset(&stream_, 0, sizeof(stream_));
 
-        int ret = deflateInit2(&stream_, compression_level_, Z_DEFLATED,
-                               15 + 16,  // gzip format
-                               8, Z_DEFAULT_STRATEGY);
+        int ret =
+            deflateInit2(&stream_, compression_level_, Z_DEFLATED,
+                         static_cast<int>(format_),  // Use format enum value
+                         8, Z_DEFAULT_STRATEGY);
 
         if (ret != Z_OK) {
             throw std::runtime_error("Failed to initialize deflate");
@@ -238,6 +252,6 @@ class ManualStreamingCompressorUtility
     }
 };
 
-}  // namespace dftracer::utils::utilities::compression::gzip
+}  // namespace dftracer::utils::utilities::compression::zlib
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_STREAMING_COMPRESSOR_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_COMPRESSOR_H

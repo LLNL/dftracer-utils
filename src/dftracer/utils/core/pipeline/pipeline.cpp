@@ -30,6 +30,10 @@ Pipeline::Pipeline(const PipelineConfigManager& config)
 
 Pipeline::~Pipeline() {
     DFTRACER_UTILS_LOG_DEBUG("Pipeline '%s' destroyed", name_.c_str());
+    // Ensure executor is properly shut down before destruction
+    if (executor_) {
+        executor_->shutdown();
+    }
 }
 
 void Pipeline::set_source(std::shared_ptr<Task> source) {

@@ -228,10 +228,6 @@ int main(int argc, char** argv) {
     auto task2_collect_metadata = utilities::use(metadata_workflow).as_task();
     task2_collect_metadata->with_name("CollectMetadata");
 
-    // INTER-TASK dependency: Task 2 needs Task 1 to complete (indexes must
-    // exist)
-    task2_collect_metadata->depends_on(task1_build_indexes);
-
     // Task 2 also needs the same directory input as Task 1, use combiner
     // Combiner transforms Task 1's output (IndexBuildOutput) to Task 2's input
     // (DirectoryProcessInput)
@@ -280,9 +276,6 @@ int main(int argc, char** argv) {
     auto task3_create_mappings =
         make_task(create_chunk_mappings_func, "CreateChunkMappings");
 
-    // INTER-TASK dependency: Task 3 needs Task 2 (metadata)
-    task3_create_mappings->depends_on(task2_collect_metadata);
-
     // ========================================================================
     // Task 4: Prepare Chunk Extraction Inputs
     // ========================================================================
@@ -322,9 +315,6 @@ int main(int argc, char** argv) {
     auto task4_prepare_inputs =
         make_task(prepare_extract_inputs_func, "PrepareExtractInputs");
 
-    // INTER-TASK dependency: Task 4 needs Task 3 (manifests)
-    task4_prepare_inputs->depends_on(task3_create_mappings);
-
     // ========================================================================
     // Task 5: Extract Chunks (INTRA-TASK PARALLELISM via BatchProcessorUtility)
     // ========================================================================
@@ -354,9 +344,6 @@ int main(int argc, char** argv) {
     // Task 5.4: Task definition - Convert utility to task
     auto task5_extract_chunks = utilities::use(chunk_extractor).as_task();
     task5_extract_chunks->with_name("ExtractChunks");
-
-    // INTER-TASK dependency: Task 5 needs Task 4 (extraction inputs)
-    task5_extract_chunks->depends_on(task4_prepare_inputs);
 
     // ========================================================================
     // Task 6: Verify Output Chunks (optional)
@@ -420,8 +407,6 @@ int main(int argc, char** argv) {
 
         // INTER-TASK dependencies: Task 6 needs Task 5 (chunks) and Task 2
         // (metadata)
-        task6_verify_chunks->depends_on(task5_extract_chunks);
-        task6_verify_chunks->depends_on(task2_collect_metadata);
 
         // Task 6.7: Combiner to merge chunks and metadata into verification
         // input
@@ -444,6 +429,16 @@ int main(int argc, char** argv) {
     // ========================================================================
     // Execute Pipeline
     // ========================================================================
+
+    // Define dependencies
+    task2_collect_metadata->depends_on(task1_build_indexes);
+    task3_create_mappings->depends_on(task2_collect_metadata);
+    task4_prepare_inputs->depends_on(task3_create_mappings);
+    task5_extract_chunks->depends_on(task4_prepare_inputs);
+    if (verify && task6_verify_chunks) {
+        task6_verify_chunks->depends_on(task5_extract_chunks);
+        task6_verify_chunks->depends_on(task2_collect_metadata);
+    }
 
     // Set up pipeline
     pipeline.set_source(task1_build_indexes);

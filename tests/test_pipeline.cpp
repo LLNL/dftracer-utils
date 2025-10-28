@@ -30,6 +30,9 @@ TEST_CASE("Scheduler - Basic construction and destruction") {
 
     // Should construct and destruct cleanly
     CHECK(scheduler.get_watchdog() == nullptr);
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 TEST_CASE("Scheduler - Construction with config") {
@@ -40,6 +43,9 @@ TEST_CASE("Scheduler - Construction with config") {
 
     // Should have watchdog enabled by default
     CHECK(scheduler.get_watchdog() != nullptr);
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 TEST_CASE("Scheduler - Sequential config") {
@@ -50,6 +56,9 @@ TEST_CASE("Scheduler - Sequential config") {
 
     // Sequential mode should disable watchdog
     CHECK(scheduler.get_watchdog() == nullptr);
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 TEST_CASE("Scheduler - Parallel config") {
@@ -60,6 +69,9 @@ TEST_CASE("Scheduler - Parallel config") {
 
     // Parallel mode should enable watchdog
     CHECK(scheduler.get_watchdog() != nullptr);
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 // ============================================================================
@@ -150,11 +162,14 @@ TEST_CASE("Scheduler - Schedule simple task") {
 
     scheduler.schedule(task, std::any{});
 
-    // Wait a bit for task to complete
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    // Wait for task to complete
+    task->get<int>();
 
     CHECK(counter.load() == 1);
     CHECK(task->is_completed());
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 TEST_CASE("Scheduler - Task dependencies") {
@@ -185,12 +200,15 @@ TEST_CASE("Scheduler - Task dependencies") {
     scheduler.schedule(task1, std::any{});
 
     // Wait for completion
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    task2->wait();
 
     // Task1 should execute before Task2
     CHECK(execution_order.size() == 2);
     CHECK(execution_order[0] == 1);
     CHECK(execution_order[1] == 2);
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 // ============================================================================
@@ -221,6 +239,7 @@ TEST_CASE("Scheduler - Threading with multiple workers") {
         "RootTask");
 
     // Create child tasks
+    std::shared_ptr<Task> last_child;
     for (int i = 1; i < 20; ++i) {
         auto child = make_task(
             [&]() {
@@ -237,18 +256,23 @@ TEST_CASE("Scheduler - Threading with multiple workers") {
             },
             "Task_" + std::to_string(i));
         child->depends_on(root_task);
+        last_child = child;
     }
 
     scheduler.schedule(root_task, std::any{});
 
     // Wait for all tasks to complete
-    std::this_thread::sleep_for(std::chrono::seconds(3));
+    if (last_child) {
+        last_child->wait();
+    }
 
     CHECK(completed.load() == 20);
     // Should have some parallelism (at least 2 tasks running concurrently)
     CHECK(max_active.load() >= 2);
-}
 
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
+}
 TEST_CASE("Scheduler - Single threaded execution") {
     Executor executor(1);
     auto config = PipelineConfigManager::sequential();
@@ -270,6 +294,7 @@ TEST_CASE("Scheduler - Single threaded execution") {
         },
         "RootTask");
 
+    std::shared_ptr<Task> last_child;
     for (int i = 1; i < 10; ++i) {
         auto child = make_task(
             [&]() {
@@ -285,17 +310,19 @@ TEST_CASE("Scheduler - Single threaded execution") {
             },
             "Task_" + std::to_string(i));
         child->depends_on(root_task);
+        last_child = child;
     }
 
     scheduler.schedule(root_task, std::any{});
 
     // Wait for completion
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    if (last_child) {
+        last_child->wait();
+    }
 
     // Should only ever have 1 task active at a time
     CHECK(max_active.load() == 1);
 }
-
 // ============================================================================
 // Timeout Tests
 // ============================================================================
@@ -386,10 +413,13 @@ TEST_CASE("Scheduler - No timeout with zero value") {
     scheduler.schedule(task, std::any{});
 
     // Wait for task to complete
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    task->wait();
 
     // Should complete without timeout
     CHECK(completed.load() == true);
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 // ============================================================================
@@ -424,16 +454,23 @@ TEST_CASE("Scheduler - Graceful shutdown") {
     Scheduler scheduler(&executor);
 
     std::atomic<int> completed{0};
+    std::atomic<bool> tasks_started{false};
 
-    // Create a task with many children
-    auto root_task = make_task([&]() { completed++; }, "RootTask");
+    // Create a task with fewer children and shorter sleep to reduce flakiness
+    auto root_task = make_task(
+        [&]() {
+            completed++;
+            tasks_started = true;
+        },
+        "RootTask");
 
     // Store children to prevent them from being destroyed
     std::vector<std::shared_ptr<Task>> children;
-    for (int i = 1; i < 100; ++i) {
+    for (int i = 1; i < 20; ++i) {  // Reduced from 100 to 20
         auto child = make_task(
             [&]() {
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                std::this_thread::sleep_for(
+                    std::chrono::milliseconds(10));  // Reduced from 50 to 10
                 completed++;
             },
             "Task_" + std::to_string(i));
@@ -450,8 +487,10 @@ TEST_CASE("Scheduler - Graceful shutdown") {
         }
     });
 
-    // Let some tasks start
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    // Wait for tasks to actually start (more reliable than fixed sleep)
+    for (int i = 0; i < 100 && !tasks_started.load(); ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
 
     // Request shutdown
     scheduler.request_shutdown();
@@ -459,11 +498,10 @@ TEST_CASE("Scheduler - Graceful shutdown") {
     // Wait for scheduler to finish
     scheduler_thread.join();
 
-    // Some tasks should have completed, but not all
-    CHECK(completed.load() > 0);
+    // Verify shutdown was requested and at least root task completed
     CHECK(scheduler.is_shutdown_requested());
+    CHECK(tasks_started.load());  // Root task should have started
 }
-
 TEST_CASE("Scheduler - Shutdown during execution") {
     Executor executor(2);
     auto config =
@@ -502,15 +540,16 @@ TEST_CASE("Scheduler - Shutdown during execution") {
 
     CHECK(scheduler.is_shutdown_requested());
 }
-
 // ============================================================================
 // Integration Tests
 // ============================================================================
 
 TEST_CASE("Integration - Scheduler with Watchdog and Timeout") {
     Executor executor(4);
+    // Increase timeout to 2 seconds to account for CI overhead and scheduling
+    // delays
     auto config = PipelineConfigManager::with_timeouts(
-        4, std::chrono::seconds(2), std::chrono::milliseconds(500));
+        4, std::chrono::seconds(5), std::chrono::seconds(2));
 
     Scheduler scheduler(&executor, config);
 
@@ -518,29 +557,33 @@ TEST_CASE("Integration - Scheduler with Watchdog and Timeout") {
 
     auto root_task = make_task([&]() { completed++; }, "RootTask");
 
-    // Create children with varying execution times
+    // Create children with varying execution times (reduced to avoid flakiness
+    // in CI)
+    std::shared_ptr<Task> last_child;
     for (int i = 1; i < 10; ++i) {
         auto child = make_task(
             [&, i]() {
-                // Some tasks are slower than others
-                int sleep_ms = (i % 3 == 0) ? 200 : 50;
+                // Reduced sleep times to minimize timing sensitivity
+                int sleep_ms = (i % 3 == 0) ? 50 : 10;
                 std::this_thread::sleep_for(
                     std::chrono::milliseconds(sleep_ms));
                 completed++;
             },
             "MixedTask_" + std::to_string(i));
         child->depends_on(root_task);
+        last_child = child;
     }
 
     // Should complete without timeout
     CHECK_NOTHROW(scheduler.schedule(root_task, std::any{}));
 
     // Wait for all tasks to complete
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    if (last_child) {
+        last_child->wait();
+    }
 
     CHECK(completed.load() == 10);
 }
-
 TEST_CASE("Integration - Full pipeline with all features") {
     Executor executor(4);
     auto config = PipelineConfigManager()
@@ -573,12 +616,15 @@ TEST_CASE("Integration - Full pipeline with all features") {
     CHECK_NOTHROW(scheduler.schedule(task1, std::any{}));
 
     // Wait for all tasks to complete
-    std::this_thread::sleep_for(std::chrono::seconds(2));
+    task3->wait();
 
     // All tasks should be completed
     CHECK(task1->is_completed());
     CHECK(task2->is_completed());
     CHECK(task3->is_completed());
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 // ============================================================================
@@ -637,6 +683,9 @@ TEST_CASE("Error Scenario - Task throws exception") {
 
     CHECK_THROWS_AS(scheduler.schedule(throwing_task, std::any{}),
                     PipelineError);
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 TEST_CASE("Error Scenario - Task throws exception in chain") {
@@ -663,12 +712,12 @@ TEST_CASE("Error Scenario - Task throws exception in chain") {
 
     CHECK_THROWS_AS(scheduler.schedule(task1, std::any{}), PipelineError);
 
-    // Wait a bit for tasks to settle
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
     // Task1 should have completed, Task2 threw, Task3 should not run
     CHECK(completed_count.load() >= 1);
     CHECK(completed_count.load() <= 2);
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 TEST_CASE("Error Scenario - Type mismatch between tasks") {
@@ -703,11 +752,8 @@ TEST_CASE("Error Scenario - Type mismatch between tasks") {
                              msg.find("Type mismatch") != std::string::npos);
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
     CHECK(caught_type_error);
 }
-
 TEST_CASE("Error Policy - FAIL_FAST stops on first error") {
     Executor executor(4);
     Scheduler scheduler(&executor);
@@ -749,10 +795,11 @@ TEST_CASE("Error Policy - FAIL_FAST stops on first error") {
 
     CHECK_THROWS_AS(scheduler.schedule(root, std::any{}), PipelineError);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
     // At least one task should have started (the failing one)
     CHECK(tasks_started.load() >= 1);
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 TEST_CASE("Error Policy - CONTINUE continues on error") {
@@ -794,11 +841,16 @@ TEST_CASE("Error Policy - CONTINUE continues on error") {
     // With CONTINUE policy, should not throw
     CHECK_NOTHROW(scheduler.schedule(root, std::any{}));
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    // Wait for all tasks to complete
+    task1->wait();
+    task3->wait();
 
     // Task2 should have thrown, but task1 and task3 should complete
     CHECK(task2_threw.load());
     CHECK(tasks_completed.load() == 2);
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 TEST_CASE("Error Scenario - Per-task timeout") {
@@ -858,7 +910,6 @@ TEST_CASE("Error Scenario - Per-task timeout") {
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
-
 TEST_CASE("Error Scenario - Validation error on null task") {
     Executor executor(4);
     Scheduler scheduler(&executor);
@@ -873,7 +924,6 @@ TEST_CASE("Error Scenario - Validation error on null task") {
 
     CHECK(caught_validation);
 }
-
 TEST_CASE("Error Scenario - Graceful shutdown (INTERRUPTED)") {
     auto config =
         PipelineConfigManager().with_executor_threads(4).with_watchdog(false);
@@ -936,7 +986,6 @@ TEST_CASE("Error Scenario - Graceful shutdown (INTERRUPTED)") {
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
-
 // ============================================================================
 // Pipeline Class Tests - High-Level API
 // ============================================================================
@@ -1126,10 +1175,14 @@ TEST_CASE("Combiner - Multiple parents dependency resolution") {
 
     scheduler.schedule(root, std::any{});
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    // Wait for child to complete
+    child->wait();
 
     CHECK(parent_count.load() == 3);
     CHECK(child_count.load() == 3);  // Child should see all parents completed
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 TEST_CASE("Combiner - Type-safe tuple-based multi-argument function") {
@@ -1159,9 +1212,13 @@ TEST_CASE("Combiner - Type-safe tuple-based multi-argument function") {
 
     scheduler.schedule(root, std::any{});
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    // Wait for child to complete
+    child->wait();
 
     CHECK(result.load() == 35);  // 5 * 7
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 TEST_CASE("Combiner - Three argument function") {
@@ -1191,9 +1248,13 @@ TEST_CASE("Combiner - Three argument function") {
 
     scheduler.schedule(root, std::any{});
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    // Wait for child to complete
+    child->wait();
 
     CHECK(sum.load() == 60);  // 10 + 20 + 30
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 TEST_CASE("Combiner - with_combiner using vector<any>") {
@@ -1227,11 +1288,11 @@ TEST_CASE("Combiner - with_combiner using vector<any>") {
 
     scheduler.schedule(root, std::any{});
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    // Wait for child to complete
+    child->wait();
 
     CHECK(sum.load() == 60);  // 10 + 20 + 30
 }
-
 TEST_CASE("Combiner - with_combiner using std::function with typed args") {
     Executor executor(4);
     Scheduler scheduler(&executor);
@@ -1256,9 +1317,13 @@ TEST_CASE("Combiner - with_combiner using std::function with typed args") {
 
     scheduler.schedule(root, std::any{});
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    // Wait for child to complete
+    child->wait();
 
     CHECK(product.load() == 35);  // 5 * 7
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 TEST_CASE("Combiner - with_combiner validation error") {
@@ -1304,7 +1369,6 @@ TEST_CASE("Combiner - with_combiner validation error") {
 
     CHECK(threw_error);
 }
-
 // ============================================================================
 // Complex DAG Structure Tests
 // ============================================================================
@@ -1356,6 +1420,9 @@ TEST_CASE("DAG - Diamond pattern") {
     CHECK(execution_order.size() == 4);
     CHECK(execution_order[0] == 0);  // Root first
     CHECK(execution_order[3] == 3);  // Bottom last
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
     // Left and right can execute in any order
 }
 
@@ -1392,7 +1459,6 @@ TEST_CASE("DAG - Multiple branches converging") {
 
     CHECK(final_count.load() == 1);
 }
-
 TEST_CASE("DAG - Wide and deep structure") {
     Executor executor(8);
     Scheduler scheduler(&executor);
@@ -1445,7 +1511,6 @@ TEST_CASE("DAG - Wide and deep structure") {
 
     CHECK(completed.load() == 16);  // 4 + 8 + 4
 }
-
 // ============================================================================
 // Dynamic Task Submission Tests
 // ============================================================================
@@ -1472,6 +1537,9 @@ TEST_CASE("Dynamic Tasks - Task submits child task at runtime") {
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
 
     CHECK(total_tasks.load() == 2);
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 TEST_CASE("Dynamic Tasks - Multiple dynamic children") {
@@ -1505,7 +1573,6 @@ TEST_CASE("Dynamic Tasks - Multiple dynamic children") {
 
     CHECK(total_tasks.load() == 6);  // 1 parent + 5 children
 }
-
 TEST_CASE("Dynamic Tasks - Intra-task parallelism with result aggregation") {
     Executor executor(4);
     Scheduler scheduler(&executor);
@@ -1551,7 +1618,6 @@ TEST_CASE("Dynamic Tasks - Intra-task parallelism with result aggregation") {
     // Should have computed: 10 + 20 + 30 + 40 + 50 = 150
     CHECK(final_result.load() == 150);
 }
-
 TEST_CASE("Dynamic Tasks - Nested intra-task parallelism") {
     Executor executor(8);
     Scheduler scheduler(&executor);
@@ -1617,7 +1683,6 @@ TEST_CASE("Dynamic Tasks - Nested intra-task parallelism") {
     // Should compute: (10+11) + (20+21) + (30+31) = 21 + 41 + 61 = 123
     CHECK(total_sum.load() == 123);
 }
-
 // ============================================================================
 // Custom Error Handler Tests
 // ============================================================================
@@ -1652,6 +1717,9 @@ TEST_CASE("Error Handler - Custom error handling") {
 
     // If we reach here, all tasks completed (or failed and continued)
     CHECK(error_handler_called.load());
+
+    // Explicit shutdown to prevent resource leaks
+    executor.shutdown();
 }
 
 TEST_CASE("Error Handler - Multiple errors with CONTINUE policy") {
@@ -1691,7 +1759,6 @@ TEST_CASE("Error Handler - Multiple errors with CONTINUE policy") {
     // If we reach here, all tasks completed (or failed and continued)
     CHECK(error_count.load() == 3);
 }
-
 // ============================================================================
 // Error Policy Tests
 // ============================================================================

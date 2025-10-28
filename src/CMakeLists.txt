@@ -37,16 +37,7 @@ set(DFTRACER_UTILS_CORE_SOURCES
     # Tasks
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/tasks/task.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/tasks/task_context.cpp
-    # Old pipeline files (deprecated - will be removed)
-    # ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/executors/executor_type.cpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/executors/executor_factory.cpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/executors/sequential_executor.cpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/executors/thread_executor.cpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/executors/scheduler/thread_scheduler.cpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/executors/scheduler/thread_task_queue.cpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/executors/scheduler/sequential_scheduler.cpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/executors/executor_context.cpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/pipeline/tasks/task_context.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/tasks/task_future.cpp
     # Indexer
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/indexer/indexer_c.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/indexer/helpers.cpp
@@ -84,6 +75,7 @@ set(DFTRACER_UTILS_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/indexer/tar/queries/query_metadata.cpp
     # Reader
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/reader/reader_c.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/reader/stream_c.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/reader/gzip_reader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/reader/tar_reader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/reader/reader_factory.cpp
@@ -99,6 +91,7 @@ set(DFTRACER_UTILS_UTILITIES_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/utilities/composites/dft/chunk_manifest_mapper.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/utilities/composites/dft/event_id_extractor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/utilities/composites/dft/event_collector.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/utilities/composites/file_merger.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/utilities/composites/dft/event_hasher.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/utilities/composites/dft/utils.cpp
 )
@@ -599,12 +592,11 @@ if(DFTRACER_UTILS_BUILD_BINARIES)
   set(DFTRACER_BINARIES
       ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_reader.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_tar.cpp
-      # ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_event_count.cpp
-      # ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_pgzip.cpp
-      # ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_merge.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_event_count.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_pgzip.cpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_merge.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_split.cpp
-      # ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_info.cpp
-      )
+      ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/binaries/dftracer_info.cpp)
 
   foreach(bin ${DFTRACER_BINARIES})
     string(REPLACE ".cpp" "" bin_exec ${bin})

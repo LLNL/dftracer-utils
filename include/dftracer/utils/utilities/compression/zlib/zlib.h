@@ -1,11 +1,12 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_H
-#define DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_H
+#define DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_H
 
 /**
- * @file gzip.h
- * @brief Convenience header for gzip compression utilities.
+ * @file zlib.h
+ * @brief Convenience header for zlib compression utilities.
  *
- * This header provides composable utilities for gzip compression:
+ * This header provides composable utilities for zlib compression (supporting
+ * GZIP, ZLIB, and DEFLATE formats):
  *
  * In-Memory Compression:
  * - Compressor: Compress raw data using gzip (io::RawData ->
@@ -22,9 +23,9 @@
  *
  * Usage (In-Memory):
  * @code
- * #include <dftracer/utils/utilities/compression/gzip/gzip.h>
+ * #include <dftracer/utils/utilities/compression/zlib/zlib.h>
  *
- * using namespace dftracer::utils::utilities::compression::gzip;
+ * using namespace dftracer::utils::utilities::compression::zlib;
  * using namespace dftracer::utils::utilities::io;
  *
  * auto compressor = std::make_shared<Compressor>();
@@ -37,17 +38,17 @@
  *
  * Usage (Streaming):
  * @code
- * #include <dftracer/utils/utilities/compression/gzip/gzip.h>
+ * #include <dftracer/utils/utilities/compression/zlib/zlib.h>
  * #include <dftracer/utils/utilities/io/streaming_file_reader.h>
  *
  * using namespace dftracer::utils::utilities;
  *
  * auto reader = std::make_shared<io::StreamingFileReader>();
- * auto compressor = std::make_shared<compression::gzip::StreamingCompressor>();
+ * auto compressor = std::make_shared<compression::zlib::StreamingCompressor>();
  *
  * io::ChunkRange chunks =
  * reader->process(io::StreamReadInput{"/large/file.txt"});
- * compression::gzip::CompressedChunkRange compressed =
+ * compression::zlib::CompressedChunkRange compressed =
  * compressor->process(chunks);
  *
  * for (const auto& chunk : compressed) {
@@ -56,9 +57,10 @@
  * @endcode
  */
 
-#include <dftracer/utils/utilities/compression/gzip/compressor.h>
-#include <dftracer/utils/utilities/compression/gzip/decompressor.h>
-#include <dftracer/utils/utilities/compression/gzip/streaming_compressor.h>
-#include <dftracer/utils/utilities/compression/gzip/streaming_decompressor.h>
+#include <dftracer/utils/utilities/compression/zlib/compressor.h>
+#include <dftracer/utils/utilities/compression/zlib/decompressor.h>
+#include <dftracer/utils/utilities/compression/zlib/shared.h>
+#include <dftracer/utils/utilities/compression/zlib/streaming_compressor.h>
+#include <dftracer/utils/utilities/compression/zlib/streaming_decompressor.h>
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_H

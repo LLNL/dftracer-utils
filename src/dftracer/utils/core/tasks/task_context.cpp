@@ -5,8 +5,8 @@
 
 namespace dftracer::utils {
 
-std::shared_future<std::any> TaskContext::submit_task(
-    std::shared_ptr<Task> task, const std::any& input) {
+TaskFuture TaskContext::submit_task(std::shared_ptr<Task> task,
+                                    const std::any& input) {
     if (!scheduler_) {
         throw std::runtime_error(
             "TaskContext: No scheduler available for dynamic task submission");
@@ -23,8 +23,8 @@ std::shared_future<std::any> TaskContext::submit_task(
     // Submit task to scheduler
     scheduler_->submit_dynamic_task(task, input);
 
-    // Return task's future
-    return task->get_future();
+    // Return task's future wrapped in TaskFuture for automatic work-stealing
+    return TaskFuture(task->get_future());
 }
 
 }  // namespace dftracer::utils

@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_COMPRESSOR_H
-#define DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_COMPRESSOR_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_COMPRESSOR_H
+#define DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_COMPRESSOR_H
 
 #include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utility.h>
@@ -8,7 +8,7 @@
 
 #include <stdexcept>
 
-namespace dftracer::utils::utilities::compression::gzip {
+namespace dftracer::utils::utilities::compression::zlib {
 
 // Use I/O types for compression
 using io::CompressedData;
@@ -108,6 +108,6 @@ class CompressorUtility
     }
 };
 
-}  // namespace dftracer::utils::utilities::compression::gzip
+}  // namespace dftracer::utils::utilities::compression::zlib
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_COMPRESSOR_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_COMPRESSOR_H

@@ -140,7 +140,7 @@ class ChunkVerifierUtility
         TaskContext& ctx = this->context();
 
         // Step 3: Collect events from all chunks in parallel
-        std::vector<std::shared_future<std::any>> futures;
+        std::vector<TaskFuture> futures;
         futures.reserve(input.chunks.size());
 
         for (const auto& chunk : input.chunks) {

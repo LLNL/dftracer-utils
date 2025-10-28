@@ -1,6 +1,7 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_COMPRESSED_CHUNK_ITERATOR_H
-#define DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_COMPRESSED_CHUNK_ITERATOR_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_COMPRESSED_CHUNK_ITERATOR_H
+#define DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_COMPRESSED_CHUNK_ITERATOR_H
 
+#include <dftracer/utils/utilities/compression/zlib/shared.h>
 #include <dftracer/utils/utilities/io/chunk_iterator.h>
 #include <dftracer/utils/utilities/io/types/types.h>
 #include <zlib.h>
@@ -11,7 +12,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace dftracer::utils::utilities::compression::gzip {
+namespace dftracer::utils::utilities::compression::zlib {
 
 using io::ChunkIterator;
 using io::CompressedData;
@@ -45,6 +46,7 @@ class CompressedChunkIterator {
         bool initialized = false;
         bool is_end = false;
         int compression_level;
+        CompressionFormat format;
 
         std::vector<unsigned char> output_buffer;
         std::vector<CompressedData> pending_chunks;  // Buffered output chunks
@@ -52,10 +54,12 @@ class CompressedChunkIterator {
 
         static constexpr std::size_t OUTPUT_BUFFER_SIZE = 64 * 1024;
 
-        CompressionState(ChunkIterator it, ChunkIterator end, int level)
+        CompressionState(ChunkIterator it, ChunkIterator end, int level,
+                         CompressionFormat fmt = CompressionFormat::GZIP)
             : input_it(it),
               input_end(end),
               compression_level(level),
+              format(fmt),
               output_buffer(OUTPUT_BUFFER_SIZE) {
             std::memset(&stream, 0, sizeof(stream));
 
@@ -74,9 +78,10 @@ class CompressedChunkIterator {
         }
 
         void initialize() {
-            int ret = deflateInit2(&stream, compression_level, Z_DEFLATED,
-                                   15 + 16,  // gzip format
-                                   8, Z_DEFAULT_STRATEGY);
+            int ret =
+                deflateInit2(&stream, compression_level, Z_DEFLATED,
+                             static_cast<int>(format),  // Use format enum value
+                             8, Z_DEFAULT_STRATEGY);
 
             if (ret != Z_OK) {
                 throw std::runtime_error("Failed to initialize deflate");
@@ -197,9 +202,10 @@ class CompressedChunkIterator {
 
     // Begin iterator
     CompressedChunkIterator(ChunkIterator input_begin, ChunkIterator input_end,
-                            int compression_level = Z_DEFAULT_COMPRESSION)
-        : state_(std::make_shared<CompressionState>(input_begin, input_end,
-                                                    compression_level)) {
+                            int compression_level = Z_DEFAULT_COMPRESSION,
+                            CompressionFormat format = CompressionFormat::GZIP)
+        : state_(std::make_shared<CompressionState>(
+              input_begin, input_end, compression_level, format)) {
         if (state_->is_end) {
             state_ = nullptr;
         }
@@ -244,22 +250,25 @@ class CompressedChunkRange {
     ChunkIterator input_begin_;
     ChunkIterator input_end_;
     int compression_level_;
+    CompressionFormat format_;
 
    public:
     CompressedChunkRange(ChunkIterator input_begin, ChunkIterator input_end,
-                         int compression_level = Z_DEFAULT_COMPRESSION)
+                         int compression_level = Z_DEFAULT_COMPRESSION,
+                         CompressionFormat format = CompressionFormat::GZIP)
         : input_begin_(input_begin),
           input_end_(input_end),
-          compression_level_(compression_level) {}
+          compression_level_(compression_level),
+          format_(format) {}
 
     CompressedChunkIterator begin() const {
         return CompressedChunkIterator{input_begin_, input_end_,
-                                       compression_level_};
+                                       compression_level_, format_};
     }
 
     CompressedChunkIterator end() const { return CompressedChunkIterator{}; }
 };
 
-}  // namespace dftracer::utils::utilities::compression::gzip
+}  // namespace dftracer::utils::utilities::compression::zlib
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_COMPRESSED_CHUNK_ITERATOR_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_COMPRESSED_CHUNK_ITERATOR_H

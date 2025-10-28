@@ -2,6 +2,7 @@
 #define DFTRACER_UTILS_CORE_TASKS_TASK_CONTEXT_H
 
 #include <dftracer/utils/core/common/typedefs.h>
+#include <dftracer/utils/core/tasks/task_future.h>
 
 #include <any>
 #include <future>
@@ -42,15 +43,14 @@ class TaskContext {
      *
      * @param task The task to submit
      * @param input Input for the task
-     * @return Future for the task's result
+     * @return TaskFuture for the task's result (with automatic work-stealing)
      *
      * Example:
      *   auto child_task = make_task([](int x) { return x * 2; });
      *   auto future = ctx.submit_task(child_task, std::any(42));
-     *   int result = std::any_cast<int>(future->get()); // 84
+     *   int result = std::any_cast<int>(future.get()); // 84
      */
-    std::shared_future<std::any> submit_task(std::shared_ptr<Task> task,
-                                             const std::any& input);
+    TaskFuture submit_task(std::shared_ptr<Task> task, const std::any& input);
 
     /**
      * Get current task ID

@@ -1,6 +1,8 @@
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/reader/reader.h>
 #include <dftracer/utils/reader/reader_factory.h>
+#include <dftracer/utils/reader/stream.h>
+#include <dftracer/utils/reader/stream_type.h>
 
 #include <cstring>
 
@@ -161,6 +163,34 @@ int dft_reader_read_lines(dft_reader_handle_t reader, size_t start_line,
 void dft_reader_reset(dft_reader_handle_t reader) {
     if (reader) {
         (*cast_reader(reader))->reset();
+    }
+}
+
+dft_reader_stream_t dft_reader_stream(dft_reader_handle_t reader,
+                                      dft_stream_type_t stream_type,
+                                      dft_range_type_t range_type, size_t start,
+                                      size_t end) {
+    if (validate_handle(reader)) {
+        DFTRACER_UTILS_LOG_ERROR("%s", "Invalid reader handle");
+        return nullptr;
+    }
+
+    try {
+        // Convert C enum to C++ enum
+        StreamType cpp_stream_type = static_cast<StreamType>(stream_type);
+        RangeType cpp_range_type = static_cast<RangeType>(range_type);
+
+        // Create stream - stream() already returns a shared_ptr
+        auto stream = (*cast_reader(reader))
+                          ->stream(cpp_stream_type, cpp_range_type, start, end);
+
+        // Transfer ownership to C API - allocate shared_ptr on heap for C
+        // handle
+        return static_cast<dft_reader_stream_t>(
+            new std::shared_ptr<ReaderStream>(std::move(stream)));
+    } catch (const std::exception &e) {
+        DFTRACER_UTILS_LOG_ERROR("Failed to create stream: %s", e.what());
+        return nullptr;
     }
 }
 

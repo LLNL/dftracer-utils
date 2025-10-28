@@ -1,13 +1,14 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_STREAMING_DECOMPRESSOR_H
-#define DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_STREAMING_DECOMPRESSOR_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_DECOMPRESSOR_H
+#define DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_DECOMPRESSOR_H
 
+#include <dftracer/utils/utilities/compression/zlib/shared.h>
 #include <dftracer/utils/utilities/io/types/types.h>
 #include <zlib.h>
 
 #include <cstring>
 #include <stdexcept>
 
-namespace dftracer::utils::utilities::compression::gzip {
+namespace dftracer::utils::utilities::compression::zlib {
 
 using io::CompressedData;
 using io::RawData;
@@ -37,6 +38,7 @@ class StreamingDecompressorUtility
    private:
     z_stream stream_;
     bool initialized_ = false;
+    DecompressionFormat format_;
     std::size_t total_in_ = 0;
     std::size_t total_out_ = 0;
 
@@ -44,7 +46,9 @@ class StreamingDecompressorUtility
     std::vector<unsigned char> output_buffer_;
 
    public:
-    StreamingDecompressorUtility() : output_buffer_(OUTPUT_BUFFER_SIZE) {}
+    explicit StreamingDecompressorUtility(
+        DecompressionFormat format = DecompressionFormat::AUTO)
+        : format_(format), output_buffer_(OUTPUT_BUFFER_SIZE) {}
 
     ~StreamingDecompressorUtility() {
         if (initialized_) {
@@ -117,7 +121,8 @@ class StreamingDecompressorUtility
     void initialize() {
         std::memset(&stream_, 0, sizeof(stream_));
 
-        int ret = inflateInit2(&stream_, 15 + 32);  // Auto-detect gzip/zlib
+        int ret = inflateInit2(
+            &stream_, static_cast<int>(format_));  // Use format enum value
 
         if (ret != Z_OK) {
             throw std::runtime_error("Failed to initialize inflate");
@@ -127,6 +132,6 @@ class StreamingDecompressorUtility
     }
 };
 
-}  // namespace dftracer::utils::utilities::compression::gzip
+}  // namespace dftracer::utils::utilities::compression::zlib
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_STREAMING_DECOMPRESSOR_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_DECOMPRESSOR_H

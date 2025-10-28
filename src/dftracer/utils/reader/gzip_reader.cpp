@@ -165,8 +165,7 @@ std::size_t GzipReader::read(std::size_t start_bytes, std::size_t end_bytes,
     }
 
     std::size_t result = stream_cache_.get()->read(buffer, buffer_size);
-    DFTRACER_UTILS_LOG_DEBUG("%s", "GzipReader::read - returned %zu bytes",
-                             result);
+    DFTRACER_UTILS_LOG_DEBUG("GzipReader::read - returned %zu bytes", result);
 
     // Update position for next potential read
     stream_cache_.update_position(start_bytes + result);

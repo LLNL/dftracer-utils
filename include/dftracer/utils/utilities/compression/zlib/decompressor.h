@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_DECOMPRESSOR_H
-#define DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_DECOMPRESSOR_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_DECOMPRESSOR_H
+#define DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_DECOMPRESSOR_H
 
 #include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utility.h>
@@ -9,21 +9,21 @@
 #include <stdexcept>
 #include <string>
 
-namespace dftracer::utils::utilities::compression::gzip {
+namespace dftracer::utils::utilities::compression::zlib {
 
 // Use I/O types for compression
 using io::CompressedData;
 using io::RawData;
 
 /**
- * @brief Utility that decompresses gzip-compressed data.
+ * @brief Utility that decompresses zlib-compressed data.
  *
  * This utility takes compressed data and decompresses it using the zlib
  * library. It's the inverse operation of Compressor and can be composed in
  * pipelines.
  *
  * Features:
- * - Decompresses gzip-formatted data
+ * - Decompresses zlib-formatted data
  * - Uses original size hint for efficient allocation (if available)
  * - Automatic retry with larger buffer if needed
  * - Can be tagged with Cacheable, Retryable, Monitored behaviors
@@ -39,19 +39,6 @@ using io::RawData;
  *
  * // original.data == restored.data
  * assert(original == restored);
- * @endcode
- *
- * With pipeline:
- * @code
- * Pipeline pipeline;
- * auto compress_task = use(compressor).emit_on(pipeline);
- * auto decompress_task = use(decompressor).emit_on(pipeline);
- *
- * // Chain: RawData -> CompressedData -> RawData
- * pipeline.connect(compress_task.id(), decompress_task.id());
- *
- * auto output = SequentialExecutor().execute(pipeline, RawData{"data"});
- * auto restored = output.get<RawData>(decompress_task.id());
  * @endcode
  */
 class DecompressorUtility
@@ -119,6 +106,6 @@ class DecompressorUtility
     }
 };
 
-}  // namespace dftracer::utils::utilities::compression::gzip
+}  // namespace dftracer::utils::utilities::compression::zlib
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_GZIP_DECOMPRESSOR_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_DECOMPRESSOR_H

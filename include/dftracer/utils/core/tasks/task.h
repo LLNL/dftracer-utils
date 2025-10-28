@@ -196,6 +196,12 @@ class Task : public std::enable_shared_from_this<Task> {
     }
 
     /**
+     * Wait for task to complete without retrieving the result
+     * This is useful for void tasks where you just want to wait for completion
+     */
+    void wait() const { future_.wait(); }
+
+    /**
      * Get parent tasks (returns a copy for thread safety)
      */
     std::vector<std::shared_ptr<Task>> get_parents() const { return parents_; }

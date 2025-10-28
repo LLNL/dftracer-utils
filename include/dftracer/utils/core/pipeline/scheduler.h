@@ -9,6 +9,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <functional>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <queue>
@@ -20,7 +21,46 @@ namespace dftracer::utils {
 
 class Task;
 class Executor;
+class ExecutorProgress;
 class Watchdog;
+
+/**
+ * Task priority levels for scheduling
+ * Lower values = higher priority
+ */
+enum class TaskPriority {
+    CRITICAL = 0,   // Highest priority - critical path tasks
+    HIGH = 1,       // High priority - important tasks
+    NORMAL = 2,     // Default priority
+    LOW = 3,        // Low priority
+    BACKGROUND = 4  // Lowest priority - background tasks
+};
+
+/**
+ * Comprehensive scheduler metrics including executor progress
+ */
+struct SchedulerMetrics {
+    // Scheduling performance
+    size_t ready_queue_depth;
+    size_t total_scheduled;
+    size_t scheduling_threads_active;
+    double avg_scheduling_latency_ms;
+
+    // Pipeline state
+    size_t total_pipeline_tasks;
+    size_t pending_tasks;
+    double pipeline_elapsed_time_ms;
+
+    // Error tracking
+    std::vector<std::pair<TaskIndex, std::string>> recent_failures;
+
+    // Priority distribution
+    std::map<TaskPriority, size_t> tasks_by_priority;
+
+    // Timing
+    std::chrono::steady_clock::time_point start_time;
+    std::chrono::steady_clock::time_point last_update;
+};
 
 /**
  * Scheduler - Manages task scheduling and dependency tracking
@@ -38,14 +78,13 @@ class Scheduler {
     Executor* executor_;  // Reference to executor
     std::atomic<bool> running_{false};
 
-    // Scheduling threads (configurable via PipelineConfigManager)
     std::vector<std::thread> scheduling_threads_;
     std::atomic<bool> scheduling_running_{false};
     std::size_t num_scheduling_threads_{1};
 
     // Task queue for scheduling (tasks that became ready)
     std::queue<std::shared_ptr<Task>> ready_queue_;
-    std::mutex ready_mutex_;
+    mutable std::mutex ready_mutex_;
     std::condition_variable ready_cv_;
 
     // Watchdog integration
@@ -61,12 +100,8 @@ class Scheduler {
     // Execution start time (for global timeout)
     std::chrono::steady_clock::time_point execution_start_time_;
 
-    // Tracking completed tasks
-    std::unordered_set<TaskIndex> completed_tasks_;
-    std::unordered_set<TaskIndex>
-        failed_tasks_;    // Track failed tasks (for CONTINUE policy)
-    mutable std::mutex
-        tracking_mutex_;  // Mutable to allow locking in const methods
+    // Mutex for coordinating task tracking operations
+    mutable std::mutex tracking_mutex_;
 
     // Pending count for execution coordination
     std::atomic<size_t> pending_count_{0};
@@ -77,11 +112,18 @@ class Scheduler {
     ErrorPolicy error_policy_{ErrorPolicy::FAIL_FAST};
     ErrorHandler error_handler_;
     std::atomic<bool> has_error_{false};
-    std::string timeout_reason_;  // Reason for timeout (if timeout occurred)
+    // Reason for timeout (if timeout occurred)
+    std::string timeout_reason_;
 
     // Progress callback
     std::function<void(size_t completed, size_t total)> progress_callback_;
     std::atomic<size_t> total_tasks_{0};
+
+    // Metrics tracking
+    std::atomic<size_t> total_scheduled_{
+        0};  // Total tasks scheduled to executor
+    std::chrono::steady_clock::time_point metrics_start_time_;
+    mutable std::mutex metrics_mutex_;
 
    public:
     /**
@@ -192,6 +234,16 @@ class Scheduler {
      * Check if scheduler is running
      */
     bool is_running() const { return running_.load(); }
+
+    /**
+     * Get comprehensive metrics including executor progress
+     */
+    SchedulerMetrics get_metrics() const;
+
+    /**
+     * Get executor progress (convenience method)
+     */
+    ExecutorProgress get_executor_progress() const;
 
    private:
     /**
