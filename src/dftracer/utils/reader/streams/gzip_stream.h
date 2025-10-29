@@ -1,7 +1,7 @@
 #ifndef DFTRACER_UTILS_READER_STREAMS_GZIP_STREAM_H
 #define DFTRACER_UTILS_READER_STREAMS_GZIP_STREAM_H
 
-#include <dftracer/utils/common/checkpointer.h>
+#include <dftracer/utils/core/common/checkpointer.h>
 #include <dftracer/utils/indexer/checkpoint.h>
 #include <dftracer/utils/indexer/indexer.h>
 #include <dftracer/utils/reader/error.h>

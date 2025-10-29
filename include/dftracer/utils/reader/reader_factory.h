@@ -1,7 +1,7 @@
 #ifndef DFTRACER_UTILS_READER_READER_FACTORY_H
 #define DFTRACER_UTILS_READER_READER_FACTORY_H
 
-#include <dftracer/utils/common/format_detector.h>
+#include <dftracer/utils/core/common/format_detector.h>
 #include <dftracer/utils/indexer/indexer.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/reader/reader.h>

@@ -1,10 +1,10 @@
 #include <Python.h>
+#include <dftracer/utils/core/utils/timer.h>
 #include <dftracer/utils/python/json.h>
 #include <dftracer/utils/python/lazy_json_line_processor.h>
 #include <dftracer/utils/python/pylist_line_processor.h>
 #include <dftracer/utils/python/reader.h>
 #include <dftracer/utils/reader/reader.h>
-#include <dftracer/utils/utils/timer.h>
 #include <structmember.h>
 
 #include <cstddef>

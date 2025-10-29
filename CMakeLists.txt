@@ -7,6 +7,15 @@ set(DFTRACER_UTILS_VERSION
     "${DFTRACER_UTILS_VERSION_MAJOR}.${DFTRACER_UTILS_VERSION_MINOR}.${DFTRACER_UTILS_VERSION_PATCH}"
 )
 
+# Use Ninja as default generator if available and not already specified
+if(NOT DEFINED ENV{CMAKE_GENERATOR} AND NOT CMAKE_GENERATOR)
+  find_program(NINJA_EXECUTABLE ninja)
+  if(NINJA_EXECUTABLE)
+    set(CMAKE_GENERATOR "Ninja" CACHE INTERNAL "Default generator" FORCE)
+    message(STATUS "Using Ninja generator")
+  endif()
+endif()
+
 project(
   dftracer_utils
   VERSION ${DFTRACER_UTILS_VERSION}
@@ -73,12 +82,12 @@ endif()
 if(DFTRACER_UTILS_DEBUG)
   configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/configure_files/dftracer_utils_config.dbg.h.in"
-    "${CMAKE_BINARY_DIR}/include/dftracer/utils/common/config.h"
+    "${CMAKE_BINARY_DIR}/include/dftracer/utils/core/common/config.h"
     @ONLY)
 else()
   configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/configure_files/dftracer_utils_config.h.in"
-    "${CMAKE_BINARY_DIR}/include/dftracer/utils/common/config.h"
+    "${CMAKE_BINARY_DIR}/include/dftracer/utils/core/common/config.h"
     @ONLY)
 endif()
 
