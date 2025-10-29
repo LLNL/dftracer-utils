@@ -86,7 +86,7 @@ TEST_SUITE("DirectoryFileProcessor") {
             auto process_task = use(dir_processor).as_task();
 
             // Schedule the task
-            scheduler.schedule(process_task, std::any{input});
+            scheduler.schedule(process_task, input);
 
             // Get results (blocks until task completes)
             auto output = process_task->get<BatchFileProcessOutput<FileInfo>>();
@@ -148,7 +148,7 @@ TEST_SUITE("DirectoryFileProcessor") {
                 false};
 
             auto process_task = use(dir_processor).as_task();
-            scheduler.schedule(process_task, std::any{input});
+            scheduler.schedule(process_task, input);
 
             // Get results (blocks until task completes)
 
@@ -207,7 +207,7 @@ TEST_SUITE("DirectoryFileProcessor") {
             };
 
             auto process_task = use(dir_processor).as_task();
-            scheduler.schedule(process_task, std::any{input});
+            scheduler.schedule(process_task, input);
 
             // Get results (blocks until task completes)
 
@@ -253,7 +253,7 @@ TEST_SUITE("DirectoryFileProcessor") {
             DirectoryProcessInput input{test_dir, {".txt"}, false};
 
             auto process_task = use(dir_processor).as_task();
-            scheduler.schedule(process_task, std::any{input});
+            scheduler.schedule(process_task, input);
 
             // Get results (blocks until task completes)
             auto output = process_task->get<BatchFileProcessOutput<int>>();
@@ -293,7 +293,7 @@ TEST_SUITE("DirectoryFileProcessor") {
                 false};
 
             auto process_task = use(dir_processor).as_task();
-            scheduler.schedule(process_task, std::any{input});
+            scheduler.schedule(process_task, input);
 
             // Get results (blocks until task completes)
             auto output =
@@ -334,7 +334,7 @@ TEST_SUITE("DirectoryFileProcessor") {
                                         false};
 
             auto process_task = use(dir_processor).as_task();
-            scheduler.schedule(process_task, std::any{input});
+            scheduler.schedule(process_task, input);
 
             // Get results (blocks until task completes)
 

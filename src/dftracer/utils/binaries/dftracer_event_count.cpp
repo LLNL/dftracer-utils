@@ -176,15 +176,12 @@ int main(int argc, char** argv) {
     task2_collect_metadata->with_name("CollectMetadata");
 
     // Task 2 needs the same directory input as Task 1
-    task2_collect_metadata->with_combiner(
-        std::function<std::any(IndexBuildOutput)>([&log_dir](
-                                                      const IndexBuildOutput&)
-                                                      -> std::any {
-            // Return fresh directory input for metadata collection
-            return utilities::composites::DirectoryProcessInput::from_directory(
-                       log_dir)
-                .with_extensions({".pfw", ".pfw.gz"});
-        }));
+    task2_collect_metadata->with_combiner([&log_dir](const IndexBuildOutput&) {
+        // Return fresh directory input for metadata collection
+        return utilities::composites::DirectoryProcessInput::from_directory(
+                   log_dir)
+            .with_extensions({".pfw", ".pfw.gz"});
+    });
 
     // ========================================================================
     // Task 3: Aggregate Event Counts

@@ -14,6 +14,7 @@
 #include <mutex>
 #include <queue>
 #include <thread>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -154,15 +155,16 @@ class Scheduler {
      * @param source Starting task
      * @param input Initial input
      */
-    void schedule(std::shared_ptr<Task> source, const std::any& input);
+    void schedule(std::shared_ptr<Task> source, const std::any& input = {});
 
     /**
      * Schedule execution starting from source task
      * @param source Starting task
      * @param input Initial input
      */
-    template <typename T>
-    void schedule(std::shared_ptr<Task> source, const T& input) {
+    template <typename T, typename = std::enable_if_t<
+                              !std::is_same_v<std::decay_t<T>, std::any>>>
+    void schedule(std::shared_ptr<Task> source, T&& input) {
         schedule(source, std::any(std::forward<T>(input)));
     }
 

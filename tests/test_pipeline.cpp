@@ -160,7 +160,7 @@ TEST_CASE("Scheduler - Schedule simple task") {
         },
         "SimpleTask");
 
-    scheduler.schedule(task, std::any{});
+    scheduler.schedule(task);
 
     // Wait for task to complete
     task->get<int>();
@@ -197,7 +197,7 @@ TEST_CASE("Scheduler - Task dependencies") {
     // Task2 depends on Task1
     task2->depends_on(task1);
 
-    scheduler.schedule(task1, std::any{});
+    scheduler.schedule(task1);
 
     // Wait for completion
     task2->wait();
@@ -259,7 +259,7 @@ TEST_CASE("Scheduler - Threading with multiple workers") {
         last_child = child;
     }
 
-    scheduler.schedule(root_task, std::any{});
+    scheduler.schedule(root_task);
 
     // Wait for all tasks to complete
     if (last_child) {
@@ -313,7 +313,7 @@ TEST_CASE("Scheduler - Single threaded execution") {
         last_child = child;
     }
 
-    scheduler.schedule(root_task, std::any{});
+    scheduler.schedule(root_task);
 
     // Wait for completion
     if (last_child) {
@@ -368,7 +368,7 @@ TEST_CASE("Scheduler - Global timeout triggers") {
         // Should throw timeout error
         bool caught_timeout = false;
         try {
-            scheduler.schedule(blocking_task, std::any{});
+            scheduler.schedule(blocking_task);
         } catch (const PipelineError& e) {
             caught_timeout = (e.get_type() == PipelineError::TIMEOUT_ERROR);
         }
@@ -410,7 +410,7 @@ TEST_CASE("Scheduler - No timeout with zero value") {
         },
         "Task");
 
-    scheduler.schedule(task, std::any{});
+    scheduler.schedule(task);
 
     // Wait for task to complete
     task->wait();
@@ -481,7 +481,7 @@ TEST_CASE("Scheduler - Graceful shutdown") {
     // Start scheduling in a separate thread
     std::thread scheduler_thread([&]() {
         try {
-            scheduler.schedule(root_task, std::any{});
+            scheduler.schedule(root_task);
         } catch (const PipelineError&) {
             // Expected if shutdown is requested
         }
@@ -522,7 +522,7 @@ TEST_CASE("Scheduler - Shutdown during execution") {
 
     std::thread scheduler_thread([&]() {
         try {
-            scheduler.schedule(task, std::any{});
+            scheduler.schedule(task);
         } catch (...) {
             // May throw if interrupted
         }
@@ -575,7 +575,7 @@ TEST_CASE("Integration - Scheduler with Watchdog and Timeout") {
     }
 
     // Should complete without timeout
-    CHECK_NOTHROW(scheduler.schedule(root_task, std::any{}));
+    CHECK_NOTHROW(scheduler.schedule(root_task));
 
     // Wait for all tasks to complete
     if (last_child) {
@@ -613,7 +613,7 @@ TEST_CASE("Integration - Full pipeline with all features") {
     task3->depends_on(task2);
 
     // Should complete successfully
-    CHECK_NOTHROW(scheduler.schedule(task1, std::any{}));
+    CHECK_NOTHROW(scheduler.schedule(task1));
 
     // Wait for all tasks to complete
     task3->wait();
@@ -681,8 +681,7 @@ TEST_CASE("Error Scenario - Task throws exception") {
     // FAIL_FAST policy should throw immediately
     scheduler.set_error_policy(ErrorPolicy::FAIL_FAST);
 
-    CHECK_THROWS_AS(scheduler.schedule(throwing_task, std::any{}),
-                    PipelineError);
+    CHECK_THROWS_AS(scheduler.schedule(throwing_task), PipelineError);
 
     // Explicit shutdown to prevent resource leaks
     executor.shutdown();
@@ -710,7 +709,7 @@ TEST_CASE("Error Scenario - Task throws exception in chain") {
 
     scheduler.set_error_policy(ErrorPolicy::FAIL_FAST);
 
-    CHECK_THROWS_AS(scheduler.schedule(task1, std::any{}), PipelineError);
+    CHECK_THROWS_AS(scheduler.schedule(task1), PipelineError);
 
     // Task1 should have completed, Task2 threw, Task3 should not run
     CHECK(completed_count.load() >= 1);
@@ -740,7 +739,7 @@ TEST_CASE("Error Scenario - Type mismatch between tasks") {
         string_task->depends_on(int_task);
 
         // If we get here, try scheduling (might throw later)
-        scheduler.schedule(int_task, std::any{});
+        scheduler.schedule(int_task);
     } catch (const PipelineError& e) {
         caught_type_error =
             (e.get_type() == PipelineError::TYPE_MISMATCH ||
@@ -793,7 +792,7 @@ TEST_CASE("Error Policy - FAIL_FAST stops on first error") {
 
     scheduler.set_error_policy(ErrorPolicy::FAIL_FAST);
 
-    CHECK_THROWS_AS(scheduler.schedule(root, std::any{}), PipelineError);
+    CHECK_THROWS_AS(scheduler.schedule(root), PipelineError);
 
     // At least one task should have started (the failing one)
     CHECK(tasks_started.load() >= 1);
@@ -839,7 +838,7 @@ TEST_CASE("Error Policy - CONTINUE continues on error") {
     scheduler.set_error_policy(ErrorPolicy::CONTINUE);
 
     // With CONTINUE policy, should not throw
-    CHECK_NOTHROW(scheduler.schedule(root, std::any{}));
+    CHECK_NOTHROW(scheduler.schedule(root));
 
     // Wait for all tasks to complete
     task1->wait();
@@ -890,7 +889,7 @@ TEST_CASE("Error Scenario - Per-task timeout") {
 
         bool caught_timeout = false;
         try {
-            scheduler.schedule(task_with_timeout, std::any{});
+            scheduler.schedule(task_with_timeout);
         } catch (const PipelineError& e) {
             caught_timeout = (e.get_type() == PipelineError::TIMEOUT_ERROR);
         }
@@ -917,7 +916,7 @@ TEST_CASE("Error Scenario - Validation error on null task") {
     // Trying to schedule null task should throw validation error
     bool caught_validation = false;
     try {
-        scheduler.schedule(nullptr, std::any{});
+        scheduler.schedule(nullptr);
     } catch (const PipelineError& e) {
         caught_validation = (e.get_type() == PipelineError::VALIDATION_ERROR);
     }
@@ -955,7 +954,7 @@ TEST_CASE("Error Scenario - Graceful shutdown (INTERRUPTED)") {
         std::atomic<bool> caught_interrupted{false};
         std::thread scheduler_thread([&]() {
             try {
-                scheduler.schedule(long_task, std::any{});
+                scheduler.schedule(long_task);
             } catch (const PipelineError& e) {
                 caught_interrupted =
                     (e.get_type() == PipelineError::INTERRUPTED);
@@ -1173,7 +1172,7 @@ TEST_CASE("Combiner - Multiple parents dependency resolution") {
     task2->depends_on(root);
     task3->depends_on(root);
 
-    scheduler.schedule(root, std::any{});
+    scheduler.schedule(root);
 
     // Wait for child to complete
     child->wait();
@@ -1210,7 +1209,7 @@ TEST_CASE("Combiner - Type-safe tuple-based multi-argument function") {
     task1->depends_on(root);
     task2->depends_on(root);
 
-    scheduler.schedule(root, std::any{});
+    scheduler.schedule(root);
 
     // Wait for child to complete
     child->wait();
@@ -1246,7 +1245,7 @@ TEST_CASE("Combiner - Three argument function") {
     task2->depends_on(root);
     task3->depends_on(root);
 
-    scheduler.schedule(root, std::any{});
+    scheduler.schedule(root);
 
     // Wait for child to complete
     child->wait();
@@ -1271,7 +1270,7 @@ TEST_CASE("Combiner - with_combiner using vector<any>") {
     auto child =
         make_task([&](int combined) { sum = combined; }, "ChildWithCombiner");
 
-    child->with_combiner([](const std::vector<std::any>& inputs) -> std::any {
+    child->with_combiner([](const std::vector<std::any>& inputs) {
         int result = 0;
         for (const auto& input : inputs) {
             result += std::any_cast<int>(input);
@@ -1286,7 +1285,7 @@ TEST_CASE("Combiner - with_combiner using vector<any>") {
     task2->depends_on(root);
     task3->depends_on(root);
 
-    scheduler.schedule(root, std::any{});
+    scheduler.schedule(root);
 
     // Wait for child to complete
     child->wait();
@@ -1306,8 +1305,7 @@ TEST_CASE("Combiner - with_combiner using std::function with typed args") {
     auto child = make_task([&](int combined) { product = combined; },
                            "ChildWithTypedCombiner");
 
-    child->with_combiner(std::function<std::any(int, int)>(
-        [](int a, int b) -> std::any { return a * b; }));
+    child->with_combiner([](int a, int b) { return a * b; });
 
     child->depends_on({task1, task2});
 
@@ -1315,7 +1313,7 @@ TEST_CASE("Combiner - with_combiner using std::function with typed args") {
     task1->depends_on(root);
     task2->depends_on(root);
 
-    scheduler.schedule(root, std::any{});
+    scheduler.schedule(root);
 
     // Wait for child to complete
     child->wait();
@@ -1340,8 +1338,7 @@ TEST_CASE("Combiner - with_combiner validation error") {
         },
         "ChildBadCombiner");
 
-    child->with_combiner(std::function<std::any(int, int, int)>(
-        [](int a, int b, int c) -> std::any { return a + b + c; }));
+    child->with_combiner([](int a, int b, int c) { return a + b + c; });
 
     child->depends_on({task1, task2});
 
@@ -1351,7 +1348,7 @@ TEST_CASE("Combiner - with_combiner validation error") {
 
     bool threw_error = false;
     try {
-        scheduler.schedule(root, std::any{});
+        scheduler.schedule(root);
         std::this_thread::sleep_for(std::chrono::milliseconds(300));
 
         // The error should be stored in the future - trying to get() should
@@ -1413,7 +1410,7 @@ TEST_CASE("DAG - Diamond pattern") {
     bottom->depends_on(left);
     bottom->depends_on(right);
 
-    scheduler.schedule(root, std::any{});
+    scheduler.schedule(root);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
 
@@ -1453,7 +1450,7 @@ TEST_CASE("DAG - Multiple branches converging") {
         final_task->depends_on(branch);
     }
 
-    scheduler.schedule(root, std::any{});
+    scheduler.schedule(root);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
@@ -1505,7 +1502,7 @@ TEST_CASE("DAG - Wide and deep structure") {
         level3.push_back(task);
     }
 
-    scheduler.schedule(root, std::any{});
+    scheduler.schedule(root);
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
@@ -1528,11 +1525,11 @@ TEST_CASE("Dynamic Tasks - Task submits child task at runtime") {
             // Dynamically create and submit a child task
             auto child = make_task([&]() { ++total_tasks; }, "DynamicChild");
 
-            ctx.submit_task(child, std::any{});
+            ctx.submit_task(child);
         },
         "ParentTask");
 
-    scheduler.schedule(parent_task, std::any{});
+    scheduler.schedule(parent_task);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
 
@@ -1562,12 +1559,12 @@ TEST_CASE("Dynamic Tasks - Multiple dynamic children") {
                     },
                     "DynamicChild_" + std::to_string(i));
 
-                ctx.submit_task(child, std::any{});
+                ctx.submit_task(child);
             }
         },
         "ParentTask");
 
-    scheduler.schedule(parent_task, std::any{});
+    scheduler.schedule(parent_task);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
@@ -1582,7 +1579,7 @@ TEST_CASE("Dynamic Tasks - Intra-task parallelism with result aggregation") {
     auto parent_task = make_task(
         [&](TaskContext& ctx) {
             // Spawn multiple parallel child tasks and wait for their results
-            std::vector<std::shared_future<std::any>> futures;
+            std::vector<TaskFuture> futures;
 
             // Create 5 child tasks that compute values in parallel
             for (int i = 0; i < 5; ++i) {
@@ -1596,13 +1593,13 @@ TEST_CASE("Dynamic Tasks - Intra-task parallelism with result aggregation") {
                     "ChildTask_" + std::to_string(i));
 
                 // Submit and collect future
-                futures.push_back(ctx.submit_task(child, std::any{}));
+                futures.push_back(ctx.submit_task(child));
             }
 
             // Wait for all children and aggregate results
             int sum = 0;
             for (auto& future : futures) {
-                int value = std::any_cast<int>(future.get());
+                int value = future.get<int>();
                 sum += value;
             }
 
@@ -1611,7 +1608,7 @@ TEST_CASE("Dynamic Tasks - Intra-task parallelism with result aggregation") {
         },
         "ParentTaskWithAggregation");
 
-    scheduler.schedule(parent_task, std::any{});
+    scheduler.schedule(parent_task);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
 
@@ -1626,14 +1623,13 @@ TEST_CASE("Dynamic Tasks - Nested intra-task parallelism") {
 
     auto parent_task = make_task(
         [&](TaskContext& ctx) {
-            std::vector<std::shared_future<std::any>> level1_futures;
+            std::vector<TaskFuture> level1_futures;
 
             // Create 3 level-1 children, each spawning their own children
             for (int i = 0; i < 3; ++i) {
                 auto level1_child = make_task(
                     [i](TaskContext& ctx_inner) -> int {
-                        std::vector<std::shared_future<std::any>>
-                            level2_futures;
+                        std::vector<TaskFuture> level2_futures;
 
                         // Each level-1 child spawns 2 level-2 children
                         for (int j = 0; j < 2; ++j) {
@@ -1647,28 +1643,27 @@ TEST_CASE("Dynamic Tasks - Nested intra-task parallelism") {
                                 "Level2_" + std::to_string(i) + "_" +
                                     std::to_string(j));
 
-                            level2_futures.push_back(ctx_inner.submit_task(
-                                level2_child, std::any{}));
+                            level2_futures.push_back(
+                                ctx_inner.submit_task(level2_child));
                         }
 
                         // Wait and sum level-2 results
                         int level1_sum = 0;
                         for (auto& f : level2_futures) {
-                            level1_sum += std::any_cast<int>(f.get());
+                            level1_sum += f.get<int>();
                         }
 
                         return level1_sum;
                     },
                     "Level1_" + std::to_string(i));
 
-                level1_futures.push_back(
-                    ctx.submit_task(level1_child, std::any{}));
+                level1_futures.push_back(ctx.submit_task(level1_child));
             }
 
             // Wait and aggregate all level-1 results
             int grand_total = 0;
             for (auto& f : level1_futures) {
-                grand_total += std::any_cast<int>(f.get());
+                grand_total += f.get<int>();
             }
 
             total_sum = grand_total;
@@ -1676,7 +1671,7 @@ TEST_CASE("Dynamic Tasks - Nested intra-task parallelism") {
         },
         "RootTaskWithNested");
 
-    scheduler.schedule(parent_task, std::any{});
+    scheduler.schedule(parent_task);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
@@ -1713,7 +1708,7 @@ TEST_CASE("Error Handler - Custom error handling") {
     task2->depends_on(root);
 
     // schedule() blocks until completion with CONTINUE policy
-    scheduler.schedule(root, std::any{});
+    scheduler.schedule(root);
 
     // If we reach here, all tasks completed (or failed and continued)
     CHECK(error_handler_called.load());
@@ -1754,7 +1749,7 @@ TEST_CASE("Error Handler - Multiple errors with CONTINUE policy") {
     }
 
     // schedule() blocks until completion with CONTINUE policy
-    scheduler.schedule(root, std::any{});
+    scheduler.schedule(root);
 
     // If we reach here, all tasks completed (or failed and continued)
     CHECK(error_count.load() == 3);

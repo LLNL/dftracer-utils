@@ -390,16 +390,14 @@ int main(int argc, char** argv) {
         task3_verify->with_name("VerifyMerge");
 
         // Task 3.7: Combiner to merge output and input results for verification
-        task3_verify->with_combiner(std::function<std::any(
-                                        FileCombinerUtilityOutput,
-                                        std::vector<FileMergerUtilityOutput>)>(
+        task3_verify->with_combiner(
             [](const FileCombinerUtilityOutput& output,
-               const std::vector<FileMergerUtilityOutput>& inputs) -> std::any {
+               const std::vector<FileMergerUtilityOutput>& inputs) {
                 return utilities::composites::ChunkVerificationUtilityInput<
                            FileCombinerUtilityOutput, FileMergerUtilityOutput>::
                     from_chunks({output})  // Single "chunk" (the merged file)
                         .with_metadata(inputs);
-            }));
+            });
 
         final_task = task3_verify;
     }

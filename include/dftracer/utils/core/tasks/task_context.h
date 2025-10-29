@@ -7,6 +7,7 @@
 #include <any>
 #include <future>
 #include <memory>
+#include <type_traits>
 
 namespace dftracer::utils {
 
@@ -50,7 +51,14 @@ class TaskContext {
      *   auto future = ctx.submit_task(child_task, std::any(42));
      *   int result = std::any_cast<int>(future.get()); // 84
      */
-    TaskFuture submit_task(std::shared_ptr<Task> task, const std::any& input);
+    TaskFuture submit_task(std::shared_ptr<Task> task,
+                           const std::any& input = {});
+
+    template <typename T, typename = std::enable_if_t<
+                              !std::is_same_v<std::decay_t<T>, std::any>>>
+    TaskFuture submit_task(std::shared_ptr<Task> task, T&& input) {
+        return submit_task(task, std::any(std::forward<T>(input)));
+    }
 
     /**
      * Get current task ID

@@ -54,7 +54,7 @@ TEST_SUITE("BatchProcessor") {
 
             // Schedule the task
             std::vector<std::string> inputs = {"hello", "world", "test"};
-            scheduler.schedule(batch_task, std::any{inputs});
+            scheduler.schedule(batch_task, inputs);
 
             // Wait for completion
             // Get results
@@ -84,7 +84,7 @@ TEST_SUITE("BatchProcessor") {
             auto batch_task = use(batch).as_task();
 
             std::vector<int> inputs = {1, 2, 3, 4, 5};
-            scheduler.schedule(batch_task, std::any{inputs});
+            scheduler.schedule(batch_task, inputs);
 
             auto results = batch_task->get<std::vector<int>>();
 
@@ -116,7 +116,7 @@ TEST_SUITE("BatchProcessor") {
             auto batch_task = use(batch).as_task();
 
             std::vector<int> inputs;
-            scheduler.schedule(batch_task, std::any{inputs});
+            scheduler.schedule(batch_task, inputs);
 
             auto results = batch_task->get<std::vector<int>>();
             CHECK(results.empty());
@@ -139,7 +139,7 @@ TEST_SUITE("BatchProcessor") {
 
             std::vector<std::string> inputs = {"hello", "world", "batch",
                                                "processor"};
-            scheduler.schedule(batch_task, std::any{inputs});
+            scheduler.schedule(batch_task, inputs);
 
             auto results = batch_task->get<std::vector<std::string>>();
 
@@ -168,7 +168,7 @@ TEST_SUITE("BatchProcessor") {
             auto batch_task = use(batch).as_task();
 
             std::vector<int> inputs = {1, 2, 3, 4, 5};
-            scheduler.schedule(batch_task, std::any{inputs});
+            scheduler.schedule(batch_task, inputs);
 
             auto results = batch_task->get<std::vector<int>>();
 
@@ -210,7 +210,7 @@ TEST_SUITE("BatchProcessor") {
 
             std::vector<std::string> inputs = {"zebra", "apple", "mango",
                                                "banana"};
-            scheduler.schedule(batch_task, std::any{inputs});
+            scheduler.schedule(batch_task, inputs);
 
             auto results = batch_task->get<std::vector<std::string>>();
 
@@ -243,7 +243,7 @@ TEST_SUITE("BatchProcessor") {
             auto batch_task = use(batch).as_task();
 
             std::vector<int> inputs = {1, 2, 3, 4, 5};
-            scheduler.schedule(batch_task, std::any{inputs});
+            scheduler.schedule(batch_task, inputs);
 
             auto results = batch_task->get<std::vector<int>>();
 
@@ -278,7 +278,7 @@ TEST_SUITE("BatchProcessor") {
 
             // Process 8 items in parallel
             std::vector<int> inputs = {1, 2, 3, 4, 5, 6, 7, 8};
-            scheduler.schedule(batch_task, std::any{inputs});
+            scheduler.schedule(batch_task, inputs);
 
             // Wait for completion
             auto results = batch_task->get<std::vector<int>>();
@@ -310,7 +310,7 @@ TEST_SUITE("BatchProcessor") {
             std::vector<int> inputs(1000);
             std::iota(inputs.begin(), inputs.end(), 1);  // Fill with 1..1000
 
-            scheduler.schedule(batch_task, std::any{inputs});
+            scheduler.schedule(batch_task, inputs);
 
             auto results = batch_task->get<std::vector<int>>();
 

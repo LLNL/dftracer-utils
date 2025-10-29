@@ -231,15 +231,12 @@ int main(int argc, char** argv) {
     // Task 2 also needs the same directory input as Task 1, use combiner
     // Combiner transforms Task 1's output (IndexBuildOutput) to Task 2's input
     // (DirectoryProcessInput)
-    task2_collect_metadata->with_combiner(
-        std::function<std::any(IndexBuildOutput)>([&log_dir](
-                                                      const IndexBuildOutput&)
-                                                      -> std::any {
-            // Return fresh directory input for metadata collection
-            return utilities::composites::DirectoryProcessInput::from_directory(
-                       log_dir)
-                .with_extensions({".pfw", ".pfw.gz"});
-        }));
+    task2_collect_metadata->with_combiner([&log_dir](const IndexBuildOutput&) {
+        // Return fresh directory input for metadata collection
+        return utilities::composites::DirectoryProcessInput::from_directory(
+                   log_dir)
+            .with_extensions({".pfw", ".pfw.gz"});
+    });
 
     // ========================================================================
     // Task 3: Create Chunk Mappings
@@ -410,18 +407,15 @@ int main(int argc, char** argv) {
 
         // Task 6.7: Combiner to merge chunks and metadata into verification
         // input
-        task6_verify_chunks->with_combiner(
-            std::function<std::any(ExtractChunksOutput, MetadataCollectOutput)>(
-                [](const ExtractChunksOutput& chunks,
-                   const MetadataCollectOutput& metadata) -> std::any {
-                    return utilities::composites::ChunkVerificationUtilityInput<
-                               utilities::composites::dft::
-                                   ChunkExtractorUtilityOutput,
-                               utilities::composites::dft::
-                                   MetadataCollectorUtilityOutput>::
-                        from_chunks(chunks)
-                            .with_metadata(metadata.results);
-                }));
+        task6_verify_chunks->with_combiner([](const ExtractChunksOutput& chunks,
+                                              const MetadataCollectOutput&
+                                                  metadata) {
+            return utilities::composites::ChunkVerificationUtilityInput<
+                       utilities::composites::dft::ChunkExtractorUtilityOutput,
+                       utilities::composites::dft::
+                           MetadataCollectorUtilityOutput>::from_chunks(chunks)
+                .with_metadata(metadata.results);
+        });
 
         final_task = task6_verify_chunks;
     }

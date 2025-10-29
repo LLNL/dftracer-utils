@@ -44,6 +44,9 @@ struct function_traits<R (C::*)(Arg) const> {
     using input_type = std::decay_t<Arg>;
     using output_type = R;
     static constexpr bool has_context = false;
+
+    template <typename RetType>
+    using as_std_function = std::function<RetType(Arg)>;
 };
 
 template <typename C, typename R, typename Arg>
@@ -163,6 +166,9 @@ struct function_traits<R (C::*)(Arg1, Arg2) const> {
     using output_type = R;
     static constexpr bool has_context = false;
     static constexpr size_t arity = 2;
+
+    template <typename RetType>
+    using as_std_function = std::function<RetType(Arg1, Arg2)>;
 };
 
 // 2 arguments (with context)
@@ -199,6 +205,9 @@ struct function_traits<R (C::*)(Arg1, Arg2, Arg3) const> {
     using output_type = R;
     static constexpr bool has_context = false;
     static constexpr size_t arity = 3;
+
+    template <typename RetType>
+    using as_std_function = std::function<RetType(Arg1, Arg2, Arg3)>;
 };
 
 // 3 arguments (with context)
@@ -239,6 +248,9 @@ struct function_traits<R (C::*)(Arg1, Arg2, Arg3, Arg4) const> {
     using output_type = R;
     static constexpr bool has_context = false;
     static constexpr size_t arity = 4;
+
+    template <typename RetType>
+    using as_std_function = std::function<RetType(Arg1, Arg2, Arg3, Arg4)>;
 };
 
 // 4 arguments (with context)
@@ -283,6 +295,10 @@ struct function_traits<R (C::*)(Arg1, Arg2, Arg3, Arg4, Arg5) const> {
     using output_type = R;
     static constexpr bool has_context = false;
     static constexpr size_t arity = 5;
+
+    template <typename RetType>
+    using as_std_function =
+        std::function<RetType(Arg1, Arg2, Arg3, Arg4, Arg5)>;
 };
 
 // 5 arguments (with context)
@@ -562,7 +578,6 @@ std::shared_ptr<Task> Task::with_combiner(
     // Wrap the tuple-based combiner to work with vector<any>
     input_combiner_ =
         [combiner](const std::vector<std::any>& inputs) -> std::any {
-        // Validate input count
         if (inputs.size() != sizeof...(Args)) {
             std::ostringstream oss;
             oss << "Combiner expects " << sizeof...(Args)
@@ -570,9 +585,14 @@ std::shared_ptr<Task> Task::with_combiner(
             throw PipelineError(PipelineError::VALIDATION_ERROR, oss.str());
         }
 
-        // Unpack vector into tuple and call combiner
-        return unpack_and_call(combiner, inputs,
-                               std::index_sequence_for<Args...>{});
+        // Special case: single argument (no tuple unpacking needed)
+        if constexpr (sizeof...(Args) == 1) {
+            return combiner(std::any_cast<Args...>(inputs[0]));
+        } else {
+            // Multiple arguments: unpack vector into tuple and call combiner
+            return unpack_and_call(combiner, inputs,
+                                   std::index_sequence_for<Args...>{});
+        }
     };
     has_custom_combiner_ = true;
     return shared_from_this();
@@ -583,14 +603,11 @@ auto Task::with_combiner(Func&& combiner) -> std::enable_if_t<
     !std::is_same_v<std::decay_t<Func>,
                     std::function<std::any(const std::vector<std::any>&)>>,
     std::shared_ptr<Task>> {
-    // Wrap the callable to work with vector<any>
-    // User passes a lambda that takes the vector directly
-    input_combiner_ = [f = std::forward<Func>(combiner)](
-                          const std::vector<std::any>& inputs) -> std::any {
-        return f(inputs);
-    };
-    has_custom_combiner_ = true;
-    return shared_from_this();
+    using traits =
+        detail::function_traits<decltype(&std::decay_t<Func>::operator())>;
+    using func_type = typename traits::template as_std_function<std::any>;
+    func_type typed_combiner = std::forward<Func>(combiner);
+    return with_combiner(typed_combiner);
 }
 
 }  // namespace dftracer::utils

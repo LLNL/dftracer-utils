@@ -118,7 +118,7 @@ TEST_SUITE("ChunkVerifier") {
 
             std::cout << "Executing pipeline..." << std::endl;
             // Execute pipeline
-            pipeline.execute(std::any{input});
+            pipeline.execute(input);
 
             std::cout << "Getting results..." << std::endl;
             // Get results
@@ -167,7 +167,7 @@ TEST_SUITE("ChunkVerifier") {
             auto verify_task = use(verifier).as_task();
             pipeline.set_source(verify_task);
             pipeline.set_destination(verify_task);
-            pipeline.execute(std::any{input});
+            pipeline.execute(input);
 
             auto result = verify_task->get<ChunkVerificationUtilityOutput>();
 
@@ -236,7 +236,7 @@ TEST_SUITE("ChunkVerifier") {
             auto verify_task = use(verifier).as_task();
             pipeline.set_source(verify_task);
             pipeline.set_destination(verify_task);
-            pipeline.execute(std::any{input});
+            pipeline.execute(input);
 
             auto result = verify_task->get<ChunkVerificationUtilityOutput>();
 
@@ -282,7 +282,7 @@ TEST_SUITE("ChunkVerifier") {
             auto verify_task = use(verifier).as_task();
             pipeline.set_source(verify_task);
             pipeline.set_destination(verify_task);
-            pipeline.execute(std::any{input});
+            pipeline.execute(input);
 
             auto result = verify_task->get<ChunkVerificationUtilityOutput>();
 
@@ -346,7 +346,7 @@ TEST_SUITE("ChunkVerifier") {
                 std::cout << "Scheduling task" << std::endl;
                 pipeline.set_source(verify_task);
                 pipeline.set_destination(verify_task);
-                pipeline.execute(std::any{input});
+                pipeline.execute(input);
 
                 std::cout << "Waiting for completion" << std::endl;
                 std::cout << "Getting result" << std::endl;
@@ -400,7 +400,7 @@ TEST_SUITE("ChunkVerifier") {
             auto verify_task = use(verifier).as_task();
             pipeline.set_source(verify_task);
             pipeline.set_destination(verify_task);
-            pipeline.execute(std::any{input});
+            pipeline.execute(input);
 
             auto result = verify_task->get<ChunkVerificationUtilityOutput>();
 
