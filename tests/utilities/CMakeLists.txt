@@ -53,6 +53,7 @@ set(UTILITIES_TEST_SOURCES
     # I/O Lines
     io/lines/test_streaming_line_reader.cpp
     io/lines/sources/test_indexed_file_line_iterator.cpp
+    io/lines/sources/test_indexed_file_bytes_iterator.cpp
     io/lines/sources/test_plain_file_line_iterator.cpp
     io/lines/sources/test_plain_file_bytes_iterator.cpp
 
