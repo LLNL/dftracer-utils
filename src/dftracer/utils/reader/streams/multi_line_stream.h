@@ -85,7 +85,7 @@ class MultiLineStream : public ReaderStream {
         handle_final_line(max_lines);
 
         // Update finish state
-        update_finish_state(max_lines);
+        update_finish_state();
 
         if (output_buffer_.empty()) {
             return {};
@@ -289,7 +289,7 @@ class MultiLineStream : public ReaderStream {
         lines_output_++;
     }
 
-    void update_finish_state(std::size_t max_lines) {
+    void update_finish_state() {
         // Only finish if underlying stream is done, not just because we hit
         // max_lines The max_lines limit is enforced by not outputting more
         // lines, but we can still have buffered data to return to the caller

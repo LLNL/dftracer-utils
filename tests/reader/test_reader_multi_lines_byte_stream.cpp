@@ -400,10 +400,13 @@ TEST_CASE("MULTI_LINES_BYTES Stream - Parallel/Threaded Tests") {
             indexer->build();
         }
 
-        auto reader = ReaderFactory::create(gz_file, idx_file);
-        REQUIRE(reader != nullptr);
+        std::size_t max_bytes;
+        {
+            auto reader = ReaderFactory::create(gz_file, idx_file);
+            REQUIRE(reader != nullptr);
+            max_bytes = reader->get_max_bytes();
+        }
 
-        std::size_t max_bytes = reader->get_max_bytes();
         const int num_threads = 4;
         std::size_t chunk_size = max_bytes / num_threads;
 
@@ -412,9 +415,17 @@ TEST_CASE("MULTI_LINES_BYTES Stream - Parallel/Threaded Tests") {
         std::atomic<bool> error_occurred{false};
 
         // Launch threads to read different chunks in parallel
+        // Each thread creates its own reader to avoid sharing indexer
         for (int i = 0; i < num_threads; ++i) {
             threads.emplace_back([&, i]() {
                 try {
+                    // Create separate reader per thread
+                    auto reader = ReaderFactory::create(gz_file, idx_file);
+                    if (!reader) {
+                        error_occurred = true;
+                        return;
+                    }
+
                     std::size_t start = i * chunk_size;
                     std::size_t end = (i == num_threads - 1)
                                           ? max_bytes
