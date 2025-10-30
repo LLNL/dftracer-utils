@@ -281,7 +281,7 @@ void GzipReader::read_lines_with_processor(std::size_t start_line,
 
     // Create a LineStream that returns one line at a time
     auto line_stream = stream(StreamConfig()
-                                  .stream_type(StreamType::MULTI_LINES)
+                                  .stream_type(StreamType::LINE)
                                   .range_type(RangeType::LINE_RANGE)
                                   .from(start_line)
                                   .to(end_line));

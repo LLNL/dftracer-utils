@@ -45,18 +45,32 @@ static bool JSON_ensure_parsed(JSONObject* self) {
         return true;
     }
 
+    if (self->parsed && self->doc != nullptr) {
+        return true;
+    }
+
     if (!self->parsed && self->json_length > 0) {
         // Use YYJSON_READ_INSITU for large-scale processing
         // (zero-copy, in-place modification)
-        self->doc =
-            yyjson_read(self->json_data, self->json_length, YYJSON_READ_INSITU);
+        yyjson_read_err err;
+        self->doc = yyjson_read_opts(self->json_data, self->json_length,
+                                     YYJSON_READ_INSITU, NULL, &err);
         if (!self->doc) {
-            PyErr_SetString(PyExc_ValueError, "Failed to parse JSON");
+            char err_msg[256];
+            std::snprintf(err_msg, sizeof(err_msg),
+                          "Failed to parse JSON at position %zu: %s (code %u, "
+                          "string: %.*s)",
+                          err.pos, err.msg, err.code, (int)self->json_length,
+                          self->json_data);
+            PyErr_SetString(PyExc_ValueError, err_msg);
             return false;
         }
         self->parsed = true;
+        return true;
     }
-    return self->doc != nullptr;
+
+    // If we get here, there's no data to parse
+    return false;
 }
 
 // Get the root yyjson_val for this JSON object (handles both top-level and
