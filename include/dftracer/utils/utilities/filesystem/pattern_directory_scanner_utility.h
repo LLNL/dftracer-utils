@@ -3,7 +3,7 @@
 
 #include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utilities.h>
-#include <dftracer/utils/utilities/filesystem/directory_scanner.h>
+#include <dftracer/utils/utilities/filesystem/directory_scanner_utility.h>
 
 #include <algorithm>
 #include <string>
@@ -14,29 +14,31 @@ namespace dftracer::utils::utilities::filesystem {
 /**
  * @brief Input for pattern-based directory scanning.
  */
-struct PatternDirectory {
+struct PatternDirectoryScannerUtilityInput {
     std::string path;
     bool recursive = false;
     std::vector<std::string> patterns;  // e.g., {".pfw", ".pfw.gz", "*.txt"}
 
-    PatternDirectory() = default;
+    PatternDirectoryScannerUtilityInput() = default;
 
-    PatternDirectory(std::string p, std::vector<std::string> pats,
-                     bool rec = false)
+    PatternDirectoryScannerUtilityInput(std::string p,
+                                        std::vector<std::string> pats,
+                                        bool rec = false)
         : path(std::move(p)), recursive(rec), patterns(std::move(pats)) {}
 
-    static PatternDirectory from_path(std::string p) {
-        PatternDirectory input;
+    static PatternDirectoryScannerUtilityInput from_path(std::string p) {
+        PatternDirectoryScannerUtilityInput input;
         input.path = std::move(p);
         return input;
     }
 
-    PatternDirectory& with_patterns(std::vector<std::string> pats) {
+    PatternDirectoryScannerUtilityInput& with_patterns(
+        std::vector<std::string> pats) {
         patterns = std::move(pats);
         return *this;
     }
 
-    PatternDirectory& with_recursive(bool rec) {
+    PatternDirectoryScannerUtilityInput& with_recursive(bool rec) {
         recursive = rec;
         return *this;
     }
@@ -60,14 +62,14 @@ struct PatternDirectory {
  * @endcode
  */
 class PatternDirectoryScannerUtility
-    : public utilities::Utility<PatternDirectory, std::vector<FileEntry>,
+    : public utilities::Utility<PatternDirectoryScannerUtilityInput,
+                                std::vector<FileEntry>,
                                 utilities::tags::Parallelizable> {
    private:
-    std::shared_ptr<DirectoryScannerUtility> base_scanner_;
+    DirectoryScannerUtility base_scanner_;
 
    public:
-    PatternDirectoryScannerUtility()
-        : base_scanner_(std::make_shared<DirectoryScannerUtility>()) {}
+    PatternDirectoryScannerUtility() = default;
 
     /**
      * @brief Scan directory and filter by patterns.
@@ -75,10 +77,11 @@ class PatternDirectoryScannerUtility
      * @param input Directory path, patterns, and recursive flag
      * @return Vector of file entries matching patterns
      */
-    std::vector<FileEntry> process(const PatternDirectory& input) override {
+    std::vector<FileEntry> process(
+        const PatternDirectoryScannerUtilityInput& input) override {
         // Step 1: Use base DirectoryScanner
-        Directory dir_input{input.path, input.recursive};
-        std::vector<FileEntry> all_entries = base_scanner_->process(dir_input);
+        DirectoryScannerUtilityInput dir_input{input.path, input.recursive};
+        std::vector<FileEntry> all_entries = base_scanner_.process(dir_input);
 
         // Step 2: Filter by patterns
         std::vector<FileEntry> matched_entries;

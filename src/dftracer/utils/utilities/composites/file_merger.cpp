@@ -1,6 +1,6 @@
 #include <dftracer/utils/reader/reader_factory.h>
 #include <dftracer/utils/utilities/composites/file_merger.h>
-#include <dftracer/utils/utilities/filesystem/directory_scanner.h>
+#include <dftracer/utils/utilities/filesystem/directory_scanner_utility.h>
 #include <dftracer/utils/utilities/io/file_reader.h>
 #include <dftracer/utils/utilities/text/shared.h>
 

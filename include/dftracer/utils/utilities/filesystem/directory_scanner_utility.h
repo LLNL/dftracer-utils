@@ -1,9 +1,10 @@
-#ifndef DFTRACER_UTILS_UTILITIES_FILESYSTEM_DIRECTORY_SCANNER_H
-#define DFTRACER_UTILS_UTILITIES_FILESYSTEM_DIRECTORY_SCANNER_H
+#ifndef DFTRACER_UTILS_UTILITIES_FILESYSTEM_DIRECTORY_SCANNER_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_FILESYSTEM_DIRECTORY_SCANNER_UTILITY_H
 
 #include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utility.h>
+#include <dftracer/utils/utilities/filesystem/types.h>
 
 #include <functional>
 #include <string>
@@ -14,41 +15,20 @@ namespace dftracer::utils::utilities::filesystem {
 /**
  * @brief Input structure representing a directory to scan.
  */
-struct Directory {
+struct DirectoryScannerUtilityInput {
     fs::path path;
     bool recursive = false;  // Whether to scan subdirectories
 
-    explicit Directory(fs::path p, bool rec = false)
+    explicit DirectoryScannerUtilityInput(fs::path p, bool rec = false)
         : path(std::move(p)), recursive(rec) {}
 
     // Equality operator for caching/hashing
-    bool operator==(const Directory& other) const {
+    bool operator==(const DirectoryScannerUtilityInput& other) const {
         return path == other.path && recursive == other.recursive;
     }
 
-    bool operator!=(const Directory& other) const { return !(*this == other); }
-};
-
-/**
- * @brief Output structure representing a file entry.
- */
-struct FileEntry {
-    fs::path path;
-    std::size_t size = 0;
-    bool is_directory = false;
-    bool is_regular_file = false;
-
-    FileEntry() = default;
-
-    explicit FileEntry(const fs::path& p)
-        : path(p), size(0), is_directory(false), is_regular_file(false) {
-        if (fs::exists(p)) {
-            is_directory = fs::is_directory(p);
-            is_regular_file = fs::is_regular_file(p);
-            if (is_regular_file) {
-                size = fs::file_size(p);
-            }
-        }
+    bool operator!=(const DirectoryScannerUtilityInput& other) const {
+        return !(*this == other);
     }
 };
 
@@ -72,21 +52,14 @@ struct FileEntry {
  *     std::cout << entry.path << " - " << entry.size << " bytes\n";
  * }
  * @endcode
- *
- * With pipeline:
- * @code
- * Pipeline pipeline;
- * auto task = use(scanner).emit_on(pipeline);
- * auto output = SequentialExecutor().execute(pipeline, Directory{"/path"});
- * auto files = output.get<std::vector<FileEntry>>(task.id());
- * @endcode
  */
 class DirectoryScannerUtility
-    : public utilities::Utility<Directory, std::vector<FileEntry>,
+    : public utilities::Utility<DirectoryScannerUtilityInput,
+                                std::vector<FileEntry>,
                                 utilities::tags::Parallelizable> {
    public:
     DirectoryScannerUtility() = default;
-    ~DirectoryScannerUtility() override = default;
+    ~DirectoryScannerUtility() = default;
 
     /**
      * @brief Scan directory and return list of file entries.
@@ -96,7 +69,8 @@ class DirectoryScannerUtility
      * @throws fs::filesystem_error if directory doesn't exist or is
      * inaccessible
      */
-    std::vector<FileEntry> process(const Directory& input) override {
+    std::vector<FileEntry> process(
+        const DirectoryScannerUtilityInput& input) override {
         std::vector<FileEntry> entries;
 
         if (!fs::exists(input.path)) {
@@ -130,19 +104,19 @@ class DirectoryScannerUtility
 
 }  // namespace dftracer::utils::utilities::filesystem
 
-// Hash specialization for Directory to enable caching
+// Hash specialization for DirectoryScannerUtilityInput to enable caching
 namespace std {
 template <>
-struct hash<dftracer::utils::utilities::filesystem::Directory> {
+struct hash<
+    dftracer::utils::utilities::filesystem::DirectoryScannerUtilityInput> {
     std::size_t operator()(
-        const dftracer::utils::utilities::filesystem::Directory& dir)
-        const noexcept {
-        // Combine hash of path and recursive flag
+        const dftracer::utils::utilities::filesystem::
+            DirectoryScannerUtilityInput& dir) const noexcept {
         std::size_t h1 = std::hash<std::string>{}(dir.path.string());
         std::size_t h2 = std::hash<bool>{}(dir.recursive);
-        return h1 ^ (h2 << 1);  // Simple hash combination
+        return h1 ^ (h2 << 1);
     }
 };
 }  // namespace std
 
-#endif  // DFTRACER_UTILS_UTILITIES_FILESYSTEM_DIRECTORY_SCANNER_H
+#endif  // DFTRACER_UTILS_UTILITIES_FILESYSTEM_DIRECTORY_SCANNER_UTILITY_H

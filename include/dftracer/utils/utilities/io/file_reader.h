@@ -3,7 +3,7 @@
 
 #include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utility.h>
-#include <dftracer/utils/utilities/filesystem/directory_scanner.h>
+#include <dftracer/utils/utilities/filesystem/directory_scanner_utility.h>
 #include <dftracer/utils/utilities/text/shared.h>
 
 #include <fstream>

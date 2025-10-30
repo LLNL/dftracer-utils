@@ -6,7 +6,7 @@
 #include <dftracer/utils/core/tasks/task_context.h>
 #include <dftracer/utils/core/utilities/utilities.h>
 #include <dftracer/utils/utilities/composites/composite_types.h>
-#include <dftracer/utils/utilities/filesystem/pattern_directory_scanner.h>
+#include <dftracer/utils/utilities/filesystem/pattern_directory_scanner_utility.h>
 
 #include <functional>
 #include <memory>
@@ -50,7 +50,7 @@ class DirectoryFileProcessorUtility
 
    private:
     FileProcessorFn processor_;
-    std::shared_ptr<filesystem::PatternDirectoryScannerUtility> scanner_;
+    filesystem::PatternDirectoryScannerUtility scanner_;
 
    public:
     /**
@@ -59,9 +59,7 @@ class DirectoryFileProcessorUtility
      * @param processor Function that processes a single file
      */
     explicit DirectoryFileProcessorUtility(FileProcessorFn processor)
-        : processor_(std::move(processor)),
-          scanner_(
-              std::make_shared<filesystem::PatternDirectoryScannerUtility>()) {}
+        : processor_(std::move(processor)) {}
 
     /**
      * @brief Process all files in a directory in parallel.
@@ -74,10 +72,10 @@ class DirectoryFileProcessorUtility
         BatchFileProcessOutput<FileOutput> output;
 
         // Step 1: Use PatternDirectoryScanner to scan and filter
-        filesystem::PatternDirectory pattern_input{
+        filesystem::PatternDirectoryScannerUtilityInput pattern_input{
             input.directory_path, input.extensions, input.recursive};
         std::vector<filesystem::FileEntry> matched_entries =
-            scanner_->process(pattern_input);
+            scanner_.process(pattern_input);
 
         if (matched_entries.empty()) {
             return output;  // No files found
