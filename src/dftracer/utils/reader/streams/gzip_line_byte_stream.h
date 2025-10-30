@@ -27,11 +27,11 @@ class GzipLineByteStream : public GzipStream {
     std::size_t buffer_pos_;  // Current position in buffer for copy-based reads
 
    public:
-    GzipLineByteStream()
+    GzipLineByteStream(std::size_t buffer_size = DEFAULT_BUFFER_SIZE)
         : GzipStream(),
           actual_start_bytes_(0),
           bytes_returned_(0),
-          buffer_(DEFAULT_BUFFER_SIZE, 0),
+          buffer_(buffer_size > 0 ? buffer_size : DEFAULT_BUFFER_SIZE, 0),
           valid_bytes_(0),
           buffer_pos_(0) {
         partial_line_buffer_.reserve(1 * 1024 * 1024);

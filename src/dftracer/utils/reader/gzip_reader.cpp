@@ -442,7 +442,8 @@ std::unique_ptr<ReaderStream> GzipReader::stream(const StreamConfig &config) {
         }
         case StreamType::LINE_BYTES: {
             // Single line-aligned bytes at a time
-            auto line_byte_stream = std::make_unique<GzipLineByteStream>();
+            auto line_byte_stream =
+                std::make_unique<GzipLineByteStream>(buffer_size);
             line_byte_stream->initialize(gz_path, start_bytes, end_bytes,
                                          *indexer);
 
@@ -457,14 +458,16 @@ std::unique_ptr<ReaderStream> GzipReader::stream(const StreamConfig &config) {
         }
         case StreamType::MULTI_LINES_BYTES: {
             // Multiple line-aligned bytes per read
-            auto line_byte_stream = std::make_unique<GzipLineByteStream>();
+            auto line_byte_stream =
+                std::make_unique<GzipLineByteStream>(buffer_size);
             line_byte_stream->initialize(gz_path, start_bytes, end_bytes,
                                          *indexer);
             return line_byte_stream;
         }
         case StreamType::LINE: {
             // Single parsed line per read
-            auto line_byte_stream = std::make_unique<GzipLineByteStream>();
+            auto line_byte_stream =
+                std::make_unique<GzipLineByteStream>(buffer_size);
             line_byte_stream->initialize(gz_path, start_bytes, end_bytes,
                                          *indexer);
 
@@ -478,7 +481,8 @@ std::unique_ptr<ReaderStream> GzipReader::stream(const StreamConfig &config) {
         }
         case StreamType::MULTI_LINES: {
             // Multiple parsed lines per read
-            auto line_byte_stream = std::make_unique<GzipLineByteStream>();
+            auto line_byte_stream =
+                std::make_unique<GzipLineByteStream>(buffer_size);
             line_byte_stream->initialize(gz_path, start_bytes, end_bytes,
                                          *indexer);
 
