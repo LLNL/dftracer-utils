@@ -436,7 +436,7 @@ std::unique_ptr<ReaderStream> GzipReader::stream(const StreamConfig &config) {
     // Create appropriate stream type
     switch (stream_type) {
         case StreamType::BYTES: {
-            auto byte_stream = std::make_unique<GzipByteStream>();
+            auto byte_stream = std::make_unique<GzipByteStream>(buffer_size);
             byte_stream->initialize(gz_path, start_bytes, end_bytes, *indexer);
             return byte_stream;
         }

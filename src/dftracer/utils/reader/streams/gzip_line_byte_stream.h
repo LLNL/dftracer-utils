@@ -15,14 +15,25 @@ class GzipLineByteStream : public GzipStream {
    private:
     static constexpr std::size_t SEARCH_BUFFER_SIZE = 2048;
     static constexpr std::size_t LINE_SEARCH_LOOKBACK = 512;
+    static constexpr std::size_t DEFAULT_BUFFER_SIZE = 64 * 1024;  // 64KB
 
     std::vector<char> partial_line_buffer_;
     std::size_t actual_start_bytes_;
     std::size_t bytes_returned_;  // Track how many bytes we've returned to user
 
+    // Buffer for zero-copy reads
+    std::vector<char> buffer_;
+    std::size_t valid_bytes_;
+    std::size_t buffer_pos_;  // Current position in buffer for copy-based reads
+
    public:
     GzipLineByteStream()
-        : GzipStream(), actual_start_bytes_(0), bytes_returned_(0) {
+        : GzipStream(),
+          actual_start_bytes_(0),
+          bytes_returned_(0),
+          buffer_(DEFAULT_BUFFER_SIZE, 0),
+          valid_bytes_(0),
+          buffer_pos_(0) {
         partial_line_buffer_.reserve(1 * 1024 * 1024);
     }
 
@@ -81,12 +92,50 @@ class GzipLineByteStream : public GzipStream {
         return actual_start;
     }
 
-    std::size_t read(char *buffer, std::size_t buffer_size) override {
-// Prefetch buffer for writing
+    std::size_t read(char *output_buffer,
+                     std::size_t output_buffer_size) override {
 #ifdef __GNUC__
-        __builtin_prefetch(buffer, 1, 3);
+        __builtin_prefetch(output_buffer, 1, 3);
 #endif
 
+        // Check if we have unconsumed data from previous read
+        if (buffer_pos_ < valid_bytes_) {
+            std::size_t remaining = valid_bytes_ - buffer_pos_;
+            std::size_t copy_size = std::min(remaining, output_buffer_size);
+            std::memcpy(output_buffer, buffer_.data() + buffer_pos_, copy_size);
+            buffer_pos_ += copy_size;
+
+            DFTRACER_UTILS_LOG_DEBUG(
+                "Copied %zu bytes from existing buffer (pos %zu/%zu)",
+                copy_size, buffer_pos_, valid_bytes_);
+
+            return copy_size;
+        }
+
+        // Buffer exhausted, get new chunk via zero-copy read
+        auto span = read();
+        if (span.empty()) {
+            return 0;
+        }
+
+        // Update our tracking of the buffer state
+        valid_bytes_ = span.size();
+        buffer_pos_ = 0;
+
+        std::size_t copy_size = std::min(valid_bytes_, output_buffer_size);
+        std::memcpy(output_buffer, span.data(), copy_size);
+        buffer_pos_ = copy_size;
+
+        DFTRACER_UTILS_LOG_DEBUG(
+            "Got new chunk via zero-copy, copied %zu bytes (total in buffer: "
+            "%zu)",
+            copy_size, valid_bytes_);
+
+        return copy_size;
+    }
+
+   private:
+    std::size_t read_line_aligned_data() {
         if (!decompression_initialized_) {
             throw ReaderError(ReaderError::INITIALIZATION_ERROR,
                               "Streaming session not properly initialized");
@@ -101,21 +150,22 @@ class GzipLineByteStream : public GzipStream {
             return 0;
         }
 
-        // Copy partial line buffer directly to output buffer (if exists)
+        // Copy partial line buffer to internal buffer (if exists)
         std::size_t partial_size = partial_line_buffer_.size();
-        std::size_t available_buffer_space = buffer_size;
+        std::size_t available_buffer_space = buffer_.size();
 
         if (partial_size > 0) {
-            if (partial_size > buffer_size) {
+            if (partial_size > buffer_.size()) {
                 throw ReaderError(
                     ReaderError::READ_ERROR,
                     "Partial line buffer exceeds available buffer space");
             }
-            std::memcpy(buffer, partial_line_buffer_.data(), partial_size);
+            std::memcpy(buffer_.data(), partial_line_buffer_.data(),
+                        partial_size);
             available_buffer_space -= partial_size;
         }
 
-        // Read data directly into output buffer - stay strictly within target
+        // Read data directly into internal buffer - stay strictly within target
         // bounds
         std::size_t max_bytes_to_read = target_end_bytes_ - current_position_;
         std::size_t bytes_to_read =
@@ -123,10 +173,10 @@ class GzipLineByteStream : public GzipStream {
 
         std::size_t bytes_read = 0;
         if (bytes_to_read > 0) {
-            bool status = inflater_.read(
-                file_handle_,
-                reinterpret_cast<unsigned char *>(buffer + partial_size),
-                bytes_to_read, bytes_read);
+            bool status = inflater_.read(file_handle_,
+                                         reinterpret_cast<unsigned char *>(
+                                             buffer_.data() + partial_size),
+                                         bytes_to_read, bytes_read);
 
             if (!status || bytes_read == 0) {
                 is_finished_ = true;
@@ -147,10 +197,10 @@ class GzipLineByteStream : public GzipStream {
 
         // Apply boundary limits - only return complete lines within our chunk
         std::size_t adjusted_size =
-            apply_range_and_boundary_limits(buffer, total_data_size);
+            apply_range_and_boundary_limits(buffer_.data(), total_data_size);
 
         // Update partial buffer with any incomplete line data
-        update_partial_buffer(buffer, adjusted_size, total_data_size);
+        update_partial_buffer(buffer_.data(), adjusted_size, total_data_size);
 
         if (adjusted_size == 0) {
             DFTRACER_UTILS_LOG_DEBUG(
@@ -169,21 +219,34 @@ class GzipLineByteStream : public GzipStream {
         return adjusted_size;
     }
 
-    // Zero-copy read - stub for now
+    // Zero-copy read - returns span to internal buffer
     dftracer::utils::span_view<const char> read() override {
-        // TODO: Implement zero-copy read for GzipLineByteStream
-        return {};
+        if (is_finished_) {
+            return {};
+        }
+
+        // Read line-aligned data into buffer_
+        valid_bytes_ = read_line_aligned_data();
+
+        if (valid_bytes_ == 0) {
+            return {};
+        }
+
+        // Return span view to the data in buffer_
+        return dftracer::utils::span_view<const char>(buffer_.data(),
+                                                      valid_bytes_);
     }
 
     void reset() override {
         GzipStream::reset();
         partial_line_buffer_.clear();
         partial_line_buffer_.shrink_to_fit();
+        valid_bytes_ = 0;
+        buffer_pos_ = 0;
         actual_start_bytes_ = 0;
         bytes_returned_ = 0;
     }
 
-   private:
     void update_partial_buffer(const char *buffer, std::size_t adjusted_size,
                                std::size_t total_data_size) {
         if (adjusted_size < total_data_size) {

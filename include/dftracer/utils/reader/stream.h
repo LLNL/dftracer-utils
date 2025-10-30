@@ -26,13 +26,15 @@ namespace dftracer::utils {
  */
 class ReaderStream {
    public:
+    /**
+     * @brief Virtual destructor.
+     */
     virtual ~ReaderStream() = default;
 
     /**
      * @brief Read next chunk as zero-copy view.
      *
-     * Returns view into internal buffer. For 1TB+ datasets, use this
-     * to avoid copying. The view is valid ONLY until the next read() call.
+     * Returns view into internal buffer
      *
      * LIFETIME: The returned span is invalidated by:
      *   - Next call to read() or read(buffer, size)
