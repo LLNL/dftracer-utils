@@ -338,11 +338,6 @@ class GzipLineByteStream : public GzipStream {
         // Return all complete lines in the buffer
         std::size_t adjusted_size = adjust_to_boundary(buffer, total_data_size);
 
-        // Check if we're at the end of our assigned range
-        if (current_position_ >= target_end_bytes_) {
-            is_finished_ = true;
-        }
-
         return adjusted_size;
     }
 };
