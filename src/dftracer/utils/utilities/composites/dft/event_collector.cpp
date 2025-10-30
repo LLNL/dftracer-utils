@@ -114,10 +114,12 @@ EventCollectorUtilityOutput EventCollectorFromMetadataUtility::process(
             }
         }
 
+#if DFTRACER_UTILS_LOGGER_DEBUG_ENABLED == 1
         std::size_t events_collected = events.size() - events_before;
         DFTRACER_UTILS_LOG_DEBUG(
             "Collected %zu events from file %s (expected %zu)",
             events_collected, file.file_path.c_str(), file.valid_events);
+#endif
     }
 
     // Sort events for consistent hashing

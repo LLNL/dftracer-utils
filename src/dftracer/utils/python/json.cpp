@@ -4,7 +4,7 @@
 #include <iostream>
 
 static void JSON_dealloc(JSONObject* self) {
-    if (self->doc) {
+    if (self->doc && self->owns_doc) {
         yyjson_doc_free(self->doc);
     }
     Py_TYPE(self)->tp_free((PyObject*)self);
@@ -15,8 +15,10 @@ static PyObject* JSON_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
     self = (JSONObject*)type->tp_alloc(type, 0);
     if (self != NULL) {
         self->doc = nullptr;
+        self->root = nullptr;
         self->parsed = false;
         self->json_length = 0;
+        self->owns_doc = false;
     }
     return (PyObject*)self;
 }
@@ -32,13 +34,22 @@ static int JSON_init(JSONObject* self, PyObject* args, PyObject* kwds) {
         std::memcpy(self->json_data, json_str, self->json_length);
     }
     self->doc = nullptr;
+    self->root = nullptr;
     self->parsed = false;
+    self->owns_doc = true;
     return 0;
 }
 
 static bool JSON_ensure_parsed(JSONObject* self) {
+    if (self->root != nullptr) {
+        return true;
+    }
+
     if (!self->parsed && self->json_length > 0) {
-        self->doc = yyjson_read(self->json_data, self->json_length, 0);
+        // Use YYJSON_READ_INSITU for large-scale processing
+        // (zero-copy, in-place modification)
+        self->doc =
+            yyjson_read(self->json_data, self->json_length, YYJSON_READ_INSITU);
         if (!self->doc) {
             PyErr_SetString(PyExc_ValueError, "Failed to parse JSON");
             return false;
@@ -46,6 +57,17 @@ static bool JSON_ensure_parsed(JSONObject* self) {
         self->parsed = true;
     }
     return self->doc != nullptr;
+}
+
+// Get the root yyjson_val for this JSON object (handles both top-level and
+// subtrees)
+static yyjson_val* JSON_get_root(JSONObject* self) {
+    if (self->root != nullptr) {
+        // This is a subtree wrapper - return the wrapped value directly
+        return self->root;
+    }
+    // This is a top-level document - get the root from the doc
+    return yyjson_doc_get_root(self->doc);
 }
 
 static PyObject* JSON_contains(JSONObject* self, PyObject* key) {
@@ -63,7 +85,7 @@ static PyObject* JSON_contains(JSONObject* self, PyObject* key) {
         return NULL;
     }
 
-    yyjson_val* root = yyjson_doc_get_root(self->doc);
+    yyjson_val* root = JSON_get_root(self);
     if (!yyjson_is_obj(root)) {
         Py_RETURN_FALSE;
     }
@@ -174,7 +196,7 @@ static PyObject* JSON_getitem(JSONObject* self, PyObject* key) {
         return NULL;
     }
 
-    yyjson_val* root = yyjson_doc_get_root(self->doc);
+    yyjson_val* root = JSON_get_root(self);
     if (!yyjson_is_obj(root)) {
         PyErr_SetString(PyExc_TypeError, "JSON root is not an object");
         return NULL;
@@ -186,6 +208,11 @@ static PyObject* JSON_getitem(JSONObject* self, PyObject* key) {
         return NULL;
     }
 
+    // If the value is an object or array, return a lazy wrapper
+    if (yyjson_is_obj(val) || yyjson_is_arr(val)) {
+        return JSON_from_yyjson_val(self->doc, val);
+    }
+
     return yyjson_val_to_python(val);
 }
 
@@ -194,7 +221,7 @@ static PyObject* JSON_keys(JSONObject* self, PyObject* Py_UNUSED(ignored)) {
         return NULL;
     }
 
-    yyjson_val* root = yyjson_doc_get_root(self->doc);
+    yyjson_val* root = JSON_get_root(self);
     if (!yyjson_is_obj(root)) {
         return PyList_New(0);
     }
@@ -244,7 +271,7 @@ static PyObject* JSON_get(JSONObject* self, PyObject* args) {
         return NULL;
     }
 
-    yyjson_val* root = yyjson_doc_get_root(self->doc);
+    yyjson_val* root = JSON_get_root(self);
     if (!yyjson_is_obj(root)) {
         Py_INCREF(default_value);
         return default_value;
@@ -254,6 +281,11 @@ static PyObject* JSON_get(JSONObject* self, PyObject* args) {
     if (!val) {
         Py_INCREF(default_value);
         return default_value;
+    }
+
+    // If the value is an object or array, return a lazy wrapper
+    if (yyjson_is_obj(val) || yyjson_is_arr(val)) {
+        return JSON_from_yyjson_val(self->doc, val);
     }
 
     return yyjson_val_to_python(val);
@@ -273,6 +305,15 @@ static PyObject* JSON_iter(JSONObject* self) {
 }
 
 static PyObject* JSON_str(JSONObject* self) {
+    if (self->root != nullptr) {
+        char* json_str = yyjson_val_write(self->root, 0, NULL);
+        if (!json_str) {
+            return PyUnicode_FromString("{}");
+        }
+        PyObject* result = PyUnicode_FromString(json_str);
+        free(json_str);
+        return result;
+    }
     if (self->json_length > 0) {
         return PyUnicode_FromStringAndSize(self->json_data, self->json_length);
     }
@@ -280,15 +321,11 @@ static PyObject* JSON_str(JSONObject* self) {
 }
 
 static PyObject* JSON_repr(JSONObject* self) {
-    if (self->json_length > 0) {
-        PyObject* json_str =
-            PyUnicode_FromStringAndSize(self->json_data, self->json_length);
-        if (!json_str) return NULL;
-        PyObject* result = PyUnicode_FromFormat("JSON(%U)", json_str);
-        Py_DECREF(json_str);
-        return result;
-    }
-    return PyUnicode_FromString("JSON({})");
+    PyObject* str_obj = JSON_str(self);
+    if (!str_obj) return NULL;
+    PyObject* result = PyUnicode_FromFormat("JSON(%U)", str_obj);
+    Py_DECREF(str_obj);
+    return result;
 }
 
 PyMethodDef JSON_methods[] = {{"__contains__", (PyCFunction)JSON_contains,
@@ -370,11 +407,32 @@ PyObject* JSON_from_data(const char* data, size_t length) {
     PyObject_INIT(self, &JSONType);
 
     self->doc = nullptr;
+    self->root = nullptr;
     self->parsed = false;
     self->json_length = length;
+    self->owns_doc = true;
 
     std::memcpy(self->json_data, data, length);
     self->json_data[length] = '\0';
+
+    return (PyObject*)self;
+}
+
+// Create a JSON object wrapping a yyjson_val
+// subtree (lazy wrapper for nested objects/arrays)
+PyObject* JSON_from_yyjson_val(yyjson_doc* doc, yyjson_val* root) {
+    JSONObject* self = (JSONObject*)PyObject_MALLOC(sizeof(JSONObject));
+    if (!self) {
+        return PyErr_NoMemory();
+    }
+
+    PyObject_INIT(self, &JSONType);
+
+    self->doc = doc;         // Share the document (don't copy)
+    self->root = root;       // Point to the subtree
+    self->parsed = true;     // Already parsed (just wrapping a subtree)
+    self->json_length = 0;   // No raw JSON data
+    self->owns_doc = false;  // Don't free the doc (it's owned by parent)
 
     return (PyObject*)self;
 }
