@@ -2,6 +2,7 @@
 #define DFTRACER_UTILS_READER_STREAMS_LINE_STREAM_H
 
 #include <dftracer/utils/core/common/logging.h>
+#include <dftracer/utils/core/common/span.h>
 #include <dftracer/utils/reader/stream.h>
 
 #include <cstring>
@@ -56,6 +57,12 @@ class LineStream : public ReaderStream {
     }
 
     ~LineStream() override { reset(); }
+
+    // Zero-copy read - stub for now
+    span_view<const char> read() override {
+        // TODO: Implement zero-copy read for LineStream
+        return {};
+    }
 
     std::size_t read(char* buffer, std::size_t buffer_size) override {
         if (!underlying_stream_) {

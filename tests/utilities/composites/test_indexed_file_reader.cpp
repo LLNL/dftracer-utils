@@ -39,7 +39,11 @@ TEST_SUITE("IndexedFileReader") {
 
             // Verify reader can read lines
             auto stream =
-                reader->stream(StreamType::LINE, RangeType::LINE_RANGE, 1, 10);
+                reader->stream(StreamConfig()
+                                   .stream_type(StreamType::MULTI_LINES)
+                                   .range_type(RangeType::LINE_RANGE)
+                                   .from(1)
+                                   .to(10));
             CHECK(stream != nullptr);
 
             std::vector<char> buffer(1024);
@@ -298,7 +302,11 @@ TEST_SUITE("IndexedFileReader") {
 
             // Create line stream to read specific lines
             auto stream =
-                reader->stream(StreamType::LINE, RangeType::LINE_RANGE, 5, 10);
+                reader->stream(StreamConfig()
+                                   .stream_type(StreamType::MULTI_LINES)
+                                   .range_type(RangeType::LINE_RANGE)
+                                   .from(5)
+                                   .to(10));
             CHECK(stream != nullptr);
 
             std::vector<char> buffer(1024);

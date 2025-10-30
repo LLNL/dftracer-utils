@@ -11,6 +11,7 @@ need_ghc_filesystem()
 need_xxhash()
 need_cpplogger()
 need_yyjson()
+need_nonstd_span()
 
 # ##############################################################################
 # Libraries
@@ -25,6 +26,7 @@ set(DFTRACER_UTILS_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/common/constants.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/common/format_detector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/common/filesystem.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/common/span.cpp
     # Utilities
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/utils/timer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dftracer/utils/core/utils/string.cpp
@@ -177,6 +179,7 @@ create_library(
     ${DFTRACER_UTILS_BUILD_STATIC}
   PUBLIC_LINK_LIBRARIES
     ghc_filesystem
+    nonstd::span-lite
     Threads::Threads
   PUBLIC_INCLUDE_DIRS
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>

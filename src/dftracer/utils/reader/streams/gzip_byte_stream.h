@@ -2,6 +2,7 @@
 #define DFTRACER_UTILS_READER_STREAMS_GZIP_BYTE_STREAM_H
 
 #include <dftracer/utils/core/common/logging.h>
+#include <dftracer/utils/core/common/span.h>
 #include <dftracer/utils/reader/streams/gzip_stream.h>
 
 #include <cstddef>
@@ -35,6 +36,12 @@ class GzipByteStream : public GzipStream {
         DFTRACER_UTILS_LOG_DEBUG(
             "GzipByteStream::initialize - completed, current_position_=%zu",
             current_position_);
+    }
+
+    // Zero-copy read - stub for now
+    dftracer::utils::span_view<const char> read() override {
+        // TODO: Implement zero-copy read for GzipByteStream
+        return {};
     }
 
     std::size_t read(char *buffer, std::size_t buffer_size) override {

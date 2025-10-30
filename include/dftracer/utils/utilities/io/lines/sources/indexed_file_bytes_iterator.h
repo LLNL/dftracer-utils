@@ -87,8 +87,11 @@ class IndexedFileBytesIterator {
             end_byte_);
 
         // Create a LINE_BYTES stream for byte-range iteration
-        stream_ = reader_->stream(StreamType::LINE_BYTES, RangeType::BYTE_RANGE,
-                                  start_byte_, end_byte_);
+        stream_ = reader_->stream(StreamConfig()
+                                      .stream_type(StreamType::LINE_BYTES)
+                                      .range_type(RangeType::BYTE_RANGE)
+                                      .from(start_byte_)
+                                      .to(end_byte_));
         if (!stream_) {
             throw std::runtime_error("Failed to create stream");
         }

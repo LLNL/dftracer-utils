@@ -167,22 +167,23 @@ void dft_reader_reset(dft_reader_handle_t reader) {
 }
 
 dft_reader_stream_t dft_reader_stream(dft_reader_handle_t reader,
-                                      dft_stream_type_t stream_type,
-                                      dft_range_type_t range_type, size_t start,
-                                      size_t end) {
+                                      const dft_stream_config_t *config) {
     if (validate_handle(reader)) {
         DFTRACER_UTILS_LOG_ERROR("%s", "Invalid reader handle");
         return nullptr;
     }
 
-    try {
-        // Convert C enum to C++ enum
-        StreamType cpp_stream_type = static_cast<StreamType>(stream_type);
-        RangeType cpp_range_type = static_cast<RangeType>(range_type);
+    if (!config) {
+        DFTRACER_UTILS_LOG_ERROR("%s", "Invalid config pointer");
+        return nullptr;
+    }
 
-        // Create stream - stream() already returns a shared_ptr
-        auto stream = (*cast_reader(reader))
-                          ->stream(cpp_stream_type, cpp_range_type, start, end);
+    try {
+        // Convert C config to C++ config
+        StreamConfig cpp_config = StreamConfig::from_c(*config);
+
+        // Create stream
+        auto stream = (*cast_reader(reader))->stream(cpp_config);
 
         // Transfer ownership to C API - allocate shared_ptr on heap for C
         // handle

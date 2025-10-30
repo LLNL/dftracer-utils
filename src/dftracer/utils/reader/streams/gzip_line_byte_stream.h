@@ -3,6 +3,7 @@
 
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/common/platform_compat.h>
+#include <dftracer/utils/core/common/span.h>
 #include <dftracer/utils/reader/streams/gzip_stream.h>
 
 #include <cstddef>
@@ -166,6 +167,12 @@ class GzipLineByteStream : public GzipStream {
             bytes_returned_);
 
         return adjusted_size;
+    }
+
+    // Zero-copy read - stub for now
+    dftracer::utils::span_view<const char> read() override {
+        // TODO: Implement zero-copy read for GzipLineByteStream
+        return {};
     }
 
     void reset() override {
