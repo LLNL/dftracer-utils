@@ -1,7 +1,7 @@
-#ifndef DFTRACER_UTILS_UTILITIES_HASH_XXH3_HASHER_H
-#define DFTRACER_UTILS_UTILITIES_HASH_XXH3_HASHER_H
+#ifndef DFTRACER_UTILS_UTILITIES_HASH_XXH3_HASHER_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_HASH_XXH3_HASHER_UTILITY_H
 
-#include <dftracer/utils/utilities/hash/base_hasher.h>
+#include <dftracer/utils/utilities/hash/internal/base_hasher_utility.h>
 #include <xxhash.h>
 
 #include <stdexcept>
@@ -12,7 +12,7 @@ namespace dftracer::utils::utilities::hash {
 /**
  * @brief XXH3 64-bit hasher utility.
  */
-class XXH3HasherUtility : public BaseHasherUtility {
+class XXH3HasherUtility : public internal::BaseHasherUtility {
    private:
     XXH3_state_t* state_ = nullptr;
 
@@ -42,7 +42,6 @@ class XXH3HasherUtility : public BaseHasherUtility {
             throw std::runtime_error("XXH3Hasher not initialized");
         }
         XXH3_64bits_update(state_, data.data(), data.size());
-        // Update current hash with digest
         current_hash_ =
             Hash{static_cast<std::size_t>(XXH3_64bits_digest(state_))};
     }
@@ -50,4 +49,4 @@ class XXH3HasherUtility : public BaseHasherUtility {
 
 }  // namespace dftracer::utils::utilities::hash
 
-#endif  // DFTRACER_UTILS_UTILITIES_HASH_XXH3_HASHER_H
+#endif  // DFTRACER_UTILS_UTILITIES_HASH_XXH3_HASHER_UTILITY_H

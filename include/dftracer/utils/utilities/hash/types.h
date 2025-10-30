@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_UTILITIES_HASH_SHARED_H
-#define DFTRACER_UTILS_UTILITIES_HASH_SHARED_H
+#ifndef DFTRACER_UTILS_UTILITIES_HASH_TYPES_H
+#define DFTRACER_UTILS_UTILITIES_HASH_TYPES_H
 
 #include <cstddef>
 
@@ -30,4 +30,4 @@ struct Hash {
 };
 }  // namespace dftracer::utils::utilities::hash
 
-#endif  // DFTRACER_UTILS_UTILITIES_HASH_SHARED_H
+#endif  // DFTRACER_UTILS_UTILITIES_HASH_TYPES_H

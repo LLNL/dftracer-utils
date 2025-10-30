@@ -1,8 +1,8 @@
-#ifndef DFTRACER_UTILS_UTILITIES_HASH_MT_HASHER_H
-#define DFTRACER_UTILS_UTILITIES_HASH_MT_HASHER_H
+#ifndef DFTRACER_UTILS_UTILITIES_HASH_MT_HASHER_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_HASH_MT_HASHER_UTILITY_H
 
 #include <dftracer/utils/utilities/hash/hasher_utility.h>
-#include <dftracer/utils/utilities/hash/shared.h>
+#include <dftracer/utils/utilities/hash/types.h>
 
 #include <mutex>
 #include <string_view>
@@ -44,7 +44,6 @@ class MTHasherUtility : public HasherUtility {
 
     ~MTHasherUtility() override = default;
 
-    // Bring base class overloads into scope
     using HasherUtility::process;
     using HasherUtility::update;
 
@@ -71,4 +70,4 @@ class MTHasherUtility : public HasherUtility {
 
 }  // namespace dftracer::utils::utilities::hash
 
-#endif  // DFTRACER_UTILS_UTILITIES_HASH_MT_HASHER_H
+#endif  // DFTRACER_UTILS_UTILITIES_HASH_MT_HASHER_UTILITY_H
