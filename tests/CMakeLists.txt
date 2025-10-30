@@ -30,6 +30,8 @@ set(TEST_CPP_SOURCES
     # Reader tests
     reader/test_reader.cpp
     reader/test_reader_stream.cpp
+    reader/test_reader_line_byte_stream.cpp
+    reader/test_reader_multi_lines_byte_stream.cpp
     reader/test_basic_factory.cpp
     reader/test_reader_formats.cpp
     reader/test_reader_robustness.cpp
