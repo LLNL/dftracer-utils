@@ -4,7 +4,7 @@
 #include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utility.h>
-#include <dftracer/utils/utilities/compression/zlib/streaming_compressor.h>
+#include <dftracer/utils/utilities/compression/zlib/streaming_compressor_utility.h>
 #include <dftracer/utils/utilities/io/streaming_file_reader.h>
 #include <dftracer/utils/utilities/io/streaming_file_writer.h>
 

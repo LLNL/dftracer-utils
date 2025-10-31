@@ -1,7 +1,7 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_DECOMPRESSOR_H
-#define DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_DECOMPRESSOR_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_DECOMPRESSOR_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_DECOMPRESSOR_UTILITY_H
 
-#include <dftracer/utils/utilities/compression/zlib/shared.h>
+#include <dftracer/utils/utilities/compression/zlib/types.h>
 #include <dftracer/utils/utilities/io/types/types.h>
 #include <zlib.h>
 
@@ -9,9 +9,6 @@
 #include <stdexcept>
 
 namespace dftracer::utils::utilities::compression::zlib {
-
-using io::CompressedData;
-using io::RawData;
 
 /**
  * @brief Manual streaming decompressor that works chunk-by-chunk.
@@ -34,7 +31,7 @@ using io::RawData;
  * @endcode
  */
 class StreamingDecompressorUtility
-    : public utilities::Utility<CompressedData, std::vector<RawData>> {
+    : public utilities::Utility<io::CompressedData, std::vector<io::RawData>> {
    private:
     z_stream stream_;
     bool initialized_ = false;
@@ -67,7 +64,7 @@ class StreamingDecompressorUtility
      * @param chunk Compressed input chunk
      * @return Vector of decompressed output chunks
      */
-    std::vector<RawData> process(const CompressedData& chunk) {
+    std::vector<io::RawData> process(const io::CompressedData& chunk) {
         if (!initialized_) {
             initialize();
         }
@@ -76,7 +73,7 @@ class StreamingDecompressorUtility
             return {};
         }
 
-        std::vector<RawData> output_chunks;
+        std::vector<io::RawData> output_chunks;
 
         stream_.avail_in = static_cast<uInt>(chunk.size());
         stream_.next_in = const_cast<Bytef*>(chunk.data.data());
@@ -101,7 +98,8 @@ class StreamingDecompressorUtility
                     output_buffer_.begin(),
                     output_buffer_.begin() + decompressed_size);
 
-                output_chunks.push_back(RawData{std::move(decompressed_data)});
+                output_chunks.push_back(
+                    io::RawData{std::move(decompressed_data)});
             }
 
             if (ret == Z_STREAM_END) {
@@ -134,4 +132,4 @@ class StreamingDecompressorUtility
 
 }  // namespace dftracer::utils::utilities::compression::zlib
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_DECOMPRESSOR_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_DECOMPRESSOR_UTILITY_H

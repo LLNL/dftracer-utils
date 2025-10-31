@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_SHARED_H
-#define DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_SHARED_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_TYPES_H
+#define DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_TYPES_H
 
 #include <cstdint>
 
@@ -35,7 +35,6 @@ enum class DecompressionFormat : std::int32_t {
     GZIP = 15 + 16,     // gzip format
     AUTO = 15 + 32      // Auto-detect gzip/zlib (default)
 };
-
 }  // namespace dftracer::utils::utilities::compression::zlib
 
 #endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_SHARED_H

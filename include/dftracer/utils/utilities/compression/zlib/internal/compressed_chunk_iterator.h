@@ -1,7 +1,7 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_COMPRESSED_CHUNK_ITERATOR_H
-#define DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_COMPRESSED_CHUNK_ITERATOR_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_INTERNAL_COMPRESSED_CHUNK_ITERATOR_H
+#define DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_INTERNAL_COMPRESSED_CHUNK_ITERATOR_H
 
-#include <dftracer/utils/utilities/compression/zlib/shared.h>
+#include <dftracer/utils/utilities/compression/zlib/types.h>
 #include <dftracer/utils/utilities/io/chunk_iterator.h>
 #include <dftracer/utils/utilities/io/types/types.h>
 #include <zlib.h>
@@ -12,7 +12,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace dftracer::utils::utilities::compression::zlib {
+namespace dftracer::utils::utilities::compression::zlib::internal {
 
 using io::ChunkIterator;
 using io::CompressedData;
@@ -241,34 +241,6 @@ class CompressedChunkIterator {
         return !(*this == other);
     }
 };
+}  // namespace dftracer::utils::utilities::compression::zlib::internal
 
-/**
- * @brief Range for compressed chunk iteration.
- */
-class CompressedChunkRange {
-   private:
-    ChunkIterator input_begin_;
-    ChunkIterator input_end_;
-    int compression_level_;
-    CompressionFormat format_;
-
-   public:
-    CompressedChunkRange(ChunkIterator input_begin, ChunkIterator input_end,
-                         int compression_level = Z_DEFAULT_COMPRESSION,
-                         CompressionFormat format = CompressionFormat::GZIP)
-        : input_begin_(input_begin),
-          input_end_(input_end),
-          compression_level_(compression_level),
-          format_(format) {}
-
-    CompressedChunkIterator begin() const {
-        return CompressedChunkIterator{input_begin_, input_end_,
-                                       compression_level_, format_};
-    }
-
-    CompressedChunkIterator end() const { return CompressedChunkIterator{}; }
-};
-
-}  // namespace dftracer::utils::utilities::compression::zlib
-
-#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_COMPRESSED_CHUNK_ITERATOR_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_INTERNAL_COMPRESSED_CHUNK_ITERATOR_H

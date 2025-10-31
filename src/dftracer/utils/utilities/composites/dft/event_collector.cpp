@@ -82,7 +82,9 @@ EventCollectorUtilityOutput EventCollectorFromMetadataUtility::process(
             continue;
         }
 
+#if DFTRACER_UTILS_LOGGER_DEBUG_ENABLED == 1
         std::size_t events_before = events.size();
+#endif
         EventIdCollector collector(events, input.trim_commas);
 
         if (!file.idx_path.empty()) {

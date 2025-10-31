@@ -1,9 +1,9 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_COMPRESSOR_H
-#define DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_COMPRESSOR_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_COMPRESSOR_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_COMPRESSOR_UTILITY_H
 
 #include <dftracer/utils/core/utilities/utility.h>
-#include <dftracer/utils/utilities/compression/zlib/compressed_chunk_iterator.h>
-#include <dftracer/utils/utilities/compression/zlib/shared.h>
+#include <dftracer/utils/utilities/compression/zlib/internal/compressed_chunk_iterator.h>
+#include <dftracer/utils/utilities/compression/zlib/types.h>
 #include <dftracer/utils/utilities/io/chunk_iterator.h>
 #include <dftracer/utils/utilities/io/types/types.h>
 #include <zlib.h>
@@ -14,10 +14,42 @@
 
 namespace dftracer::utils::utilities::compression::zlib {
 
-using io::ChunkIterator;
-using io::ChunkRange;
-using io::CompressedData;
-using io::RawData;
+class StreamingCompressorUtility;
+
+using StreamingDecompressorUtilityInput = io::ChunkRange;
+
+/**
+ * @brief Range for compressed chunk iteration.
+ */
+class StreamingCompressorUtilityOutput {
+   private:
+    internal::ChunkIterator input_begin_;
+    internal::ChunkIterator input_end_;
+    int compression_level_;
+    CompressionFormat format_;
+
+   private:
+    friend class StreamingCompressorUtility;
+
+    StreamingCompressorUtilityOutput(
+        internal::ChunkIterator input_begin, internal::ChunkIterator input_end,
+        int compression_level = Z_DEFAULT_COMPRESSION,
+        CompressionFormat format = CompressionFormat::GZIP)
+        : input_begin_(input_begin),
+          input_end_(input_end),
+          compression_level_(compression_level),
+          format_(format) {}
+
+   public:
+    internal::CompressedChunkIterator begin() const {
+        return internal::CompressedChunkIterator{input_begin_, input_end_,
+                                                 compression_level_, format_};
+    }
+
+    internal::CompressedChunkIterator end() const {
+        return internal::CompressedChunkIterator{};
+    }
+};
 
 /**
  * @brief Streaming gzip compressor utility.
@@ -51,13 +83,14 @@ using io::RawData;
  * @endcode
  */
 class StreamingCompressorUtility
-    : public utilities::Utility<ChunkRange, CompressedChunkRange> {
+    : public utilities::Utility<StreamingDecompressorUtilityInput,
+                                StreamingCompressorUtilityOutput> {
    private:
     int compression_level_ = Z_DEFAULT_COMPRESSION;
 
    public:
     StreamingCompressorUtility() = default;
-    ~StreamingCompressorUtility() override = default;
+    ~StreamingCompressorUtility() = default;
 
     void set_compression_level(int level) {
         if (level < 0 || level > 9) {
@@ -80,9 +113,10 @@ class StreamingCompressorUtility
      * @param input ChunkRange from StreamingFileReader
      * @return CompressedChunkRange for lazy iteration
      */
-    CompressedChunkRange process(const ChunkRange& input) override {
-        return CompressedChunkRange{input.begin(), input.end(),
-                                    compression_level_};
+    StreamingCompressorUtilityOutput process(
+        const StreamingDecompressorUtilityInput& input) override {
+        return StreamingCompressorUtilityOutput{input.begin(), input.end(),
+                                                compression_level_};
     }
 };
 
@@ -93,7 +127,7 @@ class StreamingCompressorUtility
  * use StreamingCompressor utility instead.
  */
 class ManualStreamingCompressorUtility
-    : public utilities::Utility<RawData, std::vector<CompressedData>> {
+    : public utilities::Utility<io::RawData, std::vector<io::CompressedData>> {
    private:
     z_stream stream_;
     bool initialized_ = false;
@@ -134,7 +168,7 @@ class ManualStreamingCompressorUtility
     ManualStreamingCompressorUtility& operator=(
         const ManualStreamingCompressorUtility&) = delete;
 
-    std::vector<CompressedData> process(const RawData& chunk) {
+    std::vector<io::CompressedData> process(const io::RawData& chunk) {
         if (!initialized_) {
             initialize();
         }
@@ -143,7 +177,7 @@ class ManualStreamingCompressorUtility
             return {};
         }
 
-        std::vector<CompressedData> output_chunks;
+        std::vector<io::CompressedData> output_chunks;
 
         stream_.avail_in = static_cast<uInt>(chunk.size());
         stream_.next_in = const_cast<Bytef*>(chunk.data.data());
@@ -166,8 +200,8 @@ class ManualStreamingCompressorUtility
                     output_buffer_.begin(),
                     output_buffer_.begin() + compressed_size);
 
-                output_chunks.push_back(
-                    CompressedData{std::move(compressed_data), chunk.size()});
+                output_chunks.push_back(io::CompressedData{
+                    std::move(compressed_data), chunk.size()});
             }
         }
 
@@ -182,7 +216,7 @@ class ManualStreamingCompressorUtility
      *
      * @return Vector of final compressed chunks
      */
-    std::vector<CompressedData> finalize() {
+    std::vector<io::CompressedData> finalize() {
         if (finalized_) {
             return {};  // Already finalized
         }
@@ -191,7 +225,7 @@ class ManualStreamingCompressorUtility
             initialize();
         }
 
-        std::vector<CompressedData> output_chunks;
+        std::vector<io::CompressedData> output_chunks;
         int ret;
 
         do {
@@ -214,7 +248,7 @@ class ManualStreamingCompressorUtility
                     output_buffer_.begin() + compressed_size);
 
                 output_chunks.push_back(
-                    CompressedData{std::move(compressed_data), 0});
+                    io::CompressedData{std::move(compressed_data), 0});
             }
         } while (ret == Z_OK);
 
@@ -254,4 +288,4 @@ class ManualStreamingCompressorUtility
 
 }  // namespace dftracer::utils::utilities::compression::zlib
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_COMPRESSOR_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_STREAMING_COMPRESSOR_UTILITY_H

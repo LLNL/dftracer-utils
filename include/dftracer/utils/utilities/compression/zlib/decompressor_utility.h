@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_DECOMPRESSOR_H
-#define DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_DECOMPRESSOR_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_DECOMPRESSOR_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_DECOMPRESSOR_UTILITY_H
 
 #include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utility.h>
@@ -108,4 +108,4 @@ class DecompressorUtility
 
 }  // namespace dftracer::utils::utilities::compression::zlib
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_DECOMPRESSOR_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_DECOMPRESSOR_UTILITY_H
