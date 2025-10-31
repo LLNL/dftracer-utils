@@ -514,10 +514,13 @@ TEST_CASE("MULTI_LINES_BYTES Stream - Parallel/Threaded Tests") {
             indexer->build();
         }
 
-        auto reader = ReaderFactory::create(gz_file, idx_file);
-        REQUIRE(reader != nullptr);
+        std::size_t max_bytes;
+        {
+            auto reader = ReaderFactory::create(gz_file, idx_file);
+            REQUIRE(reader != nullptr);
+            max_bytes = reader->get_max_bytes();
+        }
 
-        std::size_t max_bytes = reader->get_max_bytes();
         const int num_threads = 16;
         std::size_t chunk_size = max_bytes / num_threads;
 
@@ -529,6 +532,13 @@ TEST_CASE("MULTI_LINES_BYTES Stream - Parallel/Threaded Tests") {
         for (int i = 0; i < num_threads; ++i) {
             threads.emplace_back([&, i]() {
                 try {
+                    // Create separate reader per thread
+                    auto reader = ReaderFactory::create(gz_file, idx_file);
+                    if (!reader) {
+                        errors++;
+                        return;
+                    }
+
                     std::size_t start = i * chunk_size;
                     std::size_t end = (i == num_threads - 1)
                                           ? max_bytes
@@ -830,12 +840,17 @@ TEST_CASE("MULTI_LINES_BYTES Stream - Variable Worker Counts") {
 
             for (int i = 0; i < num_workers; ++i) {
                 threads.emplace_back([&, i]() {
+                    // Create separate reader per thread
+                    auto thread_reader =
+                        ReaderFactory::create(gz_file, idx_file);
+                    if (!thread_reader) return;
+
                     std::size_t start = i * chunk_size;
                     std::size_t end = (i == num_workers - 1)
                                           ? max_bytes
                                           : (i + 1) * chunk_size;
 
-                    auto stream = reader->stream(
+                    auto stream = thread_reader->stream(
                         StreamConfig()
                             .stream_type(StreamType::MULTI_LINES_BYTES)
                             .range_type(RangeType::BYTE_RANGE)

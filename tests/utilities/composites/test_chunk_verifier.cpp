@@ -1,4 +1,10 @@
+// Suppress GCC 14.3.0 false positive warnings
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic ignored "-Wnull-dereference"
+#endif
+
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+
 #include <dftracer/utils/core/pipeline/pipeline.h>
 #include <dftracer/utils/core/pipeline/pipeline_config.h>
 #include <dftracer/utils/core/tasks/task_context.h>
@@ -29,7 +35,7 @@ struct TestMetadata {
     std::string name;
     std::size_t total_events;
 
-    TestMetadata() : total_events(0) {}
+    TestMetadata() : name(""), total_events(0) {}
     TestMetadata(const std::string& n, std::size_t t)
         : name(n), total_events(t) {}
 };

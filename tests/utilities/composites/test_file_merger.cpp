@@ -41,8 +41,12 @@ TEST_SUITE("FileMerger") {
 
             // Verify JSON content
             std::ifstream ifs(temp_output);
+            CHECK(ifs.good());
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnull-dereference"
             std::string content((std::istreambuf_iterator<char>(ifs)),
                                 std::istreambuf_iterator<char>());
+#pragma GCC diagnostic pop
 
             // Should have validated JSON events separated by commas
             CHECK(content.find("\"id\":") != std::string::npos);
