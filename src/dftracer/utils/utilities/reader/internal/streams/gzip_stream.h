@@ -1,20 +1,20 @@
-#ifndef DFTRACER_UTILS_READER_STREAMS_GZIP_STREAM_H
-#define DFTRACER_UTILS_READER_STREAMS_GZIP_STREAM_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_GZIP_STREAM_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_GZIP_STREAM_H
 
 #include <dftracer/utils/core/common/checkpointer.h>
 #include <dftracer/utils/indexer/checkpoint.h>
 #include <dftracer/utils/indexer/indexer.h>
-#include <dftracer/utils/reader/error.h>
-#include <dftracer/utils/reader/inflater.h>
-#include <dftracer/utils/reader/streams/stream.h>
+#include <dftracer/utils/utilities/reader/internal/error.h>
+#include <dftracer/utils/utilities/reader/internal/inflater.h>
+#include <dftracer/utils/utilities/reader/internal/streams/stream.h>
 
 #ifdef __linux__
 #include <fcntl.h>
 #endif
 
-using namespace dftracer::utils;
+namespace dftracer::utils::utilities::reader::internal {
 
-class GzipStream : public dftracer::utils::StreamBase {
+class GzipStream : public StreamBase {
    protected:
     FILE *file_handle_;
     mutable ReaderInflater inflater_;
@@ -29,7 +29,7 @@ class GzipStream : public dftracer::utils::StreamBase {
     // Less frequently accessed members
     std::string current_gz_path_;
     std::size_t start_bytes_;
-    IndexerCheckpoint checkpoint_;
+    dftracer::utils::IndexerCheckpoint checkpoint_;
 
    public:
     GzipStream()
@@ -72,7 +72,7 @@ class GzipStream : public dftracer::utils::StreamBase {
             file_handle_ = nullptr;
         }
         inflater_.reset();
-        checkpoint_ = IndexerCheckpoint();
+        checkpoint_ = dftracer::utils::IndexerCheckpoint();
         decompression_initialized_ = false;
     }
 
@@ -190,4 +190,6 @@ class GzipStream : public dftracer::utils::StreamBase {
     }
 };
 
-#endif  // DFTRACER_UTILS_READER_STREAMS_GZIP_STREAM_H
+}  // namespace dftracer::utils::utilities::reader::internal
+
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_GZIP_STREAM_H

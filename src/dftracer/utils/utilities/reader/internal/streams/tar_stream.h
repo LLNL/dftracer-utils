@@ -1,15 +1,17 @@
-#ifndef DFTRACER_UTILS_READER_STREAMS_TAR_STREAM_H
-#define DFTRACER_UTILS_READER_STREAMS_TAR_STREAM_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_TAR_STREAM_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_TAR_STREAM_H
 
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/indexer/tar_indexer.h>
-#include <dftracer/utils/reader/streams/gzip_stream.h>
-#include <dftracer/utils/reader/tar_reader.h>
+#include <dftracer/utils/utilities/reader/internal/streams/gzip_stream.h>
+#include <dftracer/utils/utilities/reader/internal/tar_reader.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <vector>
+
+namespace dftracer::utils::utilities::reader::internal {
 
 /**
  * TAR-aware base stream class that provides logical content mapping
@@ -26,7 +28,7 @@ class TarStream : public GzipStream {
 
     // Current file being read
     const TarReader::TarFileInfo* current_file_;
-    std::unique_ptr<dftracer::utils::ReaderStream> underlying_stream_;
+    std::unique_ptr<ReaderStream> underlying_stream_;
 
    public:
     TarStream()
@@ -171,4 +173,6 @@ class TarStream : public GzipStream {
     }
 };
 
-#endif  // DFTRACER_UTILS_READER_STREAMS_TAR_STREAM_H
+}  // namespace dftracer::utils::utilities::reader::internal
+
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_TAR_STREAM_H

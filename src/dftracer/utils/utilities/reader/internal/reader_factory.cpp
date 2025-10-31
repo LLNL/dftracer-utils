@@ -2,13 +2,13 @@
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/indexer/gzip_indexer.h>
 #include <dftracer/utils/indexer/tar_indexer.h>
-#include <dftracer/utils/reader/gzip_reader.h>
-#include <dftracer/utils/reader/reader_factory.h>
-#include <dftracer/utils/reader/tar_reader.h>
+#include <dftracer/utils/utilities/reader/internal/gzip_reader.h>
+#include <dftracer/utils/utilities/reader/internal/reader_factory.h>
+#include <dftracer/utils/utilities/reader/internal/tar_reader.h>
 
 #include <stdexcept>
 
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 
 std::shared_ptr<Reader> ReaderFactory::create(const std::string &archive_path,
                                               const std::string &idx_path,
@@ -57,4 +57,4 @@ bool ReaderFactory::is_format_supported(ArchiveFormat format) {
             return false;
     }
 }
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal

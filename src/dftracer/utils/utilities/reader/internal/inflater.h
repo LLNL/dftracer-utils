@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_READER_INFLATER_H
-#define DFTRACER_UTILS_READER_INFLATER_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_INFLATER_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_INFLATER_H
 
 #include <dftracer/utils/core/common/checkpointer.h>
 #include <dftracer/utils/core/common/constants.h>
@@ -8,7 +8,7 @@
 #include <dftracer/utils/core/common/platform_compat.h>
 #include <dftracer/utils/indexer/checkpoint.h>
 
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 
 /**
  * Inflater specialized for reading operations with checkpoint support.
@@ -206,6 +206,6 @@ class ReaderInflater : public Inflater {
     }
 };
 
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal
 
-#endif  // DFTRACER_UTILS_READER_INFLATER_H
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_INFLATER_H

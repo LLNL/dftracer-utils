@@ -1,10 +1,10 @@
-#ifndef DFTRACER_UTILS_READER_STREAMS_STREAM_H
-#define DFTRACER_UTILS_READER_STREAMS_STREAM_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_STREAM_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_STREAM_H
 
 #include <dftracer/utils/indexer/indexer.h>
-#include <dftracer/utils/reader/stream.h>  // Public ReaderStream interface
+#include <dftracer/utils/utilities/reader/internal/stream.h>  // Public ReaderStream interface
 
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 
 /**
  * @brief Base class for internal stream implementations.
@@ -26,6 +26,6 @@ class StreamBase : public ReaderStream {
                             std::size_t end_bytes, Indexer &indexer) = 0;
 };
 
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal
 
-#endif  // DFTRACER_UTILS_READER_STREAMS_STREAM_H
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_STREAM_H

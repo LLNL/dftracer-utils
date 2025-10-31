@@ -1,9 +1,9 @@
-#ifndef DFTRACER_UTILS_READER_STREAMS_MULTI_LINE_STREAM_H
-#define DFTRACER_UTILS_READER_STREAMS_MULTI_LINE_STREAM_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_MULTI_LINE_STREAM_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_MULTI_LINE_STREAM_H
 
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/common/span.h>
-#include <dftracer/utils/reader/stream.h>
+#include <dftracer/utils/utilities/reader/internal/stream.h>
 
 #include <cstdio>
 #include <cstring>
@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 
 /**
  * @brief Stream that parses multiple lines from a LINE_BYTES stream.
@@ -299,6 +299,6 @@ class MultiLineStream : public ReaderStream {
     }
 };
 
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal
 
-#endif  // DFTRACER_UTILS_READER_STREAMS_MULTI_LINE_STREAM_H
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_MULTI_LINE_STREAM_H

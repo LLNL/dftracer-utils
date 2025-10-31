@@ -1,7 +1,7 @@
-#include <dftracer/utils/reader/reader_factory.h>
 #include <dftracer/utils/utilities/composites/file_merger_utility.h>
 #include <dftracer/utils/utilities/filesystem/directory_scanner_utility.h>
 #include <dftracer/utils/utilities/io/file_reader_utility.h>
+#include <dftracer/utils/utilities/reader/internal/reader_factory.h>
 #include <dftracer/utils/utilities/text/shared.h>
 
 #include <algorithm>
@@ -101,7 +101,7 @@ FileMergeValidatorUtilityOutput FileMergeValidatorUtility::process(
         result.success = true;
 
         if (is_compressed) {
-            auto reader =
+            auto reader = dftracer::utils::utilities::reader::internal::
                 ReaderFactory::create(input.file_path, input.index_path);
             if (reader) {
                 result.total_lines = reader->get_num_lines();

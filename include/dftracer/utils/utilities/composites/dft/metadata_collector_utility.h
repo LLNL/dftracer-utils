@@ -5,7 +5,7 @@
 #include <dftracer/utils/core/tasks/task_context.h>
 #include <dftracer/utils/core/utilities/utilities.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
-#include <dftracer/utils/reader/reader_factory.h>
+#include <dftracer/utils/utilities/reader/internal/reader_factory.h>
 
 #include <string>
 

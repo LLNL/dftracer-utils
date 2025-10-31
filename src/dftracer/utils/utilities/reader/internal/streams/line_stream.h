@@ -1,16 +1,16 @@
-#ifndef DFTRACER_UTILS_READER_STREAMS_LINE_STREAM_H
-#define DFTRACER_UTILS_READER_STREAMS_LINE_STREAM_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_LINE_STREAM_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_LINE_STREAM_H
 
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/common/span.h>
-#include <dftracer/utils/reader/stream.h>
+#include <dftracer/utils/utilities/reader/internal/stream.h>
 
 #include <cstring>
 #include <memory>
 #include <string>
 #include <vector>
 
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 
 /**
  * @brief Stream that returns one single line at a time from a LINE_BYTES
@@ -22,7 +22,7 @@ namespace dftracer::utils {
  */
 class LineStream : public ReaderStream {
    private:
-    std::unique_ptr<ReaderStream> underlying_stream_;
+    std::unique_ptr<internal::ReaderStream> underlying_stream_;
     span_view<const char> current_span_;  // Current span from underlying stream
     std::string line_accumulator_;
     std::string current_line_;
@@ -363,6 +363,6 @@ class LineStream : public ReaderStream {
     }
 };
 
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal
 
-#endif  // DFTRACER_UTILS_READER_STREAMS_LINE_STREAM_H
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_LINE_STREAM_H

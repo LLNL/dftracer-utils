@@ -12,6 +12,7 @@
 using namespace dftracer::utils::utilities::io::lines::sources;
 using namespace dftracer::utils::utilities::io::lines;
 using namespace dftracer::utils;
+using namespace dftracer::utils::utilities::reader::internal;
 using namespace dft_utils_test;
 
 TEST_SUITE("IndexedFileLineIterator") {

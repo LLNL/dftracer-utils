@@ -1,16 +1,16 @@
-#ifndef DFTRACER_UTILS_READER_GZIP_READER_H
-#define DFTRACER_UTILS_READER_GZIP_READER_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_GZIP_READER_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_GZIP_READER_H
 
 #include <dftracer/utils/indexer/indexer.h>
-#include <dftracer/utils/reader/line_processor.h>
-#include <dftracer/utils/reader/reader.h>
-#include <dftracer/utils/reader/reader_stream_cache.h>
+#include <dftracer/utils/utilities/reader/internal/line_processor.h>
+#include <dftracer/utils/utilities/reader/internal/reader.h>
+#include <dftracer/utils/utilities/reader/internal/reader_stream_cache.h>
 
 #include <cstddef>
 #include <memory>
 #include <string>
 
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 class GzipReader : public Reader {
    public:
     GzipReader(const std::string &gz_path, const std::string &idx_path,
@@ -57,6 +57,6 @@ class GzipReader : public Reader {
     ReaderStreamCache stream_cache_;
 };
 
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal
 
-#endif  // DFTRACER_UTILS_READER_GZIP_READER_H
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_GZIP_READER_H

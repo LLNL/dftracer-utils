@@ -1,10 +1,10 @@
 #include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/utils/string.h>
-#include <dftracer/utils/reader/reader_factory.h>
 #include <dftracer/utils/utilities/composites/dft/chunk_extractor_utility.h>
 #include <dftracer/utils/utilities/io/lines/line_range.h>
 #include <dftracer/utils/utilities/io/lines/streaming_line_reader.h>
+#include <dftracer/utils/utilities/reader/internal/reader_factory.h>
 #include <zlib.h>
 
 #include <cstdio>
@@ -109,8 +109,8 @@ ChunkExtractorUtilityOutput ChunkExtractorUtility::extract_and_write(
 
             if (!spec.idx_path.empty()) {
                 // Compressed/indexed file - use byte-based reading with Reader
-                auto reader =
-                    ReaderFactory::create(spec.file_path, spec.idx_path);
+                auto reader = reader::internal::ReaderFactory::create(
+                    spec.file_path, spec.idx_path);
                 line_range = LineBytesRange::from_indexed_file(
                     reader, spec.start_byte, spec.end_byte);
             } else {

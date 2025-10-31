@@ -4,12 +4,12 @@
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/indexer/indexer.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
-#include <dftracer/utils/reader/reader.h>
-#include <dftracer/utils/reader/reader_factory.h>
-#include <dftracer/utils/reader/stream.h>
-#include <dftracer/utils/reader/stream_config.h>
-#include <dftracer/utils/reader/stream_type.h>
 #include <dftracer/utils/utilities/composites/composites.h>
+#include <dftracer/utils/utilities/reader/internal/reader.h>
+#include <dftracer/utils/utilities/reader/internal/reader_factory.h>
+#include <dftracer/utils/utilities/reader/internal/stream.h>
+#include <dftracer/utils/utilities/reader/internal/stream_config.h>
+#include <dftracer/utils/utilities/reader/internal/stream_type.h>
 
 #include <algorithm>
 #include <argparse/argparse.hpp>
@@ -19,6 +19,7 @@
 #include <cstring>
 
 using namespace dftracer::utils;
+using namespace dftracer::utils::utilities::reader::internal;
 
 int main(int argc, char **argv) {
     DFTRACER_UTILS_LOGGER_INIT();

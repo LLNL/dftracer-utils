@@ -1,12 +1,12 @@
 #include <dftracer/utils/core/common/logging.h>
-#include <dftracer/utils/reader/reader.h>
-#include <dftracer/utils/reader/reader_factory.h>
-#include <dftracer/utils/reader/stream.h>
-#include <dftracer/utils/reader/stream_type.h>
+#include <dftracer/utils/utilities/reader/internal/reader.h>
+#include <dftracer/utils/utilities/reader/internal/reader_factory.h>
+#include <dftracer/utils/utilities/reader/internal/stream.h>
+#include <dftracer/utils/utilities/reader/internal/stream_type.h>
 
 #include <cstring>
 
-using namespace dftracer::utils;
+using namespace dftracer::utils::utilities::reader::internal;
 
 static std::shared_ptr<Reader> *cast_reader(dft_reader_handle_t reader) {
     return static_cast<std::shared_ptr<Reader> *>(reader);
@@ -50,7 +50,8 @@ dft_reader_handle_t dft_reader_create_with_indexer(
 
     try {
         // Indexer handle is now a shared_ptr<Indexer>*
-        auto indexer_ptr = static_cast<std::shared_ptr<Indexer> *>(indexer);
+        auto indexer_ptr =
+            static_cast<std::shared_ptr<dftracer::utils::Indexer> *>(indexer);
         auto reader = ReaderFactory::create(*indexer_ptr);
         return static_cast<dft_reader_handle_t>(
             new std::shared_ptr<Reader>(reader));

@@ -1,7 +1,7 @@
-#ifndef DFTRACER_UTILS_READER_STREAM_CONFIG_H
-#define DFTRACER_UTILS_READER_STREAM_CONFIG_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAM_CONFIG_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAM_CONFIG_H
 
-#include <dftracer/utils/reader/stream_type.h>
+#include <dftracer/utils/utilities/reader/internal/stream_type.h>
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -102,7 +102,7 @@ static inline void dft_stream_config_set_buffer(dft_stream_config_t* config,
 
 #include <cstddef>
 
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 
 /**
  * @brief Stream configuration (C++ API).
@@ -241,8 +241,8 @@ struct StreamConfig {
     }
 };
 
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal
 
 #endif  // __cplusplus
 
-#endif  // DFTRACER_UTILS_READER_STREAM_CONFIG_H
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAM_CONFIG_H

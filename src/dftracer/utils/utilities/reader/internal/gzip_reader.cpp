@@ -1,14 +1,14 @@
 #include <dftracer/utils/core/utils/timer.h>
 #include <dftracer/utils/indexer/indexer.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
-#include <dftracer/utils/reader/error.h>
-#include <dftracer/utils/reader/gzip_reader.h>
-#include <dftracer/utils/reader/stream_config.h>
-#include <dftracer/utils/reader/streams/gzip_byte_stream.h>
-#include <dftracer/utils/reader/streams/gzip_line_byte_stream.h>
-#include <dftracer/utils/reader/streams/line_stream.h>
-#include <dftracer/utils/reader/streams/multi_line_stream.h>
-#include <dftracer/utils/reader/string_line_processor.h>
+#include <dftracer/utils/utilities/reader/internal/error.h>
+#include <dftracer/utils/utilities/reader/internal/gzip_reader.h>
+#include <dftracer/utils/utilities/reader/internal/stream_config.h>
+#include <dftracer/utils/utilities/reader/internal/streams/gzip_byte_stream.h>
+#include <dftracer/utils/utilities/reader/internal/streams/gzip_line_byte_stream.h>
+#include <dftracer/utils/utilities/reader/internal/streams/line_stream.h>
+#include <dftracer/utils/utilities/reader/internal/streams/multi_line_stream.h>
+#include <dftracer/utils/utilities/reader/internal/string_line_processor.h>
 
 #include <cstdio>
 #include <cstring>
@@ -20,21 +20,29 @@ static void validate_parameters(
     std::size_t end_bytes,
     std::size_t max_bytes = std::numeric_limits<std::size_t>::max()) {
     if (!buffer || buffer_size == 0) {
-        throw ReaderError(ReaderError::INVALID_ARGUMENT,
-                          "Invalid buffer parameters");
+        throw dftracer::utils::utilities::reader::internal::ReaderError(
+            dftracer::utils::utilities::reader::internal::ReaderError::
+                INVALID_ARGUMENT,
+            "Invalid buffer parameters");
     }
     if (start_bytes >= end_bytes) {
-        throw ReaderError(ReaderError::INVALID_ARGUMENT,
-                          "start_bytes must be less than end_bytes");
+        throw dftracer::utils::utilities::reader::internal::ReaderError(
+            dftracer::utils::utilities::reader::internal::ReaderError::
+                INVALID_ARGUMENT,
+            "start_bytes must be less than end_bytes");
     }
     if (max_bytes != SIZE_MAX) {
         if (end_bytes > max_bytes) {
-            throw ReaderError(ReaderError::INVALID_ARGUMENT,
-                              "end_bytes exceeds maximum available bytes");
+            throw dftracer::utils::utilities::reader::internal::ReaderError(
+                dftracer::utils::utilities::reader::internal::ReaderError::
+                    INVALID_ARGUMENT,
+                "end_bytes exceeds maximum available bytes");
         }
         if (start_bytes > max_bytes) {
-            throw ReaderError(ReaderError::INVALID_ARGUMENT,
-                              "start_bytes exceeds maximum available bytes");
+            throw dftracer::utils::utilities::reader::internal::ReaderError(
+                dftracer::utils::utilities::reader::internal::ReaderError::
+                    INVALID_ARGUMENT,
+                "start_bytes exceeds maximum available bytes");
         }
     }
 }
@@ -47,7 +55,7 @@ static void check_reader_state(bool is_open, const void *indexer) {
 
 static constexpr std::size_t DEFAULT_READER_BUFFER_SIZE = 1 * 1024 * 1024;
 
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 
 GzipReader::GzipReader(const std::string &gz_path_,
                        const std::string &idx_path_,
@@ -500,4 +508,4 @@ std::unique_ptr<ReaderStream> GzipReader::stream(const StreamConfig &config) {
     }
 }
 
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal

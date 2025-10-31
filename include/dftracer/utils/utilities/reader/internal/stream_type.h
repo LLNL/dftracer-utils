@@ -1,8 +1,8 @@
-#ifndef DFTRACER_UTILS_READER_STREAM_TYPE_H
-#define DFTRACER_UTILS_READER_STREAM_TYPE_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAM_TYPE_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAM_TYPE_H
 
 #ifdef __cplusplus
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 
 /**
  * @brief Type of stream to create.
@@ -23,7 +23,7 @@ enum class RangeType {
     LINE_RANGE   ///< start/end are line numbers (1-based)
 };
 
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal
 
 extern "C" {
 #endif
@@ -53,4 +53,4 @@ typedef enum {
 }
 #endif
 
-#endif  // DFTRACER_UTILS_READER_STREAM_TYPE_H
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAM_TYPE_H

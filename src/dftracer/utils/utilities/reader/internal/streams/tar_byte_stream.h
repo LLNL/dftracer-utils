@@ -1,14 +1,16 @@
-#ifndef DFTRACER_UTILS_READER_STREAMS_TAR_BYTE_STREAM_H
-#define DFTRACER_UTILS_READER_STREAMS_TAR_BYTE_STREAM_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_TAR_BYTE_STREAM_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_TAR_BYTE_STREAM_H
 
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/common/span.h>
-#include <dftracer/utils/reader/streams/gzip_byte_stream.h>
-#include <dftracer/utils/reader/streams/tar_stream.h>
+#include <dftracer/utils/utilities/reader/internal/streams/gzip_byte_stream.h>
+#include <dftracer/utils/utilities/reader/internal/streams/tar_stream.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+
+namespace dftracer::utils::utilities::reader::internal {
 
 /**
  * TAR-aware byte stream that provides logical content reading from TAR.GZ
@@ -141,7 +143,7 @@ class TarByteStream : public TarStream {
     }
 
     // Zero-copy read - stub for now
-    dftracer::utils::span_view<const char> read() override {
+    span_view<const char> read() override {
         // TODO: Implement zero-copy read for TarByteStream
         return {};
     }
@@ -203,4 +205,6 @@ class TarByteStream : public TarStream {
     }
 };
 
-#endif  // DFTRACER_UTILS_READER_STREAMS_TAR_BYTE_STREAM_H
+}  // namespace dftracer::utils::utilities::reader::internal
+
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_TAR_BYTE_STREAM_H

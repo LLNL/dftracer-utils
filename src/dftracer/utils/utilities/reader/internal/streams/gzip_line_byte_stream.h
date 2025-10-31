@@ -1,15 +1,17 @@
-#ifndef DFTRACER_UTILS_READER_STREAMS_GZIP_LINE_BYTE_STREAM_H
-#define DFTRACER_UTILS_READER_STREAMS_GZIP_LINE_BYTE_STREAM_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_GZIP_LINE_BYTE_STREAM_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_GZIP_LINE_BYTE_STREAM_H
 
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/common/platform_compat.h>
 #include <dftracer/utils/core/common/span.h>
-#include <dftracer/utils/reader/streams/gzip_stream.h>
+#include <dftracer/utils/utilities/reader/internal/streams/gzip_stream.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <vector>
+
+namespace dftracer::utils::utilities::reader::internal {
 
 class GzipLineByteStream : public GzipStream {
    private:
@@ -233,8 +235,7 @@ class GzipLineByteStream : public GzipStream {
         }
 
         // Return span view to the data in buffer_
-        return dftracer::utils::span_view<const char>(buffer_.data(),
-                                                      valid_bytes_);
+        return span_view<const char>(buffer_.data(), valid_bytes_);
     }
 
     void reset() override {
@@ -342,4 +343,6 @@ class GzipLineByteStream : public GzipStream {
     }
 };
 
-#endif  // DFTRACER_UTILS_READER_STREAMS_GZIP_LINE_BYTE_STREAM_H
+}  // namespace dftracer::utils::utilities::reader::internal
+
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_GZIP_LINE_BYTE_STREAM_H

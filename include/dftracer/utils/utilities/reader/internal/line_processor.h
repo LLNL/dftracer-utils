@@ -1,10 +1,10 @@
-#ifndef DFTRACER_UTILS_READER_LINE_PROCESSOR_H
-#define DFTRACER_UTILS_READER_LINE_PROCESSOR_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_LINE_PROCESSOR_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_LINE_PROCESSOR_H
 
 #ifdef __cplusplus
 #include <cstddef>
 
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 
 /**
  * Base class for processing lines during streaming read operations.
@@ -59,7 +59,7 @@ class CLineProcessor : public LineProcessor {
     }
 };
 
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal
 
 extern "C" {
 #endif
@@ -80,4 +80,4 @@ typedef int (*dft_line_processor_callback_t)(const char* data, size_t length,
 }  // extern "C"
 #endif
 
-#endif  // DFTRACER_UTILS_READER_LINE_PROCESSOR_H
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_LINE_PROCESSOR_H

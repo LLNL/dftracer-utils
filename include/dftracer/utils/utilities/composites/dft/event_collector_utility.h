@@ -2,10 +2,10 @@
 #define DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_EVENT_COLLECTOR_H
 
 #include <dftracer/utils/core/utilities/utilities.h>
-#include <dftracer/utils/reader/line_processor.h>
 #include <dftracer/utils/utilities/composites/dft/chunk_extractor_utility.h>
 #include <dftracer/utils/utilities/composites/dft/event_id_extractor_utility.h>
 #include <dftracer/utils/utilities/composites/dft/metadata_collector_utility.h>
+#include <dftracer/utils/utilities/reader/internal/line_processor.h>
 
 #include <cstddef>
 #include <cstdint>

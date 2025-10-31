@@ -1,13 +1,13 @@
-#ifndef DFTRACER_UTILS_READER_READER_STREAM_CACHE_H
-#define DFTRACER_UTILS_READER_READER_STREAM_CACHE_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_READER_STREAM_CACHE_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_READER_STREAM_CACHE_H
 
-#include <dftracer/utils/reader/stream.h>
-#include <dftracer/utils/reader/stream_type.h>
+#include <dftracer/utils/utilities/reader/internal/stream.h>
+#include <dftracer/utils/utilities/reader/internal/stream_type.h>
 
 #include <memory>
 #include <string>
 
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 
 /**
  * @brief Cache for reader streams to enable reuse across multiple read calls.
@@ -106,6 +106,6 @@ class ReaderStreamCache {
     bool has_stream() const { return initialized_ && stream_ != nullptr; }
 };
 
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal
 
-#endif  // DFTRACER_UTILS_READER_READER_STREAM_CACHE_H
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_READER_STREAM_CACHE_H

@@ -1,10 +1,10 @@
-#ifndef DFTRACER_UTILS_READER_ERROR_H
-#define DFTRACER_UTILS_READER_ERROR_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_ERROR_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_ERROR_H
 
 #include <stdexcept>
 #include <string>
 
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 
 class ReaderError : public std::runtime_error {
    public:
@@ -28,6 +28,6 @@ class ReaderError : public std::runtime_error {
 
     static std::string format_message(Type type, const std::string &message);
 };
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal
 
-#endif  // DFTRACER_UTILS_READER_ERROR_H
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_ERROR_H

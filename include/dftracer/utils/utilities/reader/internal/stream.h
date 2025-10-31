@@ -1,12 +1,12 @@
-#ifndef DFTRACER_UTILS_READER_STREAM_H
-#define DFTRACER_UTILS_READER_STREAM_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAM_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAM_H
 
 #ifdef __cplusplus
 #include <dftracer/utils/core/common/span.h>
 
 #include <cstddef>
 
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 
 /**
  * @brief Abstract base class for streaming data from readers.
@@ -83,7 +83,7 @@ class ReaderStream {
     ReaderStream& operator=(const ReaderStream&) = delete;
 };
 
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal
 
 extern "C" {
 #endif
@@ -132,4 +132,4 @@ void dft_reader_stream_destroy(dft_reader_stream_t stream);
 }
 #endif
 
-#endif  // DFTRACER_UTILS_READER_STREAM_H
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAM_H

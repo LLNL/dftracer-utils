@@ -1,9 +1,9 @@
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/indexer/tar/queries/queries.h>
-#include <dftracer/utils/reader/streams/tar_byte_stream.h>
-#include <dftracer/utils/reader/string_line_processor.h>
-#include <dftracer/utils/reader/tar_reader.h>
+#include <dftracer/utils/utilities/reader/internal/streams/tar_byte_stream.h>
+#include <dftracer/utils/utilities/reader/internal/string_line_processor.h>
+#include <dftracer/utils/utilities/reader/internal/tar_reader.h>
 
 #include <algorithm>
 #include <cstring>
@@ -12,7 +12,7 @@
 
 using namespace dftracer::utils::tar_indexer;
 
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 
 TarReader::TarReader(const std::string &tar_gz_path_,
                      const std::string &idx_path_, std::size_t index_ckpt_size)
@@ -582,4 +582,4 @@ void TarReader::process_content_lines(const std::string &content,
     }
 }
 
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal

@@ -2,8 +2,8 @@
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/utils/string.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
-#include <dftracer/utils/reader/reader_factory.h>
 #include <dftracer/utils/utilities/composites/dft/event_collector_utility.h>
+#include <dftracer/utils/utilities/reader/internal/reader_factory.h>
 #include <yyjson.h>
 
 #include <algorithm>
@@ -14,7 +14,7 @@ namespace dftracer::utils::utilities::composites::dft {
 /**
  * @brief LineProcessor that collects EventIds from JSON events.
  */
-class EventIdCollector : public LineProcessor {
+class EventIdCollector : public reader::internal::LineProcessor {
    public:
     std::vector<EventId>& events;
     bool trim_commas;
@@ -89,7 +89,8 @@ EventCollectorUtilityOutput EventCollectorFromMetadataUtility::process(
 
         if (!file.idx_path.empty()) {
             // Indexed/compressed file
-            auto reader = ReaderFactory::create(file.file_path, file.idx_path);
+            auto reader = reader::internal::ReaderFactory::create(
+                file.file_path, file.idx_path);
             if (!reader) {
                 DFTRACER_UTILS_LOG_ERROR("Failed to create reader for file: %s",
                                          file.file_path.c_str());

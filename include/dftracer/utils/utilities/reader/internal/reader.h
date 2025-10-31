@@ -1,9 +1,9 @@
-#ifndef DFTRACER_UTILS_READER_READER_H
-#define DFTRACER_UTILS_READER_READER_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_READER_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_READER_H
 
-#include <dftracer/utils/reader/line_processor.h>
-#include <dftracer/utils/reader/stream.h>
-#include <dftracer/utils/reader/stream_config.h>
+#include <dftracer/utils/utilities/reader/internal/line_processor.h>
+#include <dftracer/utils/utilities/reader/internal/stream.h>
+#include <dftracer/utils/utilities/reader/internal/stream_config.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -57,7 +57,7 @@ dft_reader_stream_t dft_reader_stream(dft_reader_handle_t reader,
 #include <memory>
 #include <string>
 
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 
 /**
  * Abstract base interface for all reader implementations.
@@ -155,8 +155,8 @@ class Reader {
     Reader &operator=(const Reader &) = delete;
 };
 
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal
 
 #endif  // __cplusplus
 
-#endif  // DFTRACER_UTILS_READER_READER_H
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_READER_H

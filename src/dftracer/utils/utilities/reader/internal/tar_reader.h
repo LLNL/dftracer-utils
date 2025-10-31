@@ -1,8 +1,8 @@
-#ifndef DFTRACER_UTILS_READER_TAR_READER_H
-#define DFTRACER_UTILS_READER_TAR_READER_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_TAR_READER_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_TAR_READER_H
 
 #include <dftracer/utils/indexer/tar_indexer.h>
-#include <dftracer/utils/reader/reader.h>
+#include <dftracer/utils/utilities/reader/internal/reader.h>
 
 #include <cstddef>
 #include <cstdint>
@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 
 constexpr std::size_t DEFAULT_TAR_READER_BUFFER_SIZE = 1024 * 1024;
 
@@ -129,6 +129,6 @@ class TarReader : public Reader {
                                std::size_t end_line) const;
 };
 
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal
 
-#endif  // DFTRACER_UTILS_READER_TAR_READER_H
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_TAR_READER_H

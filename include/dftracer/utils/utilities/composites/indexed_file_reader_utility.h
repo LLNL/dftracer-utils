@@ -4,9 +4,9 @@
 #include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/utilities/utilities.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
-#include <dftracer/utils/reader/reader.h>
-#include <dftracer/utils/reader/reader_factory.h>
 #include <dftracer/utils/utilities/composites/types.h>
+#include <dftracer/utils/utilities/reader/internal/reader.h>
+#include <dftracer/utils/utilities/reader/internal/reader_factory.h>
 
 #include <memory>
 #include <stdexcept>
@@ -35,7 +35,8 @@ namespace dftracer::utils::utilities::composites {
  * @endcode
  */
 class IndexedFileReaderUtility
-    : public utilities::Utility<IndexedReadInput, std::shared_ptr<Reader>> {
+    : public utilities::Utility<IndexedReadInput,
+                                std::shared_ptr<reader::internal::Reader>> {
    public:
     /**
      * @brief Process index management and create Reader.
@@ -43,7 +44,8 @@ class IndexedFileReaderUtility
      * @param input Index configuration
      * @return Shared pointer to Reader ready for use
      */
-    std::shared_ptr<Reader> process(const IndexedReadInput& input) override {
+    std::shared_ptr<reader::internal::Reader> process(
+        const IndexedReadInput& input) override {
         // Validate input
         if (!fs::exists(input.file_path)) {
             throw std::runtime_error("File does not exist: " + input.file_path);
@@ -78,7 +80,8 @@ class IndexedFileReaderUtility
         }
 
         // Step 2: Create and return Reader
-        return ReaderFactory::create(input.file_path, input.idx_path);
+        return reader::internal::ReaderFactory::create(input.file_path,
+                                                       input.idx_path);
     }
 };
 

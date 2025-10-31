@@ -1,11 +1,11 @@
-#ifndef DFTRACER_UTILS_READER_STRING_LINE_PROCESSOR_H
-#define DFTRACER_UTILS_READER_STRING_LINE_PROCESSOR_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STRING_LINE_PROCESSOR_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STRING_LINE_PROCESSOR_H
 
-#include <dftracer/utils/reader/line_processor.h>
+#include <dftracer/utils/utilities/reader/internal/line_processor.h>
 
 #include <string>
 
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 class StringLineProcessor : public LineProcessor {
    private:
     std::string& result_;
@@ -25,6 +25,6 @@ class StringLineProcessor : public LineProcessor {
     }
 };
 
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal
 
-#endif  // DFTRACER_UTILS_READER_STRING_LINE_PROCESSOR_H
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STRING_LINE_PROCESSOR_H

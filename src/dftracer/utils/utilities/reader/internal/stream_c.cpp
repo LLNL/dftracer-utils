@@ -1,9 +1,9 @@
 #include <dftracer/utils/core/common/logging.h>
-#include <dftracer/utils/reader/stream.h>
+#include <dftracer/utils/utilities/reader/internal/stream.h>
 
 #include <memory>
 
-using namespace dftracer::utils;
+using namespace dftracer::utils::utilities::reader::internal;
 
 // Helper function to cast stream handle to C++ object
 static std::shared_ptr<ReaderStream>* cast_stream(dft_reader_stream_t stream) {

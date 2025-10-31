@@ -1,14 +1,14 @@
-#ifndef DFTRACER_UTILS_READER_READER_FACTORY_H
-#define DFTRACER_UTILS_READER_READER_FACTORY_H
+#ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_FACTORY_H
+#define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_FACTORY_H
 
 #include <dftracer/utils/core/common/format_detector.h>
 #include <dftracer/utils/indexer/indexer.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
-#include <dftracer/utils/reader/reader.h>
+#include <dftracer/utils/utilities/reader/internal/reader.h>
 
 #include <memory>
 #include <string>
-namespace dftracer::utils {
+namespace dftracer::utils::utilities::reader::internal {
 
 /**
  * Factory for creating appropriate reader implementations based on file format
@@ -36,6 +36,6 @@ class ReaderFactory {
     ReaderFactory() = delete;  // Static-only class
 };
 
-}  // namespace dftracer::utils
+}  // namespace dftracer::utils::utilities::reader::internal
 
-#endif  // DFTRACER_UTILS_READER_READER_FACTORY_H
+#endif  // DFTRACER_UTILS_UTILITIES_READER_INTERNAL_FACTORY_H
