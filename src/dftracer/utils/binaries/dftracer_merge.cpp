@@ -6,13 +6,7 @@
 #include <dftracer/utils/core/tasks/task.h>
 #include <dftracer/utils/core/utilities/utility_adapter.h>
 #include <dftracer/utils/indexer/indexer.h>
-#include <dftracer/utils/utilities/composites/batch_processor.h>
-#include <dftracer/utils/utilities/composites/chunk_verifier.h>
-#include <dftracer/utils/utilities/composites/dft/event_collector.h>
-#include <dftracer/utils/utilities/composites/dft/event_hasher.h>
-#include <dftracer/utils/utilities/composites/dft/index_builder.h>
-#include <dftracer/utils/utilities/composites/dft/utils.h>
-#include <dftracer/utils/utilities/composites/file_merger_utility.h>
+#include <dftracer/utils/utilities/utilities.h>
 
 #include <argparse/argparse.hpp>
 #include <chrono>

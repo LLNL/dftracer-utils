@@ -1,7 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <dftracer/utils/core/common/filesystem.h>
-#include <dftracer/utils/utilities/composites/file_compressor.h>
-#include <dftracer/utils/utilities/composites/file_decompressor.h>
+#include <dftracer/utils/utilities/composites/file_compressor_utility.h>
+#include <dftracer/utils/utilities/composites/file_decompressor_utility.h>
 #include <doctest/doctest.h>
 
 #include <fstream>

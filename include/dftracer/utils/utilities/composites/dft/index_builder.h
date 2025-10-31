@@ -5,7 +5,7 @@
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/utilities/utilities.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
-#include <dftracer/utils/utilities/composites/composite_types.h>
+#include <dftracer/utils/utilities/composites/types.h>
 
 #include <memory>
 #include <string>

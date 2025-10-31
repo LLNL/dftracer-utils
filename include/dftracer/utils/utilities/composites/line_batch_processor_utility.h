@@ -2,7 +2,7 @@
 #define DFTRACER_UTILS_UTILITIES_COMPOSITES_LINE_BATCH_PROCESSOR_UTILITY_H
 
 #include <dftracer/utils/core/utilities/utilities.h>
-#include <dftracer/utils/utilities/composites/composite_types.h>
+#include <dftracer/utils/utilities/composites/types.h>
 #include <dftracer/utils/utilities/io/lines/line_range.h>
 #include <dftracer/utils/utilities/io/lines/line_types.h>
 #include <dftracer/utils/utilities/io/lines/streaming_line_reader.h>

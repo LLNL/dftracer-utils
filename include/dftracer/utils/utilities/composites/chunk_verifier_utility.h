@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_CHUNK_VERIFIER_H
-#define DFTRACER_UTILS_UTILITIES_COMPOSITES_CHUNK_VERIFIER_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_CHUNK_VERIFIER_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_COMPOSITES_CHUNK_VERIFIER_UTILITY_H
 
 #include <dftracer/utils/core/tasks/task.h>
 #include <dftracer/utils/core/tasks/task_context.h>
@@ -184,4 +184,4 @@ class ChunkVerifierUtility
 
 }  // namespace dftracer::utils::utilities::composites
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_CHUNK_VERIFIER_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_CHUNK_VERIFIER_UTILITY_H

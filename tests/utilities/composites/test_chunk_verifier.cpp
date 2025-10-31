@@ -3,7 +3,7 @@
 #include <dftracer/utils/core/pipeline/pipeline_config.h>
 #include <dftracer/utils/core/tasks/task_context.h>
 #include <dftracer/utils/core/utilities/utility_adapter.h>
-#include <dftracer/utils/utilities/composites/chunk_verifier.h>
+#include <dftracer/utils/utilities/composites/chunk_verifier_utility.h>
 #include <doctest/doctest.h>
 
 #include <any>

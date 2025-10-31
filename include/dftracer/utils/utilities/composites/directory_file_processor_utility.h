@@ -1,11 +1,11 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_DIRECTORY_FILE_PROCESSOR_H
-#define DFTRACER_UTILS_UTILITIES_COMPOSITES_DIRECTORY_FILE_PROCESSOR_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_DIRECTORY_FILE_PROCESSOR_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_COMPOSITES_DIRECTORY_FILE_PROCESSOR_UTILITY_H
 
 #include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/tasks/task.h>
 #include <dftracer/utils/core/tasks/task_context.h>
 #include <dftracer/utils/core/utilities/utilities.h>
-#include <dftracer/utils/utilities/composites/composite_types.h>
+#include <dftracer/utils/utilities/composites/types.h>
 #include <dftracer/utils/utilities/filesystem/pattern_directory_scanner_utility.h>
 
 #include <functional>
@@ -123,4 +123,4 @@ class DirectoryFileProcessorUtility
 
 }  // namespace dftracer::utils::utilities::composites
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_DIRECTORY_FILE_PROCESSOR_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_DIRECTORY_FILE_PROCESSOR_UTILITY_H

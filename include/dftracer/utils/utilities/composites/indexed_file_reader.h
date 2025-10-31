@@ -6,7 +6,7 @@
 #include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/reader/reader.h>
 #include <dftracer/utils/reader/reader_factory.h>
-#include <dftracer/utils/utilities/composites/composite_types.h>
+#include <dftracer/utils/utilities/composites/types.h>
 
 #include <memory>
 #include <stdexcept>

@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_WORKFLOW_TYPES_H
-#define DFTRACER_UTILS_UTILITIES_COMPOSITES_WORKFLOW_TYPES_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_TYPES_H
+#define DFTRACER_UTILS_UTILITIES_COMPOSITES_TYPES_H
 
 #include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/indexer/indexer.h>
@@ -220,4 +220,4 @@ struct hash<dftracer::utils::utilities::composites::DirectoryProcessInput> {
 
 }  // namespace std
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_WORKFLOW_TYPES_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_TYPES_H

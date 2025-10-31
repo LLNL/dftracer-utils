@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_FILE_DECOMPRESSOR_H
-#define DFTRACER_UTILS_UTILITIES_COMPOSITES_FILE_DECOMPRESSOR_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_FILE_DECOMPRESSOR_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_COMPOSITES_FILE_DECOMPRESSOR_UTILITY_H
 
 #include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/utilities/tags/parallelizable.h>
@@ -274,4 +274,4 @@ class FileDecompressorUtility
 
 }  // namespace dftracer::utils::utilities::composites
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_FILE_DECOMPRESSOR_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_FILE_DECOMPRESSOR_UTILITY_H
