@@ -1,5 +1,5 @@
 #include <dftracer/utils/reader/reader_factory.h>
-#include <dftracer/utils/utilities/composites/file_merger.h>
+#include <dftracer/utils/utilities/composites/file_merger_utility.h>
 #include <dftracer/utils/utilities/filesystem/directory_scanner_utility.h>
 #include <dftracer/utils/utilities/io/file_reader.h>
 #include <dftracer/utils/utilities/text/shared.h>
@@ -14,11 +14,11 @@ namespace dftracer::utils::utilities::composites {
 // FileMergerUtility Implementation
 // ============================================================================
 
-std::atomic<int> FileMergerUtility::file_counter_{0};
+std::atomic<int> FileMergeValidatorUtility::file_counter_{0};
 
-FileMergerUtilityOutput FileMergerUtility::process(
-    const FileMergerUtilityInput& input) {
-    FileMergerUtilityOutput result;
+FileMergeValidatorUtilityOutput FileMergeValidatorUtility::process(
+    const FileMergeValidatorUtilityInput& input) {
+    FileMergeValidatorUtilityOutput result;
     result.file_path = input.file_path;
     result.output_path = input.output_path;
 
@@ -131,12 +131,12 @@ FileMergerUtilityOutput FileMergerUtility::process(
 }
 
 // ============================================================================
-// FileCombinerUtility Implementation
+// FileMergerUtility Implementation
 // ============================================================================
 
-FileCombinerUtilityOutput FileCombinerUtility::process(
-    const FileCombinerUtilityInput& input) {
-    FileCombinerUtilityOutput output;
+FileMergerUtilityOutput FileMergerUtility::process(
+    const FileMergerUtilityInput& input) {
+    FileMergerUtilityOutput output;
     output.output_path = input.output_file;
 
     // Create event extractor for collecting events during merge

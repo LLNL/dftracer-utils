@@ -49,10 +49,51 @@ class StreamingFileWriterUtility
     : public dftracer::utils::utilities::Utility<RawData, StreamWriteResult> {
    private:
     std::ofstream file_;
+    fs::path path_;
+    bool append_ = false;
+    bool create_dirs_ = true;
     std::size_t total_bytes_ = 0;
     std::size_t total_chunks_ = 0;
-    fs::path path_;
-    bool closed_ = false;
+    bool opened_ = false;
+
+    void open_file() {
+        if (opened_) {
+            return;
+        }
+
+        // Create parent directories if requested
+        if (create_dirs_ && path_.has_parent_path()) {
+            fs::path parent = path_.parent_path();
+            if (!fs::exists(parent)) {
+                fs::create_directories(parent);
+            }
+        }
+
+        // Validate parent directory exists if not creating it
+        if (!create_dirs_ && path_.has_parent_path()) {
+            fs::path parent = path_.parent_path();
+            if (!fs::exists(parent)) {
+                throw std::runtime_error("Parent directory does not exist: " +
+                                         parent.string());
+            }
+        }
+
+        // Open file
+        std::ios::openmode mode = std::ios::binary;
+        if (append_) {
+            mode |= std::ios::app;
+        } else {
+            mode |= std::ios::trunc;
+        }
+
+        file_.open(path_, mode);
+        if (!file_) {
+            throw std::runtime_error("Cannot open file for writing: " +
+                                     path_.string());
+        }
+
+        opened_ = true;
+    }
 
    public:
     /**
@@ -64,32 +105,12 @@ class StreamingFileWriterUtility
      */
     explicit StreamingFileWriterUtility(fs::path path, bool append = false,
                                         bool create_dirs = true)
-        : path_(std::move(path)) {
-        // Create parent directories if requested
-        if (create_dirs && path_.has_parent_path()) {
-            fs::path parent = path_.parent_path();
-            if (!fs::exists(parent)) {
-                fs::create_directories(parent);
-            }
-        }
-
-        // Open file
-        std::ios::openmode mode = std::ios::binary;
-        if (append) {
-            mode |= std::ios::app;
-        } else {
-            mode |= std::ios::trunc;
-        }
-
-        file_.open(path_, mode);
-        if (!file_) {
-            throw std::runtime_error("Cannot open file for writing: " +
-                                     path_.string());
-        }
+        : path_(std::move(path)), append_(append), create_dirs_(create_dirs) {
+        open_file();
     }
 
     ~StreamingFileWriterUtility() {
-        if (!closed_) {
+        if (opened_) {
             close();
         }
     }
@@ -106,7 +127,7 @@ class StreamingFileWriterUtility
      * @return StreamWriteResult with current write status
      */
     StreamWriteResult process(const RawData& chunk) override {
-        if (closed_) {
+        if (!opened_) {
             throw std::runtime_error("Cannot write to closed file");
         }
 
@@ -134,16 +155,19 @@ class StreamingFileWriterUtility
      * @brief Flush and close the file.
      */
     void close() {
-        if (!closed_) {
+        if (opened_) {
             file_.close();
-            closed_ = true;
+            opened_ = false;
         }
     }
 
+    bool append_mode() const { return append_; }
+    bool create_dirs_mode() const { return create_dirs_; }
     std::size_t total_bytes() const { return total_bytes_; }
     std::size_t total_chunks() const { return total_chunks_; }
     const fs::path& path() const { return path_; }
-    bool is_closed() const { return closed_; }
+    bool is_opened() const { return opened_; }
+    bool is_closed() const { return !opened_; }
 };
 
 }  // namespace dftracer::utils::utilities::io

@@ -19,7 +19,7 @@
 #include <dftracer/utils/utilities/composites/file_compressor.h>
 #include <dftracer/utils/utilities/composites/file_decompressor.h>
 #include <dftracer/utils/utilities/composites/indexed_file_reader.h>
-#include <dftracer/utils/utilities/composites/line_batch_processor.h>
+#include <dftracer/utils/utilities/composites/line_batch_processor_utility.h>
 
 // DFTracer-specific composites
 #include <dftracer/utils/utilities/composites/dft/dft.h>

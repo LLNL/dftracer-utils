@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_FILE_MERGER_H
-#define DFTRACER_UTILS_UTILITIES_COMPOSITES_FILE_MERGER_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_FILE_MERGER_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_COMPOSITES_FILE_MERGER_UTILITY_H
 
 #include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/common/logging.h>
@@ -8,7 +8,7 @@
 #include <dftracer/utils/utilities/composites/dft/event_id_extractor.h>
 #include <dftracer/utils/utilities/composites/dft/index_builder.h>
 #include <dftracer/utils/utilities/composites/file_compressor.h>
-#include <dftracer/utils/utilities/composites/line_batch_processor.h>
+#include <dftracer/utils/utilities/composites/line_batch_processor_utility.h>
 #include <dftracer/utils/utilities/io/lines/streaming_line_reader.h>
 #include <dftracer/utils/utilities/io/streaming_file_writer.h>
 
@@ -31,35 +31,35 @@ struct ValidatedEvent {
 /**
  * @brief Input for file merge processing
  */
-struct FileMergerUtilityInput {
+struct FileMergeValidatorUtilityInput {
     std::string file_path;
     std::string index_path;
     std::string output_path;  // Where to write validated events
     std::size_t checkpoint_size{constants::indexer::DEFAULT_CHECKPOINT_SIZE};
     bool force_rebuild{false};
 
-    static FileMergerUtilityInput from_file(const std::string& path) {
-        FileMergerUtilityInput input;
+    static FileMergeValidatorUtilityInput from_file(const std::string& path) {
+        FileMergeValidatorUtilityInput input;
         input.file_path = path;
         return input;
     }
 
-    FileMergerUtilityInput& with_index(const std::string& idx_path) {
+    FileMergeValidatorUtilityInput& with_index(const std::string& idx_path) {
         index_path = idx_path;
         return *this;
     }
 
-    FileMergerUtilityInput& with_output(const std::string& out_path) {
+    FileMergeValidatorUtilityInput& with_output(const std::string& out_path) {
         output_path = out_path;
         return *this;
     }
 
-    FileMergerUtilityInput& with_checkpoint_size(std::size_t size) {
+    FileMergeValidatorUtilityInput& with_checkpoint_size(std::size_t size) {
         checkpoint_size = size;
         return *this;
     }
 
-    FileMergerUtilityInput& with_force_rebuild(bool force) {
+    FileMergeValidatorUtilityInput& with_force_rebuild(bool force) {
         force_rebuild = force;
         return *this;
     }
@@ -68,7 +68,7 @@ struct FileMergerUtilityInput {
 /**
  * @brief Result of processing a single file for merging
  */
-struct FileMergerUtilityOutput {
+struct FileMergeValidatorUtilityOutput {
     std::string file_path;
     std::string output_path;
     bool success{false};
@@ -86,48 +86,49 @@ struct FileMergerUtilityOutput {
  * 3. Uses LineBatchProcessor to process lines
  * 4. Validates JSON events and writes to output using StreamingFileWriter
  */
-class FileMergerUtility : public utilities::Utility<FileMergerUtilityInput,
-                                                    FileMergerUtilityOutput> {
+class FileMergeValidatorUtility
+    : public utilities::Utility<FileMergeValidatorUtilityInput,
+                                FileMergeValidatorUtilityOutput> {
    private:
     static std::atomic<int> file_counter_;
 
    public:
-    FileMergerUtilityOutput process(
-        const FileMergerUtilityInput& input) override;
+    FileMergeValidatorUtilityOutput process(
+        const FileMergeValidatorUtilityInput& input) override;
 
     static int get_next_counter() { return file_counter_.fetch_add(1); }
 };
 
 /**
- * @brief Input for file combiner utility
+ * @brief Input for file merger utility
  */
-struct FileCombinerUtilityInput {
-    std::vector<FileMergerUtilityOutput> file_results;
+struct FileMergerUtilityInput {
+    std::vector<FileMergeValidatorUtilityOutput> file_results;
     std::string output_file;
     bool compress{false};
 
-    static FileCombinerUtilityInput from_results(
-        const std::vector<FileMergerUtilityOutput>& results) {
-        FileCombinerUtilityInput input;
+    static FileMergerUtilityInput from_results(
+        const std::vector<FileMergeValidatorUtilityOutput>& results) {
+        FileMergerUtilityInput input;
         input.file_results = results;
         return input;
     }
 
-    FileCombinerUtilityInput& with_output(const std::string& path) {
+    FileMergerUtilityInput& with_output(const std::string& path) {
         output_file = path;
         return *this;
     }
 
-    FileCombinerUtilityInput& with_compression(bool enable) {
+    FileMergerUtilityInput& with_compression(bool enable) {
         compress = enable;
         return *this;
     }
 };
 
 /**
- * @brief Output from file combiner utility
+ * @brief Output from file merger utility
  */
-struct FileCombinerUtilityOutput {
+struct FileMergerUtilityOutput {
     bool success{false};
     std::string output_path;
     std::size_t total_events{0};
@@ -145,17 +146,16 @@ struct FileCombinerUtilityOutput {
  * 3. Optionally compresses the output
  * 4. Cleans up temporary files
  */
-class FileCombinerUtility
-    : public utilities::Utility<FileCombinerUtilityInput,
-                                FileCombinerUtilityOutput> {
+class FileMergerUtility : public utilities::Utility<FileMergerUtilityInput,
+                                                    FileMergerUtilityOutput> {
    private:
     bool compress_output_file(const std::string& file_path);
 
    public:
-    FileCombinerUtilityOutput process(
-        const FileCombinerUtilityInput& input) override;
+    FileMergerUtilityOutput process(
+        const FileMergerUtilityInput& input) override;
 };
 
 }  // namespace dftracer::utils::utilities::composites
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_FILE_MERGER_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_FILE_MERGER_UTILITY_H

@@ -1,6 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <dftracer/utils/core/common/filesystem.h>
-#include <dftracer/utils/utilities/composites/file_merger.h>
+#include <dftracer/utils/utilities/composites/file_merger_utility.h>
 #include <doctest/doctest.h>
 #include <testing_utilities.h>
 #include <unistd.h>
@@ -22,12 +22,11 @@ TEST_SUITE("FileMerger") {
             std::string temp_output = env.get_dir() + "/output_temp.json";
 
             // Create input
-            auto input =
-                FileMergerUtilityInput::from_file(test_file).with_output(
-                    temp_output);
+            auto input = FileMergeValidatorUtilityInput::from_file(test_file)
+                             .with_output(temp_output);
 
             // Process
-            FileMergerUtility merger;
+            FileMergeValidatorUtility merger;
             auto output = merger.process(input);
 
             // Verify
@@ -58,14 +57,14 @@ TEST_SUITE("FileMerger") {
             std::string index_path = env.get_dir() + "/test.idx";
 
             // Create input
-            auto input = FileMergerUtilityInput::from_file(gz_file)
+            auto input = FileMergeValidatorUtilityInput::from_file(gz_file)
                              .with_output(temp_output)
                              .with_index(index_path)
                              .with_checkpoint_size(1024)
                              .with_force_rebuild(true);
 
             // Process
-            FileMergerUtility merger;
+            FileMergeValidatorUtility merger;
             auto output = merger.process(input);
 
             // Verify
@@ -79,18 +78,17 @@ TEST_SUITE("FileMerger") {
         TestEnvironment env(300);
 
         // Create multiple test files and process them
-        std::vector<FileMergerUtilityOutput> merge_results;
+        std::vector<FileMergeValidatorUtilityOutput> merge_results;
 
         for (int i = 0; i < 3; ++i) {
             std::string test_file = env.create_dft_test_file(5 + i * 2);
             std::string temp_output =
                 env.get_dir() + "/temp_" + std::to_string(i) + ".json";
 
-            auto input =
-                FileMergerUtilityInput::from_file(test_file).with_output(
-                    temp_output);
+            auto input = FileMergeValidatorUtilityInput::from_file(test_file)
+                             .with_output(temp_output);
 
-            FileMergerUtility merger;
+            FileMergeValidatorUtility merger;
             auto output = merger.process(input);
 
             if (output.success) {
@@ -101,15 +99,15 @@ TEST_SUITE("FileMerger") {
         SUBCASE("Combine without compression") {
             std::string final_output = env.get_dir() + "/combined.pfw";
 
-            // Create combiner input
-            FileCombinerUtilityInput combiner_input;
-            combiner_input.file_results = merge_results;
-            combiner_input.output_file = final_output;
-            combiner_input.compress = false;
+            // Create merger input
+            FileMergerUtilityInput merger_input;
+            merger_input.file_results = merge_results;
+            merger_input.output_file = final_output;
+            merger_input.compress = false;
 
             // Process
-            FileCombinerUtility combiner;
-            auto output = combiner.process(combiner_input);
+            FileMergerUtility merger;
+            auto output = merger.process(merger_input);
 
             // Verify
             CHECK(output.success == true);
@@ -176,15 +174,15 @@ TEST_SUITE("FileMerger") {
             std::string final_output =
                 env.get_dir() + "/combined_compressed.pfw";
 
-            // Create combiner input
-            FileCombinerUtilityInput combiner_input;
-            combiner_input.file_results = merge_results;
-            combiner_input.output_file = final_output;
-            combiner_input.compress = true;
+            // Create merger input
+            FileMergerUtilityInput merger_input;
+            merger_input.file_results = merge_results;
+            merger_input.output_file = final_output;
+            merger_input.compress = true;
 
             // Process
-            FileCombinerUtility combiner;
-            auto output = combiner.process(combiner_input);
+            FileMergerUtility merger;
+            auto output = merger.process(merger_input);
 
             // Verify
             CHECK(output.success == true);
@@ -199,11 +197,11 @@ TEST_SUITE("FileMerger") {
         TestEnvironment env(400);
 
         SUBCASE("Non-existent file") {
-            auto input =
-                FileMergerUtilityInput::from_file("/non/existent/file.pfw")
-                    .with_output(env.get_dir() + "/output.json");
+            auto input = FileMergeValidatorUtilityInput::from_file(
+                             "/non/existent/file.pfw")
+                             .with_output(env.get_dir() + "/output.json");
 
-            FileMergerUtility merger;
+            FileMergeValidatorUtility merger;
             auto output = merger.process(input);
 
             CHECK(output.success == false);
@@ -219,10 +217,10 @@ TEST_SUITE("FileMerger") {
             ofs.close();
 
             auto input =
-                FileMergerUtilityInput::from_file(bad_file).with_output(
+                FileMergeValidatorUtilityInput::from_file(bad_file).with_output(
                     env.get_dir() + "/output.json");
 
-            FileMergerUtility merger;
+            FileMergeValidatorUtility merger;
             auto output = merger.process(input);
 
             // json_trim_and_validate is designed to be fast, not comprehensive

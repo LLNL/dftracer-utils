@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_LINE_BATCH_PROCESSOR_H
-#define DFTRACER_UTILS_UTILITIES_COMPOSITES_LINE_BATCH_PROCESSOR_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_LINE_BATCH_PROCESSOR_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_COMPOSITES_LINE_BATCH_PROCESSOR_UTILITY_H
 
 #include <dftracer/utils/core/utilities/utilities.h>
 #include <dftracer/utils/utilities/composites/composite_types.h>
@@ -12,6 +12,10 @@
 #include <vector>
 
 namespace dftracer::utils::utilities::composites {
+
+using LineBatchProcessUtilityInput = io::lines::LineReadInput;
+template <typename LineOutput>
+using LineBatchProcessUtilityOutput = std::vector<LineOutput>;
 
 /**
  * @brief Workflow for processing lines from a file with streaming iteration.
@@ -41,8 +45,8 @@ namespace dftracer::utils::utilities::composites {
  */
 template <typename LineOutput>
 class LineBatchProcessorUtility
-    : public utilities::Utility<io::lines::LineReadInput,
-                                std::vector<LineOutput>> {
+    : public utilities::Utility<LineBatchProcessUtilityInput,
+                                LineBatchProcessUtilityOutput<LineOutput>> {
    public:
     using LineProcessorFn =
         std::function<std::optional<LineOutput>(const io::lines::Line&)>;
@@ -65,11 +69,10 @@ class LineBatchProcessorUtility
      * @param input Line batch configuration
      * @return Vector of processed line results
      */
-    std::vector<LineOutput> process(
-        const io::lines::LineReadInput& input) override {
-        std::vector<LineOutput> results;
+    LineBatchProcessUtilityOutput<LineOutput> process(
+        const LineBatchProcessUtilityInput& input) override {
+        LineBatchProcessUtilityOutput<LineOutput> results;
 
-        // Use StreamingLineReader for auto-detection and lazy iteration
         io::lines::LineRange range;
 
         if (!input.idx_path.empty()) {
@@ -109,6 +112,10 @@ class LineBatchProcessorUtility
     }
 };
 
+using SimpleLineBatchProcessUtilityInput = io::lines::LineReadInput;
+template <typename LineOutput>
+using SimpleLineBatchProcessUtilityOutput = std::vector<LineOutput>;
+
 /**
  * @brief Simplified line batch processor that always processes all lines.
  *
@@ -116,8 +123,9 @@ class LineBatchProcessorUtility
  */
 template <typename LineOutput>
 class SimpleLineBatchProcessorUtility
-    : public utilities::Utility<io::lines::LineReadInput,
-                                std::vector<LineOutput>> {
+    : public utilities::Utility<
+          SimpleLineBatchProcessUtilityInput,
+          SimpleLineBatchProcessUtilityOutput<LineOutput>> {
    public:
     using SimpleLineProcessorFn =
         std::function<LineOutput(const io::lines::Line&)>;
@@ -129,9 +137,9 @@ class SimpleLineBatchProcessorUtility
     explicit SimpleLineBatchProcessorUtility(SimpleLineProcessorFn processor)
         : processor_(std::move(processor)) {}
 
-    std::vector<LineOutput> process(
-        const io::lines::LineReadInput& input) override {
-        std::vector<LineOutput> results;
+    SimpleLineBatchProcessUtilityOutput<LineOutput> process(
+        const SimpleLineBatchProcessUtilityInput& input) override {
+        SimpleLineBatchProcessUtilityOutput<LineOutput> results;
 
         // Use StreamingLineReader
         io::lines::LineRange range;
@@ -165,4 +173,4 @@ class SimpleLineBatchProcessorUtility
 
 }  // namespace dftracer::utils::utilities::composites
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_LINE_BATCH_PROCESSOR_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_LINE_BATCH_PROCESSOR_UTILITY_H
