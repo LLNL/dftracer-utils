@@ -3,7 +3,7 @@
 
 #include <dftracer/utils/core/common/typedefs.h>
 #include <dftracer/utils/core/pipeline/error.h>
-#include <dftracer/utils/core/pipeline/pipeline_config_manager.h>
+#include <dftracer/utils/core/pipeline/pipeline_config.h>
 #include <dftracer/utils/core/pipeline/pipeline_output.h>
 #include <dftracer/utils/core/pipeline/scheduler.h>
 
@@ -49,8 +49,8 @@ class Pipeline {
      * Constructor with configuration manager
      * @param config Pipeline configuration (includes name, threads, etc.)
      */
-    explicit Pipeline(const PipelineConfigManager& config =
-                          PipelineConfigManager::default_config());
+    explicit Pipeline(
+        const PipelineConfig& config = PipelineConfig::default_config());
 
     ~Pipeline();
 

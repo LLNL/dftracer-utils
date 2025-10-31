@@ -2,7 +2,7 @@
 #include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/pipeline/pipeline.h>
-#include <dftracer/utils/core/pipeline/pipeline_config_manager.h>
+#include <dftracer/utils/core/pipeline/pipeline_config.h>
 #include <dftracer/utils/core/tasks/task.h>
 #include <dftracer/utils/core/utilities/utility_adapter.h>
 #include <dftracer/utils/indexer/indexer.h>
@@ -207,7 +207,7 @@ int main(int argc, char** argv) {
     // ========================================================================
     // Create Pipeline with Configuration
     // ========================================================================
-    auto pipeline_config = PipelineConfigManager()
+    auto pipeline_config = PipelineConfig()
                                .with_name("DFTracer Merge")
                                .with_executor_threads(executor_threads)
                                .with_scheduler_threads(scheduler_threads);

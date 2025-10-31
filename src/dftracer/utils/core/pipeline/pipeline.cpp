@@ -10,7 +10,7 @@
 
 namespace dftracer::utils {
 
-Pipeline::Pipeline(const PipelineConfigManager& config)
+Pipeline::Pipeline(const PipelineConfig& config)
     : name_(config.name),
       executor_threads_(config.executor_threads),
       error_policy_(config.error_policy),

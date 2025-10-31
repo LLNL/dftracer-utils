@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_CORE_PIPELINE_PIPELINE_CONFIG_MANAGER_H
-#define DFTRACER_UTILS_CORE_PIPELINE_PIPELINE_CONFIG_MANAGER_H
+#ifndef DFTRACER_UTILS_CORE_PIPELINE_PIPELINE_CONFIG_H
+#define DFTRACER_UTILS_CORE_PIPELINE_PIPELINE_CONFIG_H
 
 #include <chrono>
 #include <cstddef>
@@ -30,7 +30,7 @@ using ErrorHandler =
     std::function<void(std::shared_ptr<Task>, std::exception_ptr)>;
 
 /**
- * Configuration manager for Pipeline execution
+ * Configuration  for Pipeline execution
  *
  * Thread Architecture:
  * - Executor threads: Worker pool that executes task functions
@@ -38,7 +38,7 @@ using ErrorHandler =
  * - Watchdog: Optional monitoring thread for hang detection
  *
  * Usage (Fluent API):
- *   auto config = PipelineConfigManager()
+ *   auto config = PipelineConfig()
  *       .with_name("MyPipeline")
  *       .with_executor_threads(4)
  *       .with_scheduler_threads(2)
@@ -47,7 +47,7 @@ using ErrorHandler =
  *       .with_global_timeout(std::chrono::seconds(30))
  *       .with_task_timeout(std::chrono::seconds(10));
  */
-struct PipelineConfigManager {
+struct PipelineConfig {
     std::string name = "";              // Pipeline name
     std::size_t executor_threads = 0;   // 0 = hardware_concurrency
     std::size_t scheduler_threads = 1;  // Usually 1
@@ -64,7 +64,7 @@ struct PipelineConfigManager {
     /**
      * Set pipeline name
      */
-    PipelineConfigManager& with_name(std::string pipeline_name) {
+    PipelineConfig& with_name(std::string pipeline_name) {
         name = std::move(pipeline_name);
         return *this;
     }
@@ -72,7 +72,7 @@ struct PipelineConfigManager {
     /**
      * Set number of executor threads
      */
-    PipelineConfigManager& with_executor_threads(std::size_t threads) {
+    PipelineConfig& with_executor_threads(std::size_t threads) {
         executor_threads = threads;
         return *this;
     }
@@ -80,7 +80,7 @@ struct PipelineConfigManager {
     /**
      * Set number of scheduler threads
      */
-    PipelineConfigManager& with_scheduler_threads(std::size_t threads) {
+    PipelineConfig& with_scheduler_threads(std::size_t threads) {
         scheduler_threads = threads;
         return *this;
     }
@@ -88,7 +88,7 @@ struct PipelineConfigManager {
     /**
      * Set error handling policy
      */
-    PipelineConfigManager& with_error_policy(ErrorPolicy policy) {
+    PipelineConfig& with_error_policy(ErrorPolicy policy) {
         error_policy = policy;
         return *this;
     }
@@ -96,7 +96,7 @@ struct PipelineConfigManager {
     /**
      * Set custom error handler (automatically sets policy to CUSTOM)
      */
-    PipelineConfigManager& with_error_handler(ErrorHandler handler) {
+    PipelineConfig& with_error_handler(ErrorHandler handler) {
         error_handler = std::move(handler);
         error_policy = ErrorPolicy::CUSTOM;
         return *this;
@@ -105,7 +105,7 @@ struct PipelineConfigManager {
     /**
      * Enable/disable watchdog
      */
-    PipelineConfigManager& with_watchdog(bool enabled) {
+    PipelineConfig& with_watchdog(bool enabled) {
         enable_watchdog = enabled;
         return *this;
     }
@@ -113,8 +113,7 @@ struct PipelineConfigManager {
     /**
      * Set global timeout (0 = wait forever)
      */
-    PipelineConfigManager& with_global_timeout(
-        std::chrono::milliseconds timeout) {
+    PipelineConfig& with_global_timeout(std::chrono::milliseconds timeout) {
         global_timeout = timeout;
         return *this;
     }
@@ -122,8 +121,7 @@ struct PipelineConfigManager {
     /**
      * Set default task timeout (0 = wait forever)
      */
-    PipelineConfigManager& with_task_timeout(
-        std::chrono::milliseconds timeout) {
+    PipelineConfig& with_task_timeout(std::chrono::milliseconds timeout) {
         default_task_timeout = timeout;
         return *this;
     }
@@ -131,8 +129,7 @@ struct PipelineConfigManager {
     /**
      * Set watchdog check interval
      */
-    PipelineConfigManager& with_watchdog_interval(
-        std::chrono::milliseconds interval) {
+    PipelineConfig& with_watchdog_interval(std::chrono::milliseconds interval) {
         watchdog_interval = interval;
         return *this;
     }
@@ -140,7 +137,7 @@ struct PipelineConfigManager {
     /**
      * Set long-running task warning threshold
      */
-    PipelineConfigManager& with_warning_threshold(
+    PipelineConfig& with_warning_threshold(
         std::chrono::milliseconds threshold) {
         long_task_warning_threshold = threshold;
         return *this;
@@ -149,8 +146,8 @@ struct PipelineConfigManager {
     /**
      * Create default configuration
      */
-    static PipelineConfigManager default_config() {
-        PipelineConfigManager config;
+    static PipelineConfig default_config() {
+        PipelineConfig config;
         config.executor_threads = 0;  // hardware_concurrency
         config.scheduler_threads = 1;
         config.enable_watchdog = true;
@@ -164,16 +161,16 @@ struct PipelineConfigManager {
     /**
      * Create sequential execution configuration (1 thread)
      */
-    static PipelineConfigManager sequential() {
-        return PipelineConfigManager().with_executor_threads(1).with_watchdog(
+    static PipelineConfig sequential() {
+        return PipelineConfig().with_executor_threads(1).with_watchdog(
             false);  // Less useful for single-threaded
     }
 
     /**
      * Create parallel execution configuration
      */
-    static PipelineConfigManager parallel(std::size_t num_threads = 0) {
-        return PipelineConfigManager()
+    static PipelineConfig parallel(std::size_t num_threads = 0) {
+        return PipelineConfig()
             .with_executor_threads(num_threads)  // 0 = hardware_concurrency
             .with_watchdog(true);
     }
@@ -181,11 +178,11 @@ struct PipelineConfigManager {
     /**
      * Create configuration with timeouts
      */
-    static PipelineConfigManager with_timeouts(
+    static PipelineConfig with_timeouts(
         std::size_t num_threads = 0,
         std::chrono::milliseconds global_timeout = std::chrono::seconds(60),
         std::chrono::milliseconds task_timeout = std::chrono::seconds(30)) {
-        return PipelineConfigManager()
+        return PipelineConfig()
             .with_executor_threads(num_threads)
             .with_watchdog(true)
             .with_global_timeout(global_timeout)
@@ -195,4 +192,4 @@ struct PipelineConfigManager {
 
 }  // namespace dftracer::utils
 
-#endif  // DFTRACER_UTILS_CORE_PIPELINE_PIPELINE_CONFIG_MANAGER_H
+#endif  // DFTRACER_UTILS_CORE_PIPELINE_PIPELINE_CONFIG_H
