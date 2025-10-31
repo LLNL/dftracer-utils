@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_UTILITIES_IO_FILE_READER_H
-#define DFTRACER_UTILS_UTILITIES_IO_FILE_READER_H
+#ifndef DFTRACER_UTILS_UTILITIES_IO_FILE_READER_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_IO_FILE_READER_UTILITY_H
 
 #include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utility.h>
@@ -57,7 +57,7 @@ class FileReaderUtility
                                 utilities::tags::Parallelizable> {
    public:
     FileReaderUtility() = default;
-    ~FileReaderUtility() override = default;
+    ~FileReaderUtility() = default;
 
     /**
      * @brief Read file content as text.
@@ -92,4 +92,4 @@ class FileReaderUtility
 
 }  // namespace dftracer::utils::utilities::io
 
-#endif  // DFTRACER_UTILS_UTILITIES_IO_FILE_READER_H
+#endif  // DFTRACER_UTILS_UTILITIES_IO_FILE_READER_UTILITY_H

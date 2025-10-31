@@ -10,7 +10,7 @@
 #include <dftracer/utils/utilities/composites/file_compressor_utility.h>
 #include <dftracer/utils/utilities/composites/line_batch_processor_utility.h>
 #include <dftracer/utils/utilities/io/lines/streaming_line_reader.h>
-#include <dftracer/utils/utilities/io/streaming_file_writer.h>
+#include <dftracer/utils/utilities/io/streaming_file_writer_utility.h>
 
 #include <atomic>
 #include <fstream>

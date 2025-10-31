@@ -2,7 +2,6 @@
 #define DFTRACER_UTILS_UTILITIES_COMPRESSION_ZLIB_INTERNAL_COMPRESSED_CHUNK_ITERATOR_H
 
 #include <dftracer/utils/utilities/compression/zlib/types.h>
-#include <dftracer/utils/utilities/io/chunk_iterator.h>
 #include <dftracer/utils/utilities/io/types/types.h>
 #include <zlib.h>
 

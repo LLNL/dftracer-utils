@@ -1,9 +1,7 @@
-#ifndef DFTRACER_UTILS_UTILITIES_IO_STREAMING_FILE_WRITER_H
-#define DFTRACER_UTILS_UTILITIES_IO_STREAMING_FILE_WRITER_H
+#ifndef DFTRACER_UTILS_UTILITIES_IO_STREAMING_FILE_WRITER_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_IO_STREAMING_FILE_WRITER_UTILITY_H
 
 #include <dftracer/utils/core/utilities/utility.h>
-#include <dftracer/utils/utilities/io/chunk_iterator.h>
-#include <dftracer/utils/utilities/io/streaming.h>
 #include <dftracer/utils/utilities/io/types/types.h>
 
 #include <fstream>
@@ -172,4 +170,4 @@ class StreamingFileWriterUtility
 
 }  // namespace dftracer::utils::utilities::io
 
-#endif  // DFTRACER_UTILS_UTILITIES_IO_STREAMING_FILE_WRITER_H
+#endif  // DFTRACER_UTILS_UTILITIES_IO_STREAMING_FILE_WRITER_UTILITY_H

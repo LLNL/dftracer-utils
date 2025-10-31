@@ -4,7 +4,6 @@
 #include <dftracer/utils/core/utilities/utility.h>
 #include <dftracer/utils/utilities/compression/zlib/internal/compressed_chunk_iterator.h>
 #include <dftracer/utils/utilities/compression/zlib/types.h>
-#include <dftracer/utils/utilities/io/chunk_iterator.h>
 #include <dftracer/utils/utilities/io/types/types.h>
 #include <zlib.h>
 

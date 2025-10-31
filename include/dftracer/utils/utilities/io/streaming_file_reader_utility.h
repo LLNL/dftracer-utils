@@ -1,10 +1,8 @@
-#ifndef DFTRACER_UTILS_UTILITIES_IO_STREAMING_FILE_READER_H
-#define DFTRACER_UTILS_UTILITIES_IO_STREAMING_FILE_READER_H
+#ifndef DFTRACER_UTILS_UTILITIES_IO_STREAMING_FILE_READER_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_IO_STREAMING_FILE_READER_UTILITY_H
 
 #include <dftracer/utils/core/utilities/tags/parallelizable.h>
 #include <dftracer/utils/core/utilities/utility.h>
-#include <dftracer/utils/utilities/io/chunk_iterator.h>
-#include <dftracer/utils/utilities/io/streaming.h>
 #include <dftracer/utils/utilities/io/types/types.h>
 
 #include <stdexcept>
@@ -51,7 +49,7 @@ class StreamingFileReaderUtility
                                 utilities::tags::Parallelizable> {
    public:
     StreamingFileReaderUtility() = default;
-    ~StreamingFileReaderUtility() override = default;
+    ~StreamingFileReaderUtility() = default;
 
     /**
      * @brief Get lazy chunk iterator for file.
@@ -77,4 +75,4 @@ class StreamingFileReaderUtility
 
 }  // namespace dftracer::utils::utilities::io
 
-#endif  // DFTRACER_UTILS_UTILITIES_IO_STREAMING_FILE_READER_H
+#endif  // DFTRACER_UTILS_UTILITIES_IO_STREAMING_FILE_READER_UTILITY_H

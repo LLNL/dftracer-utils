@@ -1,8 +1,8 @@
-#ifndef DFTRACER_UTILS_UTILITIES_IO_CHUNK_ITERATOR_H
-#define DFTRACER_UTILS_UTILITIES_IO_CHUNK_ITERATOR_H
+#ifndef DFTRACER_UTILS_UTILITIES_IO_TYPES_CHUNK_ITERATOR_H
+#define DFTRACER_UTILS_UTILITIES_IO_TYPES_CHUNK_ITERATOR_H
 
 #include <dftracer/utils/core/common/filesystem.h>
-#include <dftracer/utils/utilities/io/types/types.h>
+#include <dftracer/utils/utilities/io/types/raw_data.h>
 
 #include <fstream>
 #include <iterator>
@@ -160,4 +160,4 @@ class ChunkRange {
 
 }  // namespace dftracer::utils::utilities::io
 
-#endif  // DFTRACER_UTILS_UTILITIES_IO_CHUNK_ITERATOR_H
+#endif  // DFTRACER_UTILS_UTILITIES_IO_TYPES_CHUNK_ITERATOR_H
