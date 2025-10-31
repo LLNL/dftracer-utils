@@ -1,6 +1,6 @@
 #include <dftracer/utils/core/utils/timer.h>
-#include <dftracer/utils/indexer/indexer.h>
-#include <dftracer/utils/indexer/indexer_factory.h>
+#include <dftracer/utils/utilities/indexer/internal/indexer.h>
+#include <dftracer/utils/utilities/indexer/internal/indexer_factory.h>
 #include <dftracer/utils/utilities/reader/internal/error.h>
 #include <dftracer/utils/utilities/reader/internal/gzip_reader.h>
 #include <dftracer/utils/utilities/reader/internal/stream_config.h>
@@ -66,7 +66,7 @@ GzipReader::GzipReader(const std::string &gz_path_,
       default_buffer_size(DEFAULT_READER_BUFFER_SIZE),
       indexer(nullptr) {
     try {
-        indexer =
+        indexer = dftracer::utils::utilities::indexer::internal::
             IndexerFactory::create(gz_path, idx_path, index_ckpt_size, false);
         is_open = true;
 
@@ -80,7 +80,9 @@ GzipReader::GzipReader(const std::string &gz_path_,
     }
 }
 
-GzipReader::GzipReader(std::shared_ptr<Indexer> indexer_)
+GzipReader::GzipReader(
+    std::shared_ptr<dftracer::utils::utilities::indexer::internal::Indexer>
+        indexer_)
     : default_buffer_size(DEFAULT_READER_BUFFER_SIZE),
       indexer(std::move(indexer_)) {
     if (!indexer) {
@@ -389,8 +391,9 @@ std::unique_ptr<ReaderStream> GzipReader::stream(const StreamConfig &config) {
         }
 
         // Get checkpoints for the line range
-        std::vector<IndexerCheckpoint> checkpoints =
-            indexer->get_checkpoints_for_line_range(start, end);
+        std::vector<
+            dftracer::utils::utilities::indexer::internal::IndexerCheckpoint>
+            checkpoints = indexer->get_checkpoints_for_line_range(start, end);
 
         DFTRACER_UTILS_LOG_DEBUG("Line range %zu-%zu: found %zu checkpoints",
                                  start, end, checkpoints.size());

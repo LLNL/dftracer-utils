@@ -2,9 +2,9 @@
 #include <dftracer/utils/core/common/constants.h>
 #include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/common/logging.h>
-#include <dftracer/utils/indexer/indexer.h>
-#include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/utilities/composites/composites.h>
+#include <dftracer/utils/utilities/indexer/internal/indexer.h>
+#include <dftracer/utils/utilities/indexer/internal/indexer_factory.h>
 #include <dftracer/utils/utilities/reader/internal/reader.h>
 #include <dftracer/utils/utilities/reader/internal/reader_factory.h>
 #include <dftracer/utils/utilities/reader/internal/stream.h>
@@ -19,6 +19,7 @@
 #include <cstring>
 
 using namespace dftracer::utils;
+using namespace dftracer::utils::utilities::indexer::internal;
 using namespace dftracer::utils::utilities::reader::internal;
 
 int main(int argc, char **argv) {

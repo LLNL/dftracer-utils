@@ -22,7 +22,8 @@ namespace dftracer::utils::utilities::reader::internal {
  */
 class TarLineByteStream : public TarStream {
    private:
-    TarIndexer* tar_indexer_ptr_;
+    dftracer::utils::utilities::indexer::internal::tar::TarIndexer*
+        tar_indexer_ptr_;
     std::unique_ptr<GzipLineByteStream> current_file_stream_;
     std::string
         line_buffer_;  // Buffer for accumulating partial lines across files
@@ -32,13 +33,16 @@ class TarLineByteStream : public TarStream {
 
     void initialize(const std::string& tar_gz_path, std::size_t start_bytes,
                     std::size_t end_bytes,
-                    dftracer::utils::Indexer& indexer) override {
+                    dftracer::utils::utilities::indexer::internal::Indexer&
+                        indexer) override {
         DFTRACER_UTILS_LOG_DEBUG(
             "TarLineByteStream::initialize - start_bytes=%zu, end_bytes=%zu",
             start_bytes, end_bytes);
 
         // Cast to TarIndexer for TAR-specific operations
-        tar_indexer_ptr_ = dynamic_cast<TarIndexer*>(&indexer);
+        tar_indexer_ptr_ = dynamic_cast<
+            dftracer::utils::utilities::indexer::internal::tar::TarIndexer*>(
+            &indexer);
         if (!tar_indexer_ptr_) {
             throw ReaderError(ReaderError::INITIALIZATION_ERROR,
                               "TarLineByteStream requires a TarIndexer");
@@ -203,7 +207,8 @@ class TarLineByteStream : public TarStream {
         }
 
         // Get the actual file data offset from the TAR indexer
-        TarIndexer::TarFileInfo tar_file_info;
+        dftracer::utils::utilities::indexer::internal::tar::TarIndexer::
+            TarFileInfo tar_file_info;
         if (!tar_indexer_ptr_->find_file(current_file_->file_name,
                                          tar_file_info)) {
             DFTRACER_UTILS_LOG_ERROR("Failed to find TAR file: %s",

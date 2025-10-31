@@ -2,7 +2,7 @@
 #define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_TAR_STREAM_H
 
 #include <dftracer/utils/core/common/logging.h>
-#include <dftracer/utils/indexer/tar_indexer.h>
+#include <dftracer/utils/utilities/indexer/internal/tar/tar_indexer.h>
 #include <dftracer/utils/utilities/reader/internal/streams/gzip_stream.h>
 #include <dftracer/utils/utilities/reader/internal/tar_reader.h>
 
@@ -20,7 +20,9 @@ namespace dftracer::utils::utilities::reader::internal {
 class TarStream : public GzipStream {
    protected:
     // TAR-specific state
-    std::unique_ptr<TarIndexer> tar_indexer_;
+    std::unique_ptr<
+        dftracer::utils::utilities::indexer::internal::tar::TarIndexer>
+        tar_indexer_;
     std::vector<TarReader::TarFileInfo> file_mapping_;
     std::size_t current_file_index_;
     std::size_t current_file_offset_;
@@ -42,13 +44,16 @@ class TarStream : public GzipStream {
 
     void initialize(const std::string& tar_gz_path, std::size_t start_bytes,
                     std::size_t end_bytes,
-                    dftracer::utils::Indexer& indexer) override {
+                    dftracer::utils::utilities::indexer::internal::Indexer&
+                        indexer) override {
         DFTRACER_UTILS_LOG_DEBUG(
             "TarStream::initialize - start_bytes=%zu, end_bytes=%zu",
             start_bytes, end_bytes);
 
         // Cast to TarIndexer for TAR-specific operations
-        auto* tar_idx = dynamic_cast<TarIndexer*>(&indexer);
+        auto* tar_idx = dynamic_cast<
+            dftracer::utils::utilities::indexer::internal::tar::TarIndexer*>(
+            &indexer);
         if (!tar_idx) {
             throw ReaderError(ReaderError::INITIALIZATION_ERROR,
                               "TarStream requires a TarIndexer");
@@ -78,7 +83,9 @@ class TarStream : public GzipStream {
     }
 
    protected:
-    void build_logical_mapping(TarIndexer& tar_indexer) {
+    void build_logical_mapping(
+        dftracer::utils::utilities::indexer::internal::tar::TarIndexer&
+            tar_indexer) {
         if (logical_mapping_initialized_) {
             return;
         }

@@ -50,8 +50,8 @@ dft_reader_handle_t dft_reader_create_with_indexer(
 
     try {
         // Indexer handle is now a shared_ptr<Indexer>*
-        auto indexer_ptr =
-            static_cast<std::shared_ptr<dftracer::utils::Indexer> *>(indexer);
+        auto indexer_ptr = static_cast<std::shared_ptr<
+            dftracer::utils::utilities::indexer::internal::Indexer> *>(indexer);
         auto reader = ReaderFactory::create(*indexer_ptr);
         return static_cast<dft_reader_handle_t>(
             new std::shared_ptr<Reader>(reader));

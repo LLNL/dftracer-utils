@@ -1,7 +1,7 @@
 #ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_TAR_READER_H
 #define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_TAR_READER_H
 
-#include <dftracer/utils/indexer/tar_indexer.h>
+#include <dftracer/utils/utilities/indexer/internal/tar/tar_indexer.h>
 #include <dftracer/utils/utilities/reader/internal/reader.h>
 
 #include <cstddef>
@@ -42,10 +42,13 @@ class TarReader : public Reader {
             estimated_lines;   // Estimated number of lines in this file
     };
 
-    TarReader(
-        const std::string &tar_gz_path, const std::string &idx_path,
-        std::size_t index_ckpt_size = TarIndexer::DEFAULT_CHECKPOINT_SIZE);
-    explicit TarReader(std::shared_ptr<TarIndexer> indexer);
+    TarReader(const std::string &tar_gz_path, const std::string &idx_path,
+              std::size_t index_ckpt_size = dftracer::utils::utilities::
+                  indexer::internal::tar::TarIndexer::DEFAULT_CHECKPOINT_SIZE);
+    explicit TarReader(
+        std::shared_ptr<
+            dftracer::utils::utilities::indexer::internal::tar::TarIndexer>
+            indexer);
     ~TarReader();
 
     // Disable copy constructor and copy assignment
@@ -104,7 +107,9 @@ class TarReader : public Reader {
     std::string idx_path;
     bool is_open;
     std::size_t default_buffer_size;
-    std::shared_ptr<TarIndexer> indexer;
+    std::shared_ptr<
+        dftracer::utils::utilities::indexer::internal::tar::TarIndexer>
+        indexer;
 
     // Cached logical view mapping
     mutable bool logical_mapping_cached;

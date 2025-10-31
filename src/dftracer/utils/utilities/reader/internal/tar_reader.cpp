@@ -1,6 +1,6 @@
 #include <dftracer/utils/core/common/logging.h>
-#include <dftracer/utils/indexer/indexer_factory.h>
-#include <dftracer/utils/indexer/tar/queries/queries.h>
+#include <dftracer/utils/utilities/indexer/internal/indexer_factory.h>
+#include <dftracer/utils/utilities/indexer/internal/tar/queries/queries.h>
 #include <dftracer/utils/utilities/reader/internal/streams/tar_byte_stream.h>
 #include <dftracer/utils/utilities/reader/internal/string_line_processor.h>
 #include <dftracer/utils/utilities/reader/internal/tar_reader.h>
@@ -10,7 +10,7 @@
 #include <sstream>
 #include <vector>
 
-using namespace dftracer::utils::tar_indexer;
+using namespace dftracer::utils::utilities::indexer::internal::tar;
 
 namespace dftracer::utils::utilities::reader::internal {
 

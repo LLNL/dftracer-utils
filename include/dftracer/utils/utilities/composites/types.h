@@ -2,7 +2,7 @@
 #define DFTRACER_UTILS_UTILITIES_COMPOSITES_TYPES_H
 
 #include <dftracer/utils/core/common/filesystem.h>
-#include <dftracer/utils/indexer/indexer.h>
+#include <dftracer/utils/utilities/indexer/internal/indexer.h>
 
 #include <cstddef>
 #include <string>
@@ -59,13 +59,15 @@ struct DirectoryProcessInput {
 struct IndexedReadInput {
     std::string file_path;
     std::string idx_path;
-    std::size_t checkpoint_size = Indexer::DEFAULT_CHECKPOINT_SIZE;
+    std::size_t checkpoint_size = dftracer::utils::utilities::indexer::
+        internal::Indexer::DEFAULT_CHECKPOINT_SIZE;
     bool force_rebuild = false;
 
     IndexedReadInput() = default;
 
     IndexedReadInput(std::string fpath, std::string ipath,
-                     std::size_t ckpt_size = Indexer::DEFAULT_CHECKPOINT_SIZE,
+                     std::size_t ckpt_size = dftracer::utils::utilities::
+                         indexer::internal::Indexer::DEFAULT_CHECKPOINT_SIZE,
                      bool force = false)
         : file_path(std::move(fpath)),
           idx_path(std::move(ipath)),
@@ -102,7 +104,8 @@ struct LineBatchInput {
     std::string idx_path;        // Empty for plain text files
     std::size_t start_line = 0;  // 0 = from beginning
     std::size_t end_line = 0;    // 0 = to end
-    std::size_t checkpoint_size = Indexer::DEFAULT_CHECKPOINT_SIZE;
+    std::size_t checkpoint_size = dftracer::utils::utilities::indexer::
+        internal::Indexer::DEFAULT_CHECKPOINT_SIZE;
 
     LineBatchInput() = default;
 

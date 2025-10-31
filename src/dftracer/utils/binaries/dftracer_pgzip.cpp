@@ -13,6 +13,7 @@
 #include <vector>
 
 using namespace dftracer::utils;
+using namespace dftracer::utils::utilities::indexer::internal;
 using namespace dftracer::utils::utilities::composites;
 
 int main(int argc, char** argv) {

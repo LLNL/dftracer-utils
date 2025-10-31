@@ -4,8 +4,8 @@
 #include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/utilities/utilities.h>
-#include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/utilities/composites/types.h>
+#include <dftracer/utils/utilities/indexer/internal/indexer_factory.h>
 
 #include <memory>
 #include <string>
@@ -18,13 +18,16 @@ namespace dftracer::utils::utilities::composites::dft {
 struct IndexBuildUtilityInput {
     std::string file_path;
     std::string idx_path;
-    std::size_t checkpoint_size = Indexer::DEFAULT_CHECKPOINT_SIZE;
+    std::size_t checkpoint_size = dftracer::utils::utilities::indexer::
+        internal::Indexer::DEFAULT_CHECKPOINT_SIZE;
     bool force_rebuild = false;
 
     IndexBuildUtilityInput() = default;
 
     IndexBuildUtilityInput(std::string fpath, std::string ipath = "",
-                           std::size_t ckpt = Indexer::DEFAULT_CHECKPOINT_SIZE,
+                           std::size_t ckpt =
+                               dftracer::utils::utilities::indexer::internal::
+                                   Indexer::DEFAULT_CHECKPOINT_SIZE,
                            bool force = false)
         : file_path(std::move(fpath)),
           idx_path(std::move(ipath)),
@@ -120,23 +123,24 @@ class IndexBuilderUtility : public utilities::Utility<IndexBuildUtilityInput,
                 }
 
                 // Build new index
-                auto indexer =
+                auto indexer = dftracer::utils::utilities::indexer::internal::
                     IndexerFactory::create(input.file_path, final_idx_path,
                                            input.checkpoint_size, true);
                 indexer->build();
                 output.was_built = true;
             } else {
                 // Check if existing index needs rebuild
-                auto indexer =
+                auto indexer = dftracer::utils::utilities::indexer::internal::
                     IndexerFactory::create(input.file_path, final_idx_path,
                                            input.checkpoint_size, false);
 
                 if (indexer->need_rebuild()) {
                     // Rebuild the index
                     fs::remove(final_idx_path);
-                    auto new_indexer =
-                        IndexerFactory::create(input.file_path, final_idx_path,
-                                               input.checkpoint_size, true);
+                    auto new_indexer = dftracer::utils::utilities::indexer::
+                        internal::IndexerFactory::create(
+                            input.file_path, final_idx_path,
+                            input.checkpoint_size, true);
                     new_indexer->build();
                     output.was_built = true;
                 }

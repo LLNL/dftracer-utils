@@ -6,7 +6,7 @@
 #include <dftracer/utils/core/common/inflater.h>
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/common/platform_compat.h>
-#include <dftracer/utils/indexer/checkpoint.h>
+#include <dftracer/utils/utilities/indexer/internal/checkpoint.h>
 
 namespace dftracer::utils::utilities::reader::internal {
 
@@ -40,8 +40,10 @@ class ReaderInflater : public Inflater {
     /**
      * Restore inflater state from a checkpoint for random access
      */
-    bool restore_from_checkpoint(FILE* file,
-                                 const IndexerCheckpoint& checkpoint) {
+    bool restore_from_checkpoint(
+        FILE* file,
+        const dftracer::utils::utilities::indexer::internal::IndexerCheckpoint&
+            checkpoint) {
         DFTRACER_UTILS_LOG_DEBUG(
             "Restoring from checkpoint: c_offset=%llu, uc_offset=%llu, bits=%d",
             checkpoint.c_offset, checkpoint.uc_offset, checkpoint.bits);

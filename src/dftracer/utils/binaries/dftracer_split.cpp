@@ -4,8 +4,8 @@
 #include <dftracer/utils/core/pipeline/pipeline_config.h>
 #include <dftracer/utils/core/tasks/task.h>
 #include <dftracer/utils/core/utilities/utility_adapter.h>
-#include <dftracer/utils/indexer/indexer.h>
 #include <dftracer/utils/utilities/composites/composites.h>
+#include <dftracer/utils/utilities/indexer/internal/indexer.h>
 #include <dftracer/utils/utilities/io/types/types.h>
 
 #include <argparse/argparse.hpp>
@@ -19,8 +19,12 @@ int main(int argc, char** argv) {
     DFTRACER_UTILS_LOGGER_INIT();
 
     auto default_checkpoint_size_str =
-        std::to_string(Indexer::DEFAULT_CHECKPOINT_SIZE) + " B (" +
-        std::to_string(Indexer::DEFAULT_CHECKPOINT_SIZE / (1024 * 1024)) +
+        std::to_string(dftracer::utils::utilities::indexer::internal::Indexer::
+                           DEFAULT_CHECKPOINT_SIZE) +
+        " B (" +
+        std::to_string(dftracer::utils::utilities::indexer::internal::Indexer::
+                           DEFAULT_CHECKPOINT_SIZE /
+                       (1024 * 1024)) +
         " MB)";
 
     argparse::ArgumentParser program("dftracer_split",
@@ -61,8 +65,9 @@ int main(int argc, char** argv) {
         .help("Checkpoint size for indexing in bytes (default: " +
               default_checkpoint_size_str + ")")
         .scan<'d', std::size_t>()
-        .default_value(
-            static_cast<std::size_t>(Indexer::DEFAULT_CHECKPOINT_SIZE));
+        .default_value(static_cast<std::size_t>(
+            dftracer::utils::utilities::indexer::internal::Indexer::
+                DEFAULT_CHECKPOINT_SIZE));
 
     program.add_argument("--executor-threads")
         .help(

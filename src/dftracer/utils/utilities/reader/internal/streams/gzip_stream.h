@@ -2,8 +2,8 @@
 #define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_GZIP_STREAM_H
 
 #include <dftracer/utils/core/common/checkpointer.h>
-#include <dftracer/utils/indexer/checkpoint.h>
-#include <dftracer/utils/indexer/indexer.h>
+#include <dftracer/utils/utilities/indexer/internal/checkpoint.h>
+#include <dftracer/utils/utilities/indexer/internal/indexer.h>
 #include <dftracer/utils/utilities/reader/internal/error.h>
 #include <dftracer/utils/utilities/reader/internal/inflater.h>
 #include <dftracer/utils/utilities/reader/internal/streams/stream.h>
@@ -29,7 +29,8 @@ class GzipStream : public StreamBase {
     // Less frequently accessed members
     std::string current_gz_path_;
     std::size_t start_bytes_;
-    dftracer::utils::IndexerCheckpoint checkpoint_;
+    dftracer::utils::utilities::indexer::internal::IndexerCheckpoint
+        checkpoint_;
 
    public:
     GzipStream()
@@ -72,7 +73,8 @@ class GzipStream : public StreamBase {
             file_handle_ = nullptr;
         }
         inflater_.reset();
-        checkpoint_ = dftracer::utils::IndexerCheckpoint();
+        checkpoint_ =
+            dftracer::utils::utilities::indexer::internal::IndexerCheckpoint();
         decompression_initialized_ = false;
     }
 
@@ -98,7 +100,8 @@ class GzipStream : public StreamBase {
 
     void initialize(const std::string &gz_path, std::size_t start_bytes,
                     std::size_t end_bytes,
-                    dftracer::utils::Indexer &indexer) override {
+                    dftracer::utils::utilities::indexer::internal::Indexer
+                        &indexer) override {
         if (is_active_) {
             reset();
         }
@@ -114,7 +117,8 @@ class GzipStream : public StreamBase {
         use_checkpoint_ = try_initialize_with_checkpoint(start_bytes, indexer);
 
         if (!use_checkpoint_) {
-            checkpoint_ = IndexerCheckpoint();
+            checkpoint_ = dftracer::utils::utilities::indexer::internal::
+                IndexerCheckpoint();
             if (!inflater_.initialize(
                     file_handle_, 0,
                     constants::indexer::ZLIB_GZIP_WINDOW_BITS)) {
@@ -126,8 +130,9 @@ class GzipStream : public StreamBase {
         decompression_initialized_ = true;
     }
 
-    bool try_initialize_with_checkpoint(std::size_t start_bytes,
-                                        dftracer::utils::Indexer &indexer) {
+    bool try_initialize_with_checkpoint(
+        std::size_t start_bytes,
+        dftracer::utils::utilities::indexer::internal::Indexer &indexer) {
         bool should_use_first_checkpoint =
             start_bytes < indexer.get_checkpoint_size();
 

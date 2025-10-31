@@ -4,7 +4,7 @@
 #include <dftracer/utils/core/common/archive_format.h>
 #include <dftracer/utils/core/tasks/task_context.h>
 #include <dftracer/utils/core/utilities/utilities.h>
-#include <dftracer/utils/indexer/indexer_factory.h>
+#include <dftracer/utils/utilities/indexer/internal/indexer_factory.h>
 #include <dftracer/utils/utilities/reader/internal/reader_factory.h>
 
 #include <string>
@@ -17,14 +17,17 @@ namespace dftracer::utils::utilities::composites::dft {
 struct MetadataCollectorUtilityInput {
     std::string file_path;
     std::string idx_path;  // Empty for plain files
-    std::size_t checkpoint_size = Indexer::DEFAULT_CHECKPOINT_SIZE;
+    std::size_t checkpoint_size = dftracer::utils::utilities::indexer::
+        internal::Indexer::DEFAULT_CHECKPOINT_SIZE;
     bool force_rebuild = false;
 
     MetadataCollectorUtilityInput() = default;
 
     MetadataCollectorUtilityInput(
         std::string fpath, std::string ipath = "",
-        std::size_t ckpt = Indexer::DEFAULT_CHECKPOINT_SIZE, bool force = false)
+        std::size_t ckpt = dftracer::utils::utilities::indexer::internal::
+            Indexer::DEFAULT_CHECKPOINT_SIZE,
+        bool force = false)
         : file_path(std::move(fpath)),
           idx_path(std::move(ipath)),
           checkpoint_size(ckpt),

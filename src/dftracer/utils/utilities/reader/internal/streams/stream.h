@@ -1,7 +1,7 @@
 #ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_STREAM_H
 #define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_STREAMS_STREAM_H
 
-#include <dftracer/utils/indexer/indexer.h>
+#include <dftracer/utils/utilities/indexer/internal/indexer.h>
 #include <dftracer/utils/utilities/reader/internal/stream.h>  // Public ReaderStream interface
 
 namespace dftracer::utils::utilities::reader::internal {
@@ -22,8 +22,10 @@ class StreamBase : public ReaderStream {
      *
      * Internal method used by stream factories to set up the stream.
      */
-    virtual void initialize(const std::string &gz_path, std::size_t start_bytes,
-                            std::size_t end_bytes, Indexer &indexer) = 0;
+    virtual void initialize(
+        const std::string &gz_path, std::size_t start_bytes,
+        std::size_t end_bytes,
+        dftracer::utils::utilities::indexer::internal::Indexer &indexer) = 0;
 };
 
 }  // namespace dftracer::utils::utilities::reader::internal

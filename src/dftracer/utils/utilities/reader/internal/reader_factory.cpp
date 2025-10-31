@@ -1,7 +1,7 @@
 #include <dftracer/utils/core/common/format_detector.h>
 #include <dftracer/utils/core/common/logging.h>
-#include <dftracer/utils/indexer/gzip_indexer.h>
-#include <dftracer/utils/indexer/tar_indexer.h>
+#include <dftracer/utils/utilities/indexer/internal/gzip/gzip_indexer.h>
+#include <dftracer/utils/utilities/indexer/internal/tar/tar_indexer.h>
 #include <dftracer/utils/utilities/reader/internal/gzip_reader.h>
 #include <dftracer/utils/utilities/reader/internal/reader_factory.h>
 #include <dftracer/utils/utilities/reader/internal/tar_reader.h>
@@ -35,14 +35,17 @@ std::shared_ptr<Reader> ReaderFactory::create(const std::string &archive_path,
 }
 
 std::shared_ptr<Reader> ReaderFactory::create(
-    std::shared_ptr<Indexer> indexer) {
+    std::shared_ptr<dftracer::utils::utilities::indexer::internal::Indexer>
+        indexer) {
     if (!indexer) {
         throw std::invalid_argument("Indexer cannot be null");
     }
 
     if (indexer->get_format_type() == ArchiveFormat::TAR_GZ) {
         return std::make_shared<TarReader>(
-            std::static_pointer_cast<TarIndexer>(indexer));
+            std::static_pointer_cast<
+                dftracer::utils::utilities::indexer::internal::tar::TarIndexer>(
+                indexer));
     }
 
     return std::make_shared<GzipReader>(indexer);

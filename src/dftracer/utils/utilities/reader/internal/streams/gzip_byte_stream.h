@@ -29,7 +29,8 @@ class GzipByteStream : public GzipStream {
 
     void initialize(const std::string &gz_path, std::size_t start_bytes,
                     std::size_t end_bytes,
-                    dftracer::utils::Indexer &indexer) override {
+                    dftracer::utils::utilities::indexer::internal::Indexer
+                        &indexer) override {
         DFTRACER_UTILS_LOG_DEBUG(
             "GzipByteStream::initialize - start_bytes=%zu, end_bytes=%zu",
             start_bytes, end_bytes);

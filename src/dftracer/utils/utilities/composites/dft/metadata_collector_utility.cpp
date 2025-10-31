@@ -1,9 +1,9 @@
 #include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/utils/string.h>
-#include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/utilities/composites/dft/metadata_collector_utility.h>
 #include <dftracer/utils/utilities/composites/indexed_file_reader_utility.h>
+#include <dftracer/utils/utilities/indexer/internal/indexer_factory.h>
 #include <dftracer/utils/utilities/io/lines/streaming_line_reader.h>
 
 #include <atomic>
@@ -52,14 +52,16 @@ MetadataCollectorUtilityOutput MetadataCollectorUtility::process_compressed(
 
     try {
         // Detect format
-        meta.format = IndexerFactory::detect_format(input.file_path);
+        meta.format = dftracer::utils::utilities::indexer::internal::
+            IndexerFactory::detect_format(input.file_path);
         meta.compressed_size = fs::file_size(input.file_path);
 
         // Check if index exists
         meta.has_index = fs::exists(input.idx_path);
 
         // Create or load indexer
-        std::shared_ptr<Indexer> indexer;
+        std::shared_ptr<dftracer::utils::utilities::indexer::internal::Indexer>
+            indexer;
         if (!meta.has_index || input.force_rebuild) {
             if (input.force_rebuild && meta.has_index) {
                 DFTRACER_UTILS_LOG_DEBUG("Removing existing index: %s",
@@ -68,19 +70,21 @@ MetadataCollectorUtilityOutput MetadataCollectorUtility::process_compressed(
             }
             DFTRACER_UTILS_LOG_DEBUG("Building index for: %s",
                                      input.file_path.c_str());
-            indexer = IndexerFactory::create(input.file_path, input.idx_path,
-                                             input.checkpoint_size, true);
+            indexer = dftracer::utils::utilities::indexer::internal::
+                IndexerFactory::create(input.file_path, input.idx_path,
+                                       input.checkpoint_size, true);
             indexer->build();
             meta.has_index = true;
         } else {
-            indexer = IndexerFactory::create(input.file_path, input.idx_path,
-                                             input.checkpoint_size, false);
+            indexer = dftracer::utils::utilities::indexer::internal::
+                IndexerFactory::create(input.file_path, input.idx_path,
+                                       input.checkpoint_size, false);
             if (indexer->need_rebuild()) {
                 DFTRACER_UTILS_LOG_DEBUG("Index needs rebuild: %s",
                                          input.idx_path.c_str());
                 meta.index_valid = false;
                 fs::remove(input.idx_path);
-                indexer =
+                indexer = dftracer::utils::utilities::indexer::internal::
                     IndexerFactory::create(input.file_path, input.idx_path,
                                            input.checkpoint_size, true);
                 indexer->build();

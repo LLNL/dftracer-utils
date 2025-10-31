@@ -3,8 +3,8 @@
 
 #include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/utilities/utilities.h>
-#include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/utilities/composites/types.h>
+#include <dftracer/utils/utilities/indexer/internal/indexer_factory.h>
 #include <dftracer/utils/utilities/reader/internal/reader.h>
 #include <dftracer/utils/utilities/reader/internal/reader_factory.h>
 
@@ -61,20 +61,23 @@ class IndexedFileReaderUtility
             }
 
             // Build new index
-            auto indexer = IndexerFactory::create(
-                input.file_path, input.idx_path, input.checkpoint_size, true);
+            auto indexer = dftracer::utils::utilities::indexer::internal::
+                IndexerFactory::create(input.file_path, input.idx_path,
+                                       input.checkpoint_size, true);
             indexer->build();
         } else {
             // Check if existing index needs rebuild
-            auto indexer = IndexerFactory::create(
-                input.file_path, input.idx_path, input.checkpoint_size, false);
+            auto indexer = dftracer::utils::utilities::indexer::internal::
+                IndexerFactory::create(input.file_path, input.idx_path,
+                                       input.checkpoint_size, false);
 
             if (indexer->need_rebuild()) {
                 // Rebuild the index
                 fs::remove(input.idx_path);
                 auto new_indexer =
-                    IndexerFactory::create(input.file_path, input.idx_path,
-                                           input.checkpoint_size, true);
+                    dftracer::utils::utilities::indexer::internal::
+                        IndexerFactory::create(input.file_path, input.idx_path,
+                                               input.checkpoint_size, true);
                 new_indexer->build();
             }
         }

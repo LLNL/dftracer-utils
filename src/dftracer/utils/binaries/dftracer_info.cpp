@@ -6,9 +6,9 @@
 #include <dftracer/utils/core/pipeline/pipeline_config.h>
 #include <dftracer/utils/core/tasks/task.h>
 #include <dftracer/utils/core/utilities/utility_adapter.h>
-#include <dftracer/utils/indexer/indexer.h>
 #include <dftracer/utils/utilities/composites/composites.h>
 #include <dftracer/utils/utilities/composites/dft/dft.h>
+#include <dftracer/utils/utilities/indexer/internal/indexer.h>
 
 #include <argparse/argparse.hpp>
 #include <chrono>
@@ -19,6 +19,7 @@
 #include <vector>
 
 using namespace dftracer::utils;
+using namespace dftracer::utils::utilities::indexer::internal;
 using namespace dftracer::utils::utilities::composites;
 using namespace dftracer::utils::utilities::composites::dft;
 

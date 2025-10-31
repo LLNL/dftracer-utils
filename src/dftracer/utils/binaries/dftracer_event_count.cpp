@@ -4,7 +4,7 @@
 #include <dftracer/utils/core/pipeline/pipeline_config.h>
 #include <dftracer/utils/core/tasks/task.h>
 #include <dftracer/utils/core/utilities/utility_adapter.h>
-#include <dftracer/utils/indexer/indexer.h>
+#include <dftracer/utils/utilities/indexer/internal/indexer.h>
 #include <dftracer/utils/utilities/utilities.h>
 
 #include <argparse/argparse.hpp>
@@ -12,6 +12,7 @@
 #include <thread>
 
 using namespace dftracer::utils;
+using namespace dftracer::utils::utilities::indexer::internal;
 
 int main(int argc, char** argv) {
     DFTRACER_UTILS_LOGGER_INIT();

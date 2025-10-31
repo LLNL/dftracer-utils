@@ -1,7 +1,7 @@
 #ifndef DFTRACER_UTILS_UTILITIES_READER_INTERNAL_GZIP_READER_H
 #define DFTRACER_UTILS_UTILITIES_READER_INTERNAL_GZIP_READER_H
 
-#include <dftracer/utils/indexer/indexer.h>
+#include <dftracer/utils/utilities/indexer/internal/indexer.h>
 #include <dftracer/utils/utilities/reader/internal/line_processor.h>
 #include <dftracer/utils/utilities/reader/internal/reader.h>
 #include <dftracer/utils/utilities/reader/internal/reader_stream_cache.h>
@@ -14,8 +14,11 @@ namespace dftracer::utils::utilities::reader::internal {
 class GzipReader : public Reader {
    public:
     GzipReader(const std::string &gz_path, const std::string &idx_path,
-               std::size_t index_ckpt_size = Indexer::DEFAULT_CHECKPOINT_SIZE);
-    explicit GzipReader(std::shared_ptr<Indexer> indexer);
+               std::size_t index_ckpt_size = dftracer::utils::utilities::
+                   indexer::internal::Indexer::DEFAULT_CHECKPOINT_SIZE);
+    explicit GzipReader(
+        std::shared_ptr<dftracer::utils::utilities::indexer::internal::Indexer>
+            indexer);
     ~GzipReader();
 
     // Disable copy constructor and copy assignment
@@ -53,7 +56,8 @@ class GzipReader : public Reader {
     std::string idx_path;
     bool is_open;
     std::size_t default_buffer_size;
-    std::shared_ptr<Indexer> indexer;
+    std::shared_ptr<dftracer::utils::utilities::indexer::internal::Indexer>
+        indexer;
     ReaderStreamCache stream_cache_;
 };
 

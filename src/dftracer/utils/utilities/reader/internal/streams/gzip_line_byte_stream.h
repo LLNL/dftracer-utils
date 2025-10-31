@@ -41,7 +41,8 @@ class GzipLineByteStream : public GzipStream {
 
     void initialize(const std::string &gz_path, std::size_t start_bytes,
                     std::size_t end_bytes,
-                    dftracer::utils::Indexer &indexer) override {
+                    dftracer::utils::utilities::indexer::internal::Indexer
+                        &indexer) override {
         GzipStream::initialize(gz_path, start_bytes, end_bytes, indexer);
         actual_start_bytes_ = find_line_start(start_bytes);
         current_position_ = actual_start_bytes_;
