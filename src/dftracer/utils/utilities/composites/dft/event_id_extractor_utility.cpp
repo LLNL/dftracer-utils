@@ -1,4 +1,4 @@
-#include <dftracer/utils/utilities/composites/dft/event_id_extractor.h>
+#include <dftracer/utils/utilities/composites/dft/event_id_extractor_utility.h>
 #include <yyjson.h>
 
 namespace dftracer::utils::utilities::composites::dft {

@@ -5,8 +5,8 @@
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/utilities/utilities.h>
 #include <dftracer/utils/core/utils/string.h>
-#include <dftracer/utils/utilities/composites/dft/event_id_extractor.h>
-#include <dftracer/utils/utilities/composites/dft/index_builder.h>
+#include <dftracer/utils/utilities/composites/dft/event_id_extractor_utility.h>
+#include <dftracer/utils/utilities/composites/dft/index_builder_utility.h>
 #include <dftracer/utils/utilities/composites/file_compressor_utility.h>
 #include <dftracer/utils/utilities/composites/line_batch_processor_utility.h>
 #include <dftracer/utils/utilities/io/lines/streaming_line_reader.h>

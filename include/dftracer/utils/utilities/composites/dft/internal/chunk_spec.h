@@ -1,9 +1,9 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_CHUNK_SPEC_H
-#define DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_CHUNK_SPEC_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_INTERNAL_CHUNK_SPEC_H
+#define DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_INTERNAL_CHUNK_SPEC_H
 
 #include <dftracer/utils/utilities/io/types/chunk_spec.h>
 
-namespace dftracer::utils::utilities::composites::dft {
+namespace dftracer::utils::utilities::composites::dft::internal {
 
 /**
  * @brief DFTracer-specific extension of ChunkSpec with line tracking.
@@ -63,6 +63,6 @@ struct DFTracerChunkSpec : public io::ChunkSpec {
     }
 };
 
-}  // namespace dftracer::utils::utilities::composites::dft
+}  // namespace dftracer::utils::utilities::composites::dft::internal
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_CHUNK_SPEC_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_INTERNAL_CHUNK_SPEC_H

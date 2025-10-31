@@ -1,5 +1,5 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_INDEX_BUILDER_H
-#define DFTRACER_UTILS_UTILITIES_COMPOSITES_INDEX_BUILDER_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_INDEX_BUILDER_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_COMPOSITES_INDEX_BUILDER_UTILITY_H
 
 #include <dftracer/utils/core/common/filesystem.h>
 #include <dftracer/utils/core/common/logging.h>
@@ -155,4 +155,4 @@ class IndexBuilderUtility : public utilities::Utility<IndexBuildUtilityInput,
 
 }  // namespace dftracer::utils::utilities::composites::dft
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_INDEX_BUILDER_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_INDEX_BUILDER_UTILITY_H

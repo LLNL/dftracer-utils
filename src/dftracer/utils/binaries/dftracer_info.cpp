@@ -351,7 +351,8 @@ int main(int argc, char** argv) {
                              .with_force_rebuild(force_rebuild);
 
             if (!index_dir.empty()) {
-                input.with_index(determine_index_path(file_path, index_dir));
+                input.with_index(
+                    internal::determine_index_path(file_path, index_dir));
             }
 
             inputs.push_back(input);

@@ -1,4 +1,4 @@
-#include <dftracer/utils/utilities/composites/dft/chunk_manifest_mapper.h>
+#include <dftracer/utils/utilities/composites/dft/chunk_manifest_mapper_utility.h>
 
 #include <algorithm>
 #include <cmath>
@@ -7,9 +7,9 @@ namespace dftracer::utils::utilities::composites::dft {
 
 ChunkManifestMapperUtilityOutput ChunkManifestMapperUtility::process(
     const ChunkManifestMapperUtilityInput& input) {
-    std::vector<DFTracerChunkManifest> manifests;
+    std::vector<internal::DFTracerChunkManifest> manifests;
 
-    DFTracerChunkManifest current_manifest;
+    internal::DFTracerChunkManifest current_manifest;
     current_manifest.total_size_mb = 0;
 
     for (const auto& file : input.file_metadata) {
@@ -39,7 +39,7 @@ ChunkManifestMapperUtilityOutput ChunkManifestMapperUtility::process(
             if (events_to_take == 0 && remaining_events > 0) {
                 if (!current_manifest.specs.empty()) {
                     manifests.push_back(current_manifest);
-                    current_manifest = DFTracerChunkManifest();
+                    current_manifest = internal::DFTracerChunkManifest();
                     current_manifest.total_size_mb = 0;
                 }
                 continue;
@@ -76,9 +76,9 @@ ChunkManifestMapperUtilityOutput ChunkManifestMapperUtility::process(
                 static_cast<double>(line_end - file.start_line + 1) *
                 bytes_per_line);
 
-            DFTracerChunkSpec spec(file.file_path, file.idx_path, size_to_take,
-                                   start_byte, end_byte, current_start,
-                                   line_end);
+            internal::DFTracerChunkSpec spec(file.file_path, file.idx_path,
+                                             size_to_take, start_byte, end_byte,
+                                             current_start, line_end);
 
             current_manifest.add_spec(spec);
 
@@ -89,7 +89,7 @@ ChunkManifestMapperUtilityOutput ChunkManifestMapperUtility::process(
             if (current_manifest.total_size_mb >=
                 input.target_chunk_size_mb * 0.95) {
                 manifests.push_back(current_manifest);
-                current_manifest = DFTracerChunkManifest();
+                current_manifest = internal::DFTracerChunkManifest();
                 current_manifest.total_size_mb = 0;
             }
         }

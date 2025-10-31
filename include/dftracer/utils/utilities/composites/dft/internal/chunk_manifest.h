@@ -1,11 +1,11 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_CHUNK_MANIFEST_H
-#define DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_CHUNK_MANIFEST_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_INTERNAL_CHUNK_MANIFEST_H
+#define DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_INTERNAL_CHUNK_MANIFEST_H
 
-#include <dftracer/utils/utilities/composites/dft/chunk_spec.h>
+#include <dftracer/utils/utilities/composites/dft/internal/chunk_spec.h>
 
 #include <vector>
 
-namespace dftracer::utils::utilities::composites::dft {
+namespace dftracer::utils::utilities::composites::dft::internal {
 
 /**
  * @brief DFTracer-specific manifest with line tracking.
@@ -40,6 +40,6 @@ struct DFTracerChunkManifest {
     }
 };
 
-}  // namespace dftracer::utils::utilities::composites::dft
+}  // namespace dftracer::utils::utilities::composites::dft::internal
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_CHUNK_MANIFEST_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_INTERNAL_CHUNK_MANIFEST_H

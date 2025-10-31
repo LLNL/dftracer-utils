@@ -2,7 +2,7 @@
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/utils/string.h>
 #include <dftracer/utils/reader/reader_factory.h>
-#include <dftracer/utils/utilities/composites/dft/chunk_extractor.h>
+#include <dftracer/utils/utilities/composites/dft/chunk_extractor_utility.h>
 #include <dftracer/utils/utilities/io/lines/line_range.h>
 #include <dftracer/utils/utilities/io/lines/streaming_line_reader.h>
 #include <zlib.h>

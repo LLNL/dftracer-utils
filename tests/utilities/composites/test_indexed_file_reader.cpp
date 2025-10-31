@@ -1,7 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/reader/reader_factory.h>
-#include <dftracer/utils/utilities/composites/indexed_file_reader.h>
+#include <dftracer/utils/utilities/composites/indexed_file_reader_utility.h>
 #include <dftracer/utils/utilities/composites/types.h>
 #include <doctest/doctest.h>
 #include <testing_utilities.h>

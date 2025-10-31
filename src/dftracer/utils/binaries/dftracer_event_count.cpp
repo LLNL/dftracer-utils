@@ -118,8 +118,9 @@ int main(int argc, char** argv) {
                                        TaskContext& /*ctx*/,
                                        const std::string& file_path)
         -> utilities::composites::dft::IndexBuildUtilityOutput {
-        std::string idx_path = utilities::composites::dft::determine_index_path(
-            file_path, index_dir);
+        std::string idx_path =
+            utilities::composites::dft::internal::determine_index_path(
+                file_path, index_dir);
         auto input =
             utilities::composites::dft::IndexBuildUtilityInput::from_file(
                 file_path)
@@ -153,8 +154,9 @@ int main(int argc, char** argv) {
                                   TaskContext& /*ctx*/,
                                   const std::string& file_path)
         -> utilities::composites::dft::MetadataCollectorUtilityOutput {
-        std::string idx_path = utilities::composites::dft::determine_index_path(
-            file_path, index_dir);
+        std::string idx_path =
+            utilities::composites::dft::internal::determine_index_path(
+                file_path, index_dir);
 
         auto input = utilities::composites::dft::MetadataCollectorUtilityInput::
                          from_file(file_path)

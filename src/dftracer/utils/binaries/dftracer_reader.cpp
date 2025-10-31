@@ -115,8 +115,8 @@ int main(int argc, char **argv) {
     if (!index_path.empty()) {
         idx_path = index_path;
     } else {
-        idx_path = utilities::composites::dft::determine_index_path(gz_path,
-                                                                    index_dir);
+        idx_path = utilities::composites::dft::internal::determine_index_path(
+            gz_path, index_dir);
     }
 
 #if DFTRACER_UTILS_LOGGER_DEBUG_ENABLED

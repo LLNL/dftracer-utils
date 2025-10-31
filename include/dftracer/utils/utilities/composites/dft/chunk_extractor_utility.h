@@ -1,9 +1,9 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_DFTRACER_CHUNK_EXTRACTOR_H
-#define DFTRACER_UTILS_UTILITIES_COMPOSITES_DFTRACER_CHUNK_EXTRACTOR_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_DFTRACER_CHUNK_EXTRACTOR_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_COMPOSITES_DFTRACER_CHUNK_EXTRACTOR_UTILITY_H
 
 #include <dftracer/utils/core/utilities/utilities.h>
-#include <dftracer/utils/utilities/composites/dft/chunk_manifest.h>
-#include <dftracer/utils/utilities/composites/dft/event_id_extractor.h>
+#include <dftracer/utils/utilities/composites/dft/event_id_extractor_utility.h>
+#include <dftracer/utils/utilities/composites/dft/internal/chunk_manifest.h>
 #include <dftracer/utils/utilities/io/types/types.h>
 
 #include <cstddef>
@@ -20,15 +20,15 @@ namespace dftracer::utils::utilities::composites::dft {
  */
 struct ChunkExtractorUtilityInput {
     int chunk_index;  // Application-level: which output chunk number
-    DFTracerChunkManifest manifest;
+    internal::DFTracerChunkManifest manifest;
     std::string output_dir;
     std::string app_name;
     bool compress = false;
 
     ChunkExtractorUtilityInput() : chunk_index(0), compress(false) {}
 
-    static ChunkExtractorUtilityInput from_manifest(int index,
-                                                    DFTracerChunkManifest m) {
+    static ChunkExtractorUtilityInput from_manifest(
+        int index, internal::DFTracerChunkManifest m) {
         ChunkExtractorUtilityInput input;
         input.chunk_index = index;
         input.manifest = std::move(m);
@@ -158,4 +158,4 @@ class ChunkExtractorUtility
 
 }  // namespace dftracer::utils::utilities::composites::dft
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_DFTRACER_CHUNK_EXTRACTOR_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_DFTRACER_CHUNK_EXTRACTOR_UTILITY_H

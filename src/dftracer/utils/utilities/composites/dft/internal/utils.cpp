@@ -1,8 +1,8 @@
 #include <dftracer/utils/core/common/constants.h>
 #include <dftracer/utils/core/common/filesystem.h>
-#include <dftracer/utils/utilities/composites/dft/utils.h>
+#include <dftracer/utils/utilities/composites/dft/internal/utils.h>
 
-namespace dftracer::utils::utilities::composites::dft {
+namespace dftracer::utils::utilities::composites::dft::internal {
 
 std::string determine_index_path(const std::string& file_path,
                                  const std::string& index_dir) {
@@ -12,4 +12,4 @@ std::string determine_index_path(const std::string& file_path,
     return (idx_dir / (base_name + constants::indexer::EXTENSION)).string();
 }
 
-}  // namespace dftracer::utils::utilities::composites::dft
+}  // namespace dftracer::utils::utilities::composites::dft::internal

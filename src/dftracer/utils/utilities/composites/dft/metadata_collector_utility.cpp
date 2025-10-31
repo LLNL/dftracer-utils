@@ -2,8 +2,8 @@
 #include <dftracer/utils/core/common/logging.h>
 #include <dftracer/utils/core/utils/string.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
-#include <dftracer/utils/utilities/composites/dft/metadata_collector.h>
-#include <dftracer/utils/utilities/composites/indexed_file_reader.h>
+#include <dftracer/utils/utilities/composites/dft/metadata_collector_utility.h>
+#include <dftracer/utils/utilities/composites/indexed_file_reader_utility.h>
 #include <dftracer/utils/utilities/io/lines/streaming_line_reader.h>
 
 #include <atomic>

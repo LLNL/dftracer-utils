@@ -1,9 +1,9 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_DFTRACER_CHUNK_MANIFEST_MAPPER_H
-#define DFTRACER_UTILS_UTILITIES_COMPOSITES_DFTRACER_CHUNK_MANIFEST_MAPPER_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_DFTRACER_CHUNK_MANIFEST_MAPPER_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_COMPOSITES_DFTRACER_CHUNK_MANIFEST_MAPPER_UTILITY_H
 
 #include <dftracer/utils/core/utilities/utilities.h>
-#include <dftracer/utils/utilities/composites/dft/chunk_manifest.h>
-#include <dftracer/utils/utilities/composites/dft/metadata_collector.h>
+#include <dftracer/utils/utilities/composites/dft/internal/chunk_manifest.h>
+#include <dftracer/utils/utilities/composites/dft/metadata_collector_utility.h>
 #include <dftracer/utils/utilities/io/types/types.h>
 
 #include <cstddef>
@@ -36,7 +36,8 @@ struct ChunkManifestMapperUtilityInput {
 /**
  * @brief Output: vector of DFTracer chunk manifests with line tracking.
  */
-using ChunkManifestMapperUtilityOutput = std::vector<DFTracerChunkManifest>;
+using ChunkManifestMapperUtilityOutput =
+    std::vector<internal::DFTracerChunkManifest>;
 
 /**
  * @brief Workflow for mapping DFTracer file metadata to chunk manifests with
@@ -76,4 +77,4 @@ class ChunkManifestMapperUtility
 
 }  // namespace dftracer::utils::utilities::composites::dft
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_DFTRACER_CHUNK_MANIFEST_MAPPER_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_DFTRACER_CHUNK_MANIFEST_MAPPER_UTILITY_H

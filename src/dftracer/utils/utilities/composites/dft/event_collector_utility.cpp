@@ -3,7 +3,7 @@
 #include <dftracer/utils/core/utils/string.h>
 #include <dftracer/utils/indexer/indexer_factory.h>
 #include <dftracer/utils/reader/reader_factory.h>
-#include <dftracer/utils/utilities/composites/dft/event_collector.h>
+#include <dftracer/utils/utilities/composites/dft/event_collector_utility.h>
 #include <yyjson.h>
 
 #include <algorithm>

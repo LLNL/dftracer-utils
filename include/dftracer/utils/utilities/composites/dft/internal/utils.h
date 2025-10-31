@@ -1,9 +1,9 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_UTILS_H
-#define DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_UTILS_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_INTERNAL_UTILS_H
+#define DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_INTERNAL_UTILS_H
 
 #include <string>
 
-namespace dftracer::utils::utilities::composites::dft {
+namespace dftracer::utils::utilities::composites::dft::internal {
 
 /**
  * @brief Determine the index file path for a given data file.
@@ -37,6 +37,6 @@ namespace dftracer::utils::utilities::composites::dft {
 std::string determine_index_path(const std::string& file_path,
                                  const std::string& index_dir = "");
 
-}  // namespace dftracer::utils::utilities::composites::dft
+}  // namespace dftracer::utils::utilities::composites::dft::internal
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_UTILS_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_INTERNAL_UTILS_H

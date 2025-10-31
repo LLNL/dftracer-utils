@@ -1,8 +1,8 @@
-#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_EVENT_HASHER_H
-#define DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_EVENT_HASHER_H
+#ifndef DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_EVENT_HASHER_UTILITY_H
+#define DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_EVENT_HASHER_UTILITY_H
 
 #include <dftracer/utils/core/utilities/utilities.h>
-#include <dftracer/utils/utilities/composites/dft/event_collector.h>
+#include <dftracer/utils/utilities/composites/dft/event_collector_utility.h>
 
 #include <cstdint>
 #include <vector>
@@ -40,4 +40,4 @@ class EventHasher : public utilities::Utility<EventHashInput, EventHashOutput> {
 
 }  // namespace dftracer::utils::utilities::composites::dft
 
-#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_EVENT_HASHER_H
+#endif  // DFTRACER_UTILS_UTILITIES_COMPOSITES_DFT_EVENT_HASHER_UTILITY_H

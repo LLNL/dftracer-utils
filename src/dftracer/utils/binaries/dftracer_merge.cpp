@@ -228,12 +228,12 @@ int main(int argc, char** argv) {
                 std::to_string(FileMergeValidatorUtility::get_next_counter()) +
                 ".tmp";
 
-            auto input =
-                FileMergeValidatorUtilityInput::from_file(file)
-                    .with_output(temp_file)
-                    .with_index(dft::determine_index_path(file, index_dir))
-                    .with_checkpoint_size(checkpoint_size)
-                    .with_force_rebuild(force_override);
+            auto input = FileMergeValidatorUtilityInput::from_file(file)
+                             .with_output(temp_file)
+                             .with_index(dft::internal::determine_index_path(
+                                 file, index_dir))
+                             .with_checkpoint_size(checkpoint_size)
+                             .with_force_rebuild(force_override);
 
             inputs.push_back(input);
         }
@@ -335,9 +335,8 @@ int main(int argc, char** argv) {
                              gz_suffix.size(), gz_suffix) == 0);
 
                     if (is_compressed) {
-                        meta.idx_path =
-                            utilities::composites::dft::determine_index_path(
-                                result.file_path, index_dir);
+                        meta.idx_path = utilities::composites::dft::internal::
+                            determine_index_path(result.file_path, index_dir);
                     }
 
                     metadata.push_back(meta);
