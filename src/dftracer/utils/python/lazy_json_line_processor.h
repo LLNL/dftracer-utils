@@ -2,11 +2,12 @@
 #define DFTRACER_UTILS_PYTHON_LAZY_JSON_LINE_PROCESSOR_H
 
 #include <Python.h>
+#include <dftracer/utils/core/utils/string.h>
 #include <dftracer/utils/python/json.h>
-#include <dftracer/utils/reader/line_processor.h>
-#include <dftracer/utils/utils/string.h>
+#include <dftracer/utils/utilities/reader/internal/line_processor.h>
 
-class PyLazyJSONLineProcessor : public dftracer::utils::LineProcessor {
+class PyLazyJSONLineProcessor
+    : public dftracer::utils::utilities::reader::internal::LineProcessor {
    public:
     PyLazyJSONLineProcessor() : result_list(nullptr) {
         result_list = PyList_New(0);
