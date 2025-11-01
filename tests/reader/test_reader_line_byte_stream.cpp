@@ -1346,7 +1346,7 @@ TEST_CASE("LINE_BYTES Stream - Buffer Size Tests") {
                                          .range_type(RangeType::BYTE_RANGE)
                                          .from(0)
                                          .to(max_bytes)
-                                         .buffer(0));  // Use default
+                                         .buffer_size(0));  // Use default
 
         std::vector<char> buffer(512 * 1024);
         std::string reference_content;
@@ -1391,7 +1391,7 @@ TEST_CASE("LINE_BYTES Stream - Buffer Size Tests") {
                                    .range_type(RangeType::BYTE_RANGE)
                                    .from(0)
                                    .to(max_bytes)
-                                   .buffer(buf_size));
+                                   .buffer_size(buf_size));
 
             std::string content;
             while (!stream->done()) {
@@ -1459,7 +1459,7 @@ TEST_CASE("LINE_BYTES Stream - Buffer Size Tests") {
                                        .range_type(RangeType::BYTE_RANGE)
                                        .from(0)
                                        .to(mid_point)
-                                       .buffer(buf_size));
+                                       .buffer_size(buf_size));
 
                 std::string chunk1;
                 while (!stream1->done()) {
@@ -1481,7 +1481,7 @@ TEST_CASE("LINE_BYTES Stream - Buffer Size Tests") {
                                        .range_type(RangeType::BYTE_RANGE)
                                        .from(mid_point)
                                        .to(max_bytes)
-                                       .buffer(buf_size));
+                                       .buffer_size(buf_size));
 
                 std::string chunk2;
                 while (!stream2->done()) {
@@ -1503,7 +1503,7 @@ TEST_CASE("LINE_BYTES Stream - Buffer Size Tests") {
                                        .range_type(RangeType::BYTE_RANGE)
                                        .from(0)
                                        .to(max_bytes)
-                                       .buffer(buf_size));
+                                       .buffer_size(buf_size));
 
                 std::string full;
                 while (!stream_full->done()) {

@@ -360,11 +360,11 @@ std::unique_ptr<ReaderStream> GzipReader::stream(const StreamConfig &config) {
     check_reader_state(is_open, indexer.get());
 
     // Extract config parameters
-    StreamType stream_type = config.stream;
-    RangeType range_type = config.range;
-    std::size_t start = config.start;
-    std::size_t end = config.end;
-    std::size_t buffer_size = config.buffer_size;
+    StreamType stream_type = config.stream_type();
+    RangeType range_type = config.range_type();
+    std::size_t start = config.start();
+    std::size_t end = config.end();
+    std::size_t buffer_size = config.buffer_size();
 
     // Convert line range to byte range if needed
     std::size_t start_bytes = start;

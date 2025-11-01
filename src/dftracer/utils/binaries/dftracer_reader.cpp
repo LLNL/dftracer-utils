@@ -200,7 +200,7 @@ int main(int argc, char **argv) {
                                    .range_type(RangeType::LINE_RANGE)
                                    .from(start_line)
                                    .to(end_line)
-                                   .buffer(read_buffer_size));
+                                   .buffer_size(read_buffer_size));
 
 #if DFTRACER_UTILS_LOGGER_DEBUG_ENABLED
             std::size_t line_count = 0;
@@ -242,7 +242,7 @@ int main(int argc, char **argv) {
                                              .range_type(RangeType::BYTE_RANGE)
                                              .from(start_bytes_)
                                              .to(end_bytes_)
-                                             .buffer(read_buffer_size));
+                                             .buffer_size(read_buffer_size));
 
 #if DFTRACER_UTILS_LOGGER_DEBUG_ENABLED == 1
             std::size_t total_bytes = 0;

@@ -54,7 +54,10 @@ static int test_bytes_stream_byte_range(void) {
 
     // Create stream
     dft_stream_config_t config;
-    dft_stream_config_init_bytes(&config, 0, 100);
+    config.stream_type = DFT_STREAM_TYPE_BYTES;
+    config.range_type = DFT_RANGE_TYPE_BYTES;
+    config.start = 0;
+    config.end = 100;
     dft_reader_stream_t stream = dft_reader_stream(reader, &config);
     CHECK_NOT_NULL(stream, "stream");
 
@@ -126,8 +129,10 @@ static int test_bytes_stream_line_range(void) {
 
     // Create stream with line range
     dft_stream_config_t config;
-    dft_stream_config_init_lines(&config, 1, 10);
-    config.stream = DFT_STREAM_TYPE_BYTES;
+    config.stream_type = DFT_STREAM_TYPE_LINE;
+    config.range_type = DFT_RANGE_TYPE_LINES;
+    config.start = 1;
+    config.end = 10;
     dft_reader_stream_t stream = dft_reader_stream(reader, &config);
     CHECK_NOT_NULL(stream, "stream");
 
@@ -196,8 +201,10 @@ static int test_line_bytes_stream(void) {
 
     // Create LINE_BYTES stream
     dft_stream_config_t config;
-    dft_stream_config_init_lines(&config, 1, 10);
-    config.stream = DFT_STREAM_TYPE_LINE_BYTES;
+    config.stream_type = DFT_STREAM_TYPE_LINE_BYTES;
+    config.range_type = DFT_RANGE_TYPE_LINES;
+    config.start = 1;
+    config.end = 10;
     dft_reader_stream_t stream = dft_reader_stream(reader, &config);
     CHECK_NOT_NULL(stream, "stream");
 
@@ -273,8 +280,10 @@ static int test_multi_lines_bytes_stream(void) {
 
     // Create MULTI_LINES_BYTES stream
     dft_stream_config_t config;
-    dft_stream_config_init_lines(&config, 1, 20);
-    config.stream = DFT_STREAM_TYPE_MULTI_LINES_BYTES;
+    config.stream_type = DFT_STREAM_TYPE_LINE;
+    config.range_type = DFT_RANGE_TYPE_LINES;
+    config.start = 1;
+    config.end = 20;
     dft_reader_stream_t stream = dft_reader_stream(reader, &config);
     CHECK_NOT_NULL(stream, "stream");
 
@@ -351,8 +360,10 @@ static int test_line_stream(void) {
 
     // Create LINE stream
     dft_stream_config_t config;
-    dft_stream_config_init_lines(&config, 6, 15);
-    config.stream = DFT_STREAM_TYPE_LINE;
+    config.stream_type = DFT_STREAM_TYPE_LINE;
+    config.range_type = DFT_RANGE_TYPE_LINES;
+    config.start = 6;
+    config.end = 15;
     dft_reader_stream_t stream = dft_reader_stream(reader, &config);
     CHECK_NOT_NULL(stream, "stream");
 
@@ -422,8 +433,10 @@ static int test_multi_lines_stream(void) {
 
     // Create MULTI_LINES stream
     dft_stream_config_t config;
-    dft_stream_config_init_lines(&config, 10, 30);
-    config.stream = DFT_STREAM_TYPE_MULTI_LINES;
+    config.stream_type = DFT_STREAM_TYPE_LINE;
+    config.range_type = DFT_RANGE_TYPE_LINES;
+    config.start = 10;
+    config.end = 30;
     dft_reader_stream_t stream = dft_reader_stream(reader, &config);
     CHECK_NOT_NULL(stream, "stream");
 
@@ -492,8 +505,10 @@ static int test_stream_recreation(void) {
     size_t bytes1;
     {
         dft_stream_config_t config;
-        dft_stream_config_init_bytes(&config, 0, 100);
-        config.stream = DFT_STREAM_TYPE_BYTES;
+        config.stream_type = DFT_STREAM_TYPE_BYTES;
+        config.range_type = DFT_RANGE_TYPE_BYTES;
+        config.start = 0;
+        config.end = 100;
         dft_reader_stream_t stream1 = dft_reader_stream(reader, &config);
         CHECK_NOT_NULL(stream1, "stream1");
 
@@ -506,8 +521,10 @@ static int test_stream_recreation(void) {
     // Second stream (equivalent to reset)
     {
         dft_stream_config_t config;
-        dft_stream_config_init_bytes(&config, 0, 100);
-        config.stream = DFT_STREAM_TYPE_BYTES;
+        config.stream_type = DFT_STREAM_TYPE_BYTES;
+        config.range_type = DFT_RANGE_TYPE_BYTES;
+        config.start = 0;
+        config.end = 100;
         dft_reader_stream_t stream2 = dft_reader_stream(reader, &config);
         CHECK_NOT_NULL(stream2, "stream2");
 
@@ -564,8 +581,10 @@ static int test_edge_cases(void) {
     printf("  Subtest: Empty range\n");
     {
         dft_stream_config_t config;
-        dft_stream_config_init_bytes(&config, 100, 100);
-        config.stream = DFT_STREAM_TYPE_BYTES;
+        config.stream_type = DFT_STREAM_TYPE_BYTES;
+        config.range_type = DFT_RANGE_TYPE_BYTES;
+        config.start = 100;
+        config.end = 100;
         dft_reader_stream_t stream1 = dft_reader_stream(reader, &config);
         CHECK_NOT_NULL(stream1, "stream1");
 
@@ -581,8 +600,10 @@ static int test_edge_cases(void) {
     printf("  Subtest: Very small buffer\n");
     {
         dft_stream_config_t config;
-        dft_stream_config_init_bytes(&config, 0, 100);
-        config.stream = DFT_STREAM_TYPE_BYTES;
+        config.stream_type = DFT_STREAM_TYPE_BYTES;
+        config.range_type = DFT_RANGE_TYPE_BYTES;
+        config.start = 0;
+        config.end = 100;
         dft_reader_stream_t stream2 = dft_reader_stream(reader, &config);
         CHECK_NOT_NULL(stream2, "stream2");
 
@@ -606,8 +627,10 @@ static int test_edge_cases(void) {
     size_t bytes;
     {
         dft_stream_config_t config;
-        dft_stream_config_init_bytes(&config, 0, 50);
-        config.stream = DFT_STREAM_TYPE_BYTES;
+        config.stream_type = DFT_STREAM_TYPE_BYTES;
+        config.range_type = DFT_RANGE_TYPE_BYTES;
+        config.start = 0;
+        config.end = 50;
         dft_reader_stream_t stream3 = dft_reader_stream(reader, &config);
         CHECK_NOT_NULL(stream3, "stream3");
 
@@ -619,8 +642,10 @@ static int test_edge_cases(void) {
 
     for (int i = 0; i < 5; i++) {
         dft_stream_config_t config;
-        dft_stream_config_init_bytes(&config, 0, 50);
-        config.stream = DFT_STREAM_TYPE_BYTES;
+        config.stream_type = DFT_STREAM_TYPE_BYTES;
+        config.range_type = DFT_RANGE_TYPE_BYTES;
+        config.start = 0;
+        config.end = 50;
         dft_reader_stream_t stream = dft_reader_stream(reader, &config);
         CHECK_NOT_NULL(stream, "stream");
         CHECK(!dft_reader_stream_done(stream),

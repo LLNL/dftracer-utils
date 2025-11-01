@@ -672,7 +672,7 @@ TEST_CASE("C++ Reader Streaming API - Buffer Size Tests") {
                                              .range_type(RangeType::BYTE_RANGE)
                                              .from(0)
                                              .to(max_bytes)
-                                             .buffer(0));
+                                             .buffer_size(0));
 
             std::vector<char> buffer(512 * 1024);
             while (!stream->done()) {
@@ -692,7 +692,7 @@ TEST_CASE("C++ Reader Streaming API - Buffer Size Tests") {
                                              .range_type(RangeType::BYTE_RANGE)
                                              .from(0)
                                              .to(max_bytes)
-                                             .buffer(buf_size));
+                                             .buffer_size(buf_size));
 
             std::string data;
             std::vector<char> buffer(512 * 1024);
@@ -718,7 +718,7 @@ TEST_CASE("C++ Reader Streaming API - Buffer Size Tests") {
                                              .range_type(RangeType::LINE_RANGE)
                                              .from(1)
                                              .to(50)
-                                             .buffer(0));
+                                             .buffer_size(0));
 
             char buffer[4096];
             while (!stream->done()) {
@@ -739,7 +739,7 @@ TEST_CASE("C++ Reader Streaming API - Buffer Size Tests") {
                                              .range_type(RangeType::LINE_RANGE)
                                              .from(1)
                                              .to(50)
-                                             .buffer(buf_size));
+                                             .buffer_size(buf_size));
 
             std::vector<std::string> lines;
             char buffer[4096];
@@ -767,7 +767,7 @@ TEST_CASE("C++ Reader Streaming API - Buffer Size Tests") {
                                    .range_type(RangeType::LINE_RANGE)
                                    .from(1)
                                    .to(50)
-                                   .buffer(0));
+                                   .buffer_size(0));
 
             std::vector<char> buffer(64 * 1024);
             std::string content;
@@ -797,7 +797,7 @@ TEST_CASE("C++ Reader Streaming API - Buffer Size Tests") {
                                    .range_type(RangeType::LINE_RANGE)
                                    .from(1)
                                    .to(50)
-                                   .buffer(buf_size));
+                                   .buffer_size(buf_size));
 
             std::vector<char> buffer(64 * 1024);
             std::string content;

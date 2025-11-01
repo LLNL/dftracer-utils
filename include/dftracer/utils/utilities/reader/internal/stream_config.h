@@ -28,10 +28,10 @@ extern "C" {
  */
 typedef struct {
     /** Type of stream (BYTES, LINE, MULTI_LINES, etc.) */
-    dft_stream_type_t stream;
+    dft_stream_type_t stream_type;
 
     /** How to interpret start/end (BYTES or LINES) */
-    dft_range_type_t range;
+    dft_range_type_t range_type;
 
     /** Start of range (byte offset or line number based on range_type) */
     size_t start;
@@ -51,51 +51,6 @@ typedef struct {
      */
     size_t buffer_size;
 } dft_stream_config_t;
-
-/**
- * @brief Initialize stream config with defaults.
- *
- * Creates a config for line-based streaming with default buffer size.
- *
- * @param config Pointer to config to initialize
- * @param start Start line number
- * @param end End line number
- */
-static inline void dft_stream_config_init_lines(dft_stream_config_t* config,
-                                                size_t start, size_t end) {
-    config->stream = DFT_STREAM_TYPE_LINE;
-    config->range = DFT_RANGE_TYPE_LINES;
-    config->start = start;
-    config->end = end;
-    config->buffer_size = 0;  // Default
-}
-
-/**
- * @brief Initialize stream config for byte reading.
- *
- * @param config Pointer to config to initialize
- * @param start Start byte offset
- * @param end End byte offset
- */
-static inline void dft_stream_config_init_bytes(dft_stream_config_t* config,
-                                                size_t start, size_t end) {
-    config->stream = DFT_STREAM_TYPE_BYTES;
-    config->range = DFT_RANGE_TYPE_BYTES;
-    config->start = start;
-    config->end = end;
-    config->buffer_size = 0;  // Default
-}
-
-/**
- * @brief Set buffer size on config.
- *
- * @param config Pointer to config
- * @param buffer_size Buffer size in bytes (0 = default)
- */
-static inline void dft_stream_config_set_buffer(dft_stream_config_t* config,
-                                                size_t buffer_size) {
-    config->buffer_size = buffer_size;
-}
 
 #ifdef __cplusplus
 }  // extern "C"
@@ -140,81 +95,89 @@ namespace dftracer::utils::utilities::reader::internal {
  * auto stream = reader->stream(config);
  * @endcode
  */
-struct StreamConfig {
-    /** Type of stream (BYTES, LINE, MULTI_LINES, etc.) */
-    StreamType stream = StreamType::LINE;
+class StreamConfig {
+   public:
+    StreamConfig() = default;
+    StreamConfig(StreamType stream_type, RangeType range_type,
+                 std::size_t start, std::size_t end, std::size_t buffer_size)
+        : stream_type_(stream_type),
+          range_type_(range_type),
+          start_(start),
+          end_(end),
+          buffer_size_(buffer_size) {}
 
-    /** How to interpret start/end (BYTE_RANGE or LINE_RANGE) */
-    RangeType range = RangeType::BYTE_RANGE;
-
-    /** Start of range (byte offset or line number based on range_type) */
-    std::size_t start = 0;
-
-    /** End of range (byte offset or line number based on range_type) */
-    std::size_t end = 0;
-
-    /**
-     * Internal buffer size in bytes (0 = use default).
-     *
-     * Larger buffers improve I/O performance but use more memory.
-     */
-    std::size_t buffer_size = 4 * 1024 * 1024;  // 4MB default
-
+    static constexpr std::size_t DEFAULT_BUFFER_SIZE = 4 * 1024 * 1024;  // 4MB
     // ========================================================================
     // Fluent API - Basic Setters
     // ========================================================================
 
     /**
+     * @brief Get stream type.
+     */
+    StreamType stream_type() const { return stream_type_; }
+
+    /**
      * @brief Set stream type.
      */
     StreamConfig& stream_type(StreamType t) {
-        stream = t;
+        stream_type_ = t;
         return *this;
     }
+
+    /**
+     * @brief Get range type.
+     */
+    RangeType range_type() const { return range_type_; }
 
     /**
      * @brief Set range type.
      */
     StreamConfig& range_type(RangeType t) {
-        range = t;
+        range_type_ = t;
         return *this;
     }
+
+    /**
+     * @brief Get start position.
+     */
+    std::size_t start() const { return start_; }
 
     /**
      * @brief Set start position.
      */
     StreamConfig& from(std::size_t s) {
-        start = s;
+        start_ = s;
         return *this;
     }
+
+    /**
+     * @brief Get end position.
+     */
+    std::size_t end() const { return end_; }
 
     /**
      * @brief Set end position.
      */
     StreamConfig& to(std::size_t e) {
-        end = e;
+        end_ = e;
         return *this;
     }
 
     /**
+     * @brief Get buffer size in bytes.
+     */
+    std::size_t buffer_size() const { return buffer_size_; }
+
+    /**
      * @brief Set buffer size in bytes.
      */
-    StreamConfig& buffer(std::size_t size) {
+    StreamConfig& buffer_size(std::size_t size = 0) {
         if (size == 0) {
             // Reset to default 4MB
-            buffer_size = 4 * 1024 * 1024;
+            buffer_size_ = DEFAULT_BUFFER_SIZE;
             return *this;
         }
-        buffer_size = size;
-        return *this;
-    }
-
-    /*
-     * @brief Set range start and end.
-     */
-    StreamConfig& from_to(std::size_t s, std::size_t e) {
-        start = s;
-        end = e;
+        buffer_size_ = size;
         return *this;
     }
 
@@ -226,19 +189,39 @@ struct StreamConfig {
      * @brief Convert to C API config.
      */
     dft_stream_config_t to_c() const {
-        return dft_stream_config_t{static_cast<dft_stream_type_t>(stream),
-                                   static_cast<dft_range_type_t>(range), start,
-                                   end, buffer_size};
+        return dft_stream_config_t{static_cast<dft_stream_type_t>(stream_type_),
+                                   static_cast<dft_range_type_t>(range_type_),
+                                   start_, end_, buffer_size_};
     }
 
     /**
      * @brief Create from C API config.
      */
     static StreamConfig from_c(const dft_stream_config_t& c_config) {
-        return StreamConfig{static_cast<StreamType>(c_config.stream),
-                            static_cast<RangeType>(c_config.range),
+        return StreamConfig{static_cast<StreamType>(c_config.stream_type),
+                            static_cast<RangeType>(c_config.range_type),
                             c_config.start, c_config.end, c_config.buffer_size};
     }
+
+   private:
+    /** Type of stream (BYTES, LINE, MULTI_LINES, etc.) */
+    StreamType stream_type_ = StreamType::LINE;
+
+    /** How to interpret start/end (BYTE_RANGE or LINE_RANGE) */
+    RangeType range_type_ = RangeType::BYTE_RANGE;
+
+    /** Start of range (byte offset or line number based on range_type) */
+    std::size_t start_ = 0;
+
+    /** End of range (byte offset or line number based on range_type) */
+    std::size_t end_ = 0;
+
+    /**
+     * Internal buffer size in bytes (0 = use default).
+     *
+     * Larger buffers improve I/O performance but use more memory.
+     */
+    std::size_t buffer_size_ = 4 * 1024 * 1024;  // 4MB default
 };
 
 }  // namespace dftracer::utils::utilities::reader::internal
